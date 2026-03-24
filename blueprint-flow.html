@@ -1,0 +1,654 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Blueprint — Product Workflow</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: #0f0f13;
+    color: #e8e8f0;
+    min-height: 100vh;
+    padding: 48px 32px;
+  }
+
+  h1 {
+    text-align: center;
+    font-size: 22px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    color: #fff;
+    margin-bottom: 6px;
+  }
+  .subtitle {
+    text-align: center;
+    font-size: 13px;
+    color: #666;
+    margin-bottom: 48px;
+    letter-spacing: 0.3px;
+  }
+
+  /* Legend */
+  .legend {
+    display: flex;
+    justify-content: center;
+    gap: 28px;
+    margin-bottom: 48px;
+    flex-wrap: wrap;
+  }
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    color: #aaa;
+  }
+  .legend-dot {
+    width: 12px; height: 12px;
+    border-radius: 3px;
+    flex-shrink: 0;
+  }
+
+  /* Main layout */
+  .flow {
+    max-width: 960px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+  }
+
+  /* Phase label */
+  .phase-label {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: #555;
+    padding: 0 0 12px 0;
+    margin-top: 36px;
+  }
+  .phase-label:first-child { margin-top: 0; }
+
+  /* Step row */
+  .step-row {
+    display: grid;
+    grid-template-columns: 180px 1fr 180px;
+    align-items: start;
+    gap: 0;
+    position: relative;
+  }
+
+  /* Customer column */
+  .col-customer { display: flex; flex-direction: column; align-items: flex-end; padding-right: 24px; }
+  .col-system   { display: flex; flex-direction: column; align-items: center; }
+  .col-57blocks { display: flex; flex-direction: column; align-items: flex-start; padding-left: 24px; }
+
+  /* Node */
+  .node {
+    border-radius: 10px;
+    padding: 12px 16px;
+    font-size: 13px;
+    line-height: 1.5;
+    position: relative;
+    width: 100%;
+    max-width: 200px;
+  }
+
+  /* Node types */
+  .node-ai {
+    background: #1a1a2e;
+    border: 1px solid #2d2d50;
+    color: #c8c8e8;
+  }
+  .node-ai .node-label { color: #5e5ef0; font-size: 10px; font-weight: 700; letter-spacing: 1px; margin-bottom: 4px; text-transform: uppercase; }
+
+  .node-customer {
+    background: #0d2818;
+    border: 1.5px solid #1a5c32;
+    color: #a8e6c0;
+  }
+  .node-customer .node-label { color: #2ecc71; font-size: 10px; font-weight: 700; letter-spacing: 1px; margin-bottom: 4px; text-transform: uppercase; }
+
+  .node-gate {
+    background: #1a1208;
+    border: 1.5px solid #5c3d00;
+    color: #f0c87a;
+  }
+  .node-gate .node-label { color: #f5a623; font-size: 10px; font-weight: 700; letter-spacing: 1px; margin-bottom: 4px; text-transform: uppercase; }
+
+  .node-57blocks {
+    background: #1a0a0a;
+    border: 1px solid #4a1a1a;
+    color: #e8a8a8;
+  }
+  .node-57blocks .node-label { color: #e74c3c; font-size: 10px; font-weight: 700; letter-spacing: 1px; margin-bottom: 4px; text-transform: uppercase; }
+
+  .node-output {
+    background: #0a1a1a;
+    border: 1px solid #1a4a4a;
+    color: #a8d8e8;
+  }
+  .node-output .node-label { color: #1abc9c; font-size: 10px; font-weight: 700; letter-spacing: 1px; margin-bottom: 4px; text-transform: uppercase; }
+
+  /* Center spine */
+  .spine {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+  }
+
+  .spine-line {
+    width: 2px;
+    background: #2a2a3a;
+    flex: 1;
+    min-height: 20px;
+  }
+  .spine-line.gap { min-height: 12px; }
+  .spine-line.phase-gap { min-height: 36px; background: transparent; }
+
+  /* Arrow */
+  .arrow {
+    width: 0; height: 0;
+    border-left: 6px solid transparent;
+    border-right: 6px solid transparent;
+    border-top: 8px solid #3a3a5a;
+    flex-shrink: 0;
+  }
+
+  /* Connector dots */
+  .connector {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    padding: 8px 0;
+  }
+  .connector-line {
+    flex: 1;
+    height: 1.5px;
+    background: linear-gradient(90deg, transparent, #3a3a5a);
+  }
+  .connector-line.right { background: linear-gradient(90deg, #3a3a5a, transparent); }
+  .connector-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    border: 1.5px solid #5e5ef0;
+    background: #0f0f13;
+    flex-shrink: 0;
+  }
+  .connector-dot.green { border-color: #2ecc71; }
+  .connector-dot.orange { border-color: #f5a623; }
+  .connector-dot.red { border-color: #e74c3c; }
+
+  /* Special: approval gate row */
+  .gate-row {
+    display: flex;
+    justify-content: center;
+    margin: 4px 0;
+  }
+  .gate-badge {
+    background: #1a1208;
+    border: 1.5px solid #5c3d00;
+    border-radius: 20px;
+    padding: 5px 16px;
+    font-size: 11px;
+    color: #f5a623;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+  }
+
+  /* Column headers */
+  .col-headers {
+    display: grid;
+    grid-template-columns: 180px 1fr 180px;
+    gap: 0;
+    margin-bottom: 20px;
+  }
+  .col-header {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    padding: 6px 12px;
+    border-radius: 6px;
+    text-align: center;
+  }
+  .col-header.customer { background: #0d2818; color: #2ecc71; }
+  .col-header.system   { background: #13132a; color: #5e5ef0; margin: 0 24px; }
+  .col-header.s57      { background: #1a0a0a; color: #e74c3c; }
+
+  /* Touchpoint marker */
+  .touchpoint {
+    position: absolute;
+    right: -8px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: #2ecc71;
+    color: #0d2818;
+    font-size: 9px;
+    font-weight: 800;
+    padding: 2px 6px;
+    border-radius: 10px;
+    white-space: nowrap;
+    letter-spacing: 0.5px;
+  }
+
+  /* Divider */
+  .phase-divider {
+    border: none;
+    border-top: 1px dashed #2a2a3a;
+    margin: 28px 0 20px;
+  }
+
+  /* Final delivery */
+  .final-delivery {
+    background: linear-gradient(135deg, #0a1a2a, #0a2a1a);
+    border: 1.5px solid #1a5c8a;
+    border-radius: 12px;
+    padding: 20px 28px;
+    text-align: center;
+    margin-top: 8px;
+  }
+  .final-delivery .label { font-size: 10px; font-weight: 700; letter-spacing: 2px; color: #1abc9c; text-transform: uppercase; margin-bottom: 8px; }
+  .final-delivery .title { font-size: 16px; font-weight: 600; color: #fff; margin-bottom: 4px; }
+  .final-delivery .desc { font-size: 12px; color: #7a9eae; }
+
+  /* Tooltip-style note */
+  .note {
+    font-size: 11px;
+    color: #666;
+    font-style: italic;
+    margin-top: 4px;
+    line-height: 1.4;
+  }
+
+  /* Step number */
+  .step-num {
+    display: inline-block;
+    width: 18px; height: 18px;
+    border-radius: 50%;
+    background: #2a2a4a;
+    color: #8888cc;
+    font-size: 10px;
+    font-weight: 700;
+    text-align: center;
+    line-height: 18px;
+    margin-right: 6px;
+    flex-shrink: 0;
+  }
+
+  .node-title {
+    display: flex;
+    align-items: center;
+    font-weight: 600;
+  }
+</style>
+</head>
+<body>
+
+<h1>Blueprint — MVP Delivery Workflow</h1>
+<p class="subtitle">从 Idea 到 Dev 环境验收的完整流程</p>
+
+<div class="legend">
+  <div class="legend-item"><div class="legend-dot" style="background:#1a5c32;border:1px solid #2ecc71"></div>客户操作 (Customer)</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#2d2d50;border:1px solid #5e5ef0"></div>AI 自动化 (Blueprint AI)</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#4a1a1a;border:1px solid #e74c3c"></div>57Blocks 介入</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#5c3d00;border:1px solid #f5a623"></div>审批节点 (Gate)</div>
+</div>
+
+<div class="flow">
+
+  <!-- Column headers -->
+  <div class="col-headers">
+    <div class="col-header customer">👤 客户</div>
+    <div class="col-header system">⚡ Blueprint AI</div>
+    <div class="col-header s57">🏢 57Blocks</div>
+  </div>
+
+  <!-- ═══════════════ PHASE 1: DEFINE ═══════════════ -->
+  <div class="phase-label">Phase 1 — Define</div>
+
+  <!-- Step 1: Customer inputs idea -->
+  <div class="step-row">
+    <div class="col-customer">
+      <div class="node node-customer" style="position:relative">
+        <div class="node-label">Step 1</div>
+        <div class="node-title">💬 描述产品想法</div>
+        <div class="note">目标用户、核心功能、现有系统、设计偏好</div>
+        <div class="touchpoint">T1 输入</div>
+      </div>
+    </div>
+    <div class="col-system">
+      <div class="spine">
+        <div class="spine-line gap"></div>
+        <div class="connector">
+          <div class="connector-line"></div>
+          <div class="connector-dot green"></div>
+          <div class="connector-line right" style="background:linear-gradient(90deg,#3a3a5a,transparent)"></div>
+        </div>
+        <div class="spine-line gap"></div>
+      </div>
+    </div>
+    <div class="col-57blocks"></div>
+  </div>
+
+  <!-- Step 2: AI generates PRD -->
+  <div class="step-row">
+    <div class="col-customer"></div>
+    <div class="col-system">
+      <div class="spine">
+        <div class="spine-line gap"></div>
+        <div class="node node-ai" style="max-width:280px;text-align:center">
+          <div class="node-label">AI 自动生成</div>
+          <div class="node-title" style="justify-content:center">📄 PRD 文档</div>
+          <div class="note" style="text-align:left;margin-top:6px">目标用户 · 核心功能 · 用例 · 成功指标 · 约束条件</div>
+        </div>
+        <div class="spine-line gap"></div>
+        <div class="arrow"></div>
+      </div>
+    </div>
+    <div class="col-57blocks"></div>
+  </div>
+
+  <!-- Gate 1: Customer reviews PRD -->
+  <div class="step-row">
+    <div class="col-customer">
+      <div class="node node-gate" style="position:relative">
+        <div class="node-label">审批节点 ①</div>
+        <div class="node-title">✅ Review PRD</div>
+        <div class="note">确认需求范围，可修改后再次生成</div>
+        <div class="touchpoint">T1 确认</div>
+      </div>
+    </div>
+    <div class="col-system">
+      <div class="spine">
+        <div class="spine-line gap"></div>
+        <div class="connector">
+          <div class="connector-line"></div>
+          <div class="connector-dot orange"></div>
+          <div class="connector-line right"></div>
+        </div>
+        <div class="spine-line gap"></div>
+        <div class="arrow"></div>
+      </div>
+    </div>
+    <div class="col-57blocks"></div>
+  </div>
+
+  <!-- Step 3: AI generates UI Spec + Mockup -->
+  <div class="step-row">
+    <div class="col-customer"></div>
+    <div class="col-system">
+      <div class="spine">
+        <div class="spine-line gap"></div>
+        <div class="node node-ai" style="max-width:280px;text-align:center">
+          <div class="node-label">AI 自动生成</div>
+          <div class="node-title" style="justify-content:center">🎨 UI Spec + 高保真 Mockup</div>
+          <div class="note" style="text-align:left;margin-top:6px">页面结构 · 组件规范 · 交互逻辑 · 带品牌色的可交互原型</div>
+        </div>
+        <div class="spine-line gap"></div>
+        <div class="arrow"></div>
+      </div>
+    </div>
+    <div class="col-57blocks"></div>
+  </div>
+
+  <!-- Gate 2: Customer reviews Mockup (most critical) -->
+  <div class="step-row">
+    <div class="col-customer">
+      <div class="node node-gate" style="border-color:#d4870a;position:relative">
+        <div class="node-label" style="color:#d4870a">审批节点 ② ⭐ 最关键</div>
+        <div class="node-title">🖼️ Review 高保真原型</div>
+        <div class="note">确认视觉风格、页面流程、交互体验<br>不满意可调整后重新生成</div>
+        <div class="touchpoint">T2 设计确认</div>
+      </div>
+    </div>
+    <div class="col-system">
+      <div class="spine">
+        <div class="spine-line gap"></div>
+        <div class="connector">
+          <div class="connector-line"></div>
+          <div class="connector-dot orange"></div>
+          <div class="connector-line right"></div>
+        </div>
+        <div class="spine-line gap"></div>
+        <div class="arrow"></div>
+      </div>
+    </div>
+    <div class="col-57blocks"></div>
+  </div>
+
+  <!-- Step 4: AI generates Tech Spec draft -->
+  <div class="step-row">
+    <div class="col-customer"></div>
+    <div class="col-system">
+      <div class="spine">
+        <div class="spine-line gap"></div>
+        <div class="node node-ai" style="max-width:280px;text-align:center">
+          <div class="node-label">AI 自动生成（草稿）</div>
+          <div class="node-title" style="justify-content:center">⚙️ Tech Spec 草稿</div>
+          <div class="note" style="text-align:left;margin-top:6px">架构设计 · 技术选型 · API 设计<br><span style="color:#f5a623">⚠ 标记出所有第三方依赖项</span></div>
+        </div>
+        <div class="spine-line gap"></div>
+        <div class="arrow"></div>
+      </div>
+    </div>
+    <div class="col-57blocks"></div>
+  </div>
+
+  <!-- Step 5: Dependencies resolution (split) -->
+  <div class="step-row">
+    <div class="col-customer">
+      <div class="node node-customer" style="position:relative">
+        <div class="node-label">Step 5a</div>
+        <div class="node-title">🔗 提供第三方依赖</div>
+        <div class="note">现有系统 API Key<br>指定集成服务<br>（仅客户才知道的信息）</div>
+        <div class="touchpoint">T3 技术输入</div>
+      </div>
+    </div>
+    <div class="col-system">
+      <div class="spine">
+        <div class="spine-line gap"></div>
+        <div class="connector">
+          <div class="connector-line"></div>
+          <div class="connector-dot red"></div>
+          <div class="connector-line right" style="background:linear-gradient(90deg,#3a3a5a,#4a1a1a)"></div>
+        </div>
+        <div class="spine-line gap"></div>
+      </div>
+    </div>
+    <div class="col-57blocks">
+      <div class="node node-57blocks">
+        <div class="node-label">Step 5b</div>
+        <div class="node-title">🔧 标准栈兜底</div>
+        <div class="note">客户未指定的依赖<br>使用 Blueprint 标准技术栈<br>（Auth · DB · Cloud · Storage）</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Step 6: AI finalizes Tech Spec + Test Spec -->
+  <div class="step-row">
+    <div class="col-customer"></div>
+    <div class="col-system">
+      <div class="spine">
+        <div class="spine-line gap"></div>
+        <div class="node node-ai" style="max-width:280px;text-align:center">
+          <div class="node-label">AI 自动生成（定稿）</div>
+          <div class="node-title" style="justify-content:center">📋 Tech Spec 定稿 + Test Spec</div>
+          <div class="note" style="text-align:left;margin-top:6px">整合所有依赖 · 验收标准 · 测试策略</div>
+        </div>
+        <div class="spine-line gap"></div>
+        <div class="arrow"></div>
+      </div>
+    </div>
+    <div class="col-57blocks"></div>
+  </div>
+
+  <!-- Step 7: Verify -->
+  <div class="step-row">
+    <div class="col-customer"></div>
+    <div class="col-system">
+      <div class="spine">
+        <div class="spine-line gap"></div>
+        <div class="node node-ai" style="max-width:280px;text-align:center;border-color:#4a4a8a">
+          <div class="node-label">AI 跨文档校验</div>
+          <div class="node-title" style="justify-content:center">🔍 /verify — 一致性检查</div>
+          <div class="note" style="text-align:left;margin-top:6px">PRD · UI Spec · Tech Spec · Test Spec 四份文档互相对齐，发现矛盾立即修正</div>
+        </div>
+        <div class="spine-line gap"></div>
+        <div class="arrow"></div>
+      </div>
+    </div>
+    <div class="col-57blocks"></div>
+  </div>
+
+  <!-- Phase divider -->
+  <hr class="phase-divider">
+
+  <!-- ═══════════════ PHASE 2: IMPLEMENT ═══════════════ -->
+  <div class="phase-label">Phase 2 — Implement（客户无需操作）</div>
+
+  <!-- Step 8: Plan -->
+  <div class="step-row">
+    <div class="col-customer"></div>
+    <div class="col-system">
+      <div class="spine">
+        <div class="spine-line gap"></div>
+        <div class="node node-ai" style="max-width:280px;text-align:center">
+          <div class="node-label">AI 自动生成</div>
+          <div class="node-title" style="justify-content:center">📌 开发计划 (Plan)</div>
+          <div class="note" style="text-align:left;margin-top:6px">功能拆解 · 任务排期 · 依赖关系</div>
+        </div>
+        <div class="spine-line gap"></div>
+        <div class="arrow"></div>
+      </div>
+    </div>
+    <div class="col-57blocks"></div>
+  </div>
+
+  <!-- Step 9: Execute -->
+  <div class="step-row">
+    <div class="col-customer"></div>
+    <div class="col-system">
+      <div class="spine">
+        <div class="spine-line gap"></div>
+        <div class="node node-ai" style="max-width:280px;text-align:center">
+          <div class="node-label">AI 自动执行</div>
+          <div class="node-title" style="justify-content:center">💻 /execute — 代码生成</div>
+          <div class="note" style="text-align:left;margin-top:6px">读取全套规格文档作为约束<br>按 Plan 逐步实现功能</div>
+        </div>
+        <div class="spine-line gap"></div>
+        <div class="arrow"></div>
+      </div>
+    </div>
+    <div class="col-57blocks"></div>
+  </div>
+
+  <!-- Step 10: Test + Review -->
+  <div class="step-row">
+    <div class="col-customer"></div>
+    <div class="col-system">
+      <div class="spine">
+        <div class="spine-line gap"></div>
+        <div class="node node-ai" style="max-width:280px;text-align:center">
+          <div class="node-label">AI 自动验证</div>
+          <div class="node-title" style="justify-content:center">🧪 /test + /review</div>
+          <div class="note" style="text-align:left;margin-top:6px">按 Test Spec 运行测试 · 检测代码漂移 · 生成测试报告</div>
+        </div>
+        <div class="spine-line gap"></div>
+        <div class="arrow"></div>
+      </div>
+    </div>
+    <div class="col-57blocks"></div>
+  </div>
+
+  <!-- Step 11: Deploy -->
+  <div class="step-row">
+    <div class="col-customer"></div>
+    <div class="col-system">
+      <div class="spine">
+        <div class="spine-line gap"></div>
+        <div class="node node-ai" style="max-width:280px;text-align:center">
+          <div class="node-label">AI + 57Blocks</div>
+          <div class="node-title" style="justify-content:center">🚀 部署到 Dev 环境</div>
+          <div class="note" style="text-align:left;margin-top:6px">自动构建 · 容器化 · 部署 · 发送验收链接给客户</div>
+        </div>
+        <div class="spine-line gap"></div>
+        <div class="arrow"></div>
+      </div>
+    </div>
+    <div class="col-57blocks">
+      <div class="node node-57blocks" style="margin-top:20px">
+        <div class="node-label">监控</div>
+        <div class="node-title">🛡️ 质量把控</div>
+        <div class="note">Review 关键节点<br>处理异常情况</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Final Gate: Customer Acceptance -->
+  <div class="step-row" style="margin-top:12px">
+    <div class="col-customer">
+      <div class="node node-gate" style="border-color:#27ae60;background:#0a2010;position:relative">
+        <div class="node-label" style="color:#27ae60">最终验收</div>
+        <div class="node-title">🎯 Dev 环境验收</div>
+        <div class="note">客户测试产品功能<br>提出修改意见或通过验收</div>
+        <div class="touchpoint" style="background:#27ae60">T4 验收</div>
+      </div>
+    </div>
+    <div class="col-system">
+      <div class="spine">
+        <div class="spine-line gap"></div>
+        <div class="connector">
+          <div class="connector-line"></div>
+          <div class="connector-dot" style="border-color:#27ae60"></div>
+          <div class="connector-line right"></div>
+        </div>
+        <div class="spine-line gap"></div>
+      </div>
+    </div>
+    <div class="col-57blocks"></div>
+  </div>
+
+  <!-- Final delivery box -->
+  <div style="margin-top:24px">
+    <div style="display:flex;justify-content:center">
+      <div style="width:2px;height:24px;background:#1a5c8a"></div>
+    </div>
+    <div class="final-delivery">
+      <div class="label">✅ Delivered</div>
+      <div class="title">MVP 交付完成</div>
+      <div class="desc">Blueprint Package · 完整代码库 · 部署在 Dev 环境的可用产品</div>
+    </div>
+  </div>
+
+  <!-- Customer touchpoints summary -->
+  <div style="margin-top:48px;background:#0a0a14;border:1px solid #2a2a3a;border-radius:12px;padding:24px 28px">
+    <div style="font-size:11px;font-weight:700;letter-spacing:2px;color:#555;text-transform:uppercase;margin-bottom:16px">客户全程只有 4 个交互节点</div>
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px">
+      <div style="background:#0d2818;border:1px solid #1a5c32;border-radius:8px;padding:14px">
+        <div style="color:#2ecc71;font-size:11px;font-weight:700;margin-bottom:6px">T1 — 启动</div>
+        <div style="color:#a8e6c0;font-size:12px">描述想法<br>确认 PRD</div>
+      </div>
+      <div style="background:#1a1208;border:1px solid #5c3d00;border-radius:8px;padding:14px">
+        <div style="color:#f5a623;font-size:11px;font-weight:700;margin-bottom:6px">T2 — 设计确认 ⭐</div>
+        <div style="color:#f0c87a;font-size:12px">Review 高保真原型<br>确认视觉设计</div>
+      </div>
+      <div style="background:#0d2818;border:1px solid #1a5c32;border-radius:8px;padding:14px">
+        <div style="color:#2ecc71;font-size:11px;font-weight:700;margin-bottom:6px">T3 — 技术输入</div>
+        <div style="color:#a8e6c0;font-size:12px">提供第三方依赖<br>现有系统信息</div>
+      </div>
+      <div style="background:#0a2010;border:1px solid #27ae60;border-radius:8px;padding:14px">
+        <div style="color:#27ae60;font-size:11px;font-weight:700;margin-bottom:6px">T4 — 验收</div>
+        <div style="color:#a8e6c0;font-size:12px">Dev 环境测试<br>验收或提修改意见</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+</body>
+</html>
