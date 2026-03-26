@@ -2,7 +2,7 @@
 
 ## 📊 概述
 **大版本**: V1（覆盖迭代 1.0 -> 当前）  
-**当前迭代**: 1.12  
+**当前迭代**: 1.13  
 **状态**: Active  
 **创建日期**: 2026-03-24  
 **负责人**: TBD
@@ -54,8 +54,9 @@
 - 从下游阶段回退分为两类：`需求变更` 与 `设计返工`；前者始终拉起 `PM Agent` 会话并在确认后重开 `PRD` 或更上游阶段，后者始终拉起 `UI Designer Agent` 会话并在确认后重开 `UI Spec`
 - 前台呈现为阶段 Agent，后台由 `Orchestrator` 统一调度，但 `Orchestrator` 不以独立人格暴露给用户
 - `Orchestrator` 可读取所有阶段状态和资产，但在 `V1` 中只承担 `阶段绑定 / 路由分发 / 状态迁移 / Gate 控制 / 任务触发` 这五类最小职责，不能直接修改用户资产正文，也不能直接生成文档
-- `Review Agent` 是纯质量守门员，负责阶段前 Review，尤其负责检查 `Mockup` 与设计稿的一致性
+- 当前阶段不设通用 `Review Agent`；`PRD / UI Spec / Tech Spec` 的质量检查由各自阶段 Agent 通过自检完成
 - `Mockup Agent` 作为后台执行者存在，负责构建、运行和重生成 Mockup，但不作为前台可见 Agent 暴露
+- `Mockup Review Agent` 是当前阶段唯一保留的专用 Review 角色，只负责检查 `Mockup` 与 `PRD / UI Spec / 设计稿` 之间的一致性、完整性与漂移
 - `Orchestrator` 允许发出系统确认消息，例如提示阶段重开影响和确认是否继续，但不以人格化 Agent 方式与用户进行多轮对话
 - `Orchestrator` 的路由策略以 AI 自动判断优先；只有在归因低置信度时，才要求用户显式选择处理方向
 - Agent 必须遵守质量约束：不乱编需求、不跨阶段越权修改、输出结构化、每次修改有原因、不确定时主动追问、进入下一阶段前先自检、低置信度结果必须显式提醒
@@ -113,7 +114,7 @@ V1 必须支持以下主链路：
 
 **系统内部 Agent**
 - `Mockup Agent`
-- `Review Agent`
+- `Mockup Review Agent`
 - `Test Agent`
 - `Orchestrator / Workflow Agent`
 
@@ -121,7 +122,7 @@ V1 必须支持以下主链路：
 - 用户前台始终看到当前阶段对应的主 Agent，而不是看到内部调度系统
 - 系统后台由 `Orchestrator` 负责读取上下文、判断意图、选择调用哪个内部或阶段 Agent
 - `Mockup 工作台` 是前台页面，但 `Mockup Agent` 是后台执行者
-- `Review Agent` 不参与前台共创，只承担质量守门员职责
+- `Mockup Review Agent` 不参与前台共创，只承担 `Mockup` 一致性与漂移检查职责
 - `Test Agent` 在 `V1` 作为后台保留能力存在，不前台暴露，也不进入当前交付包
 
 #### Agent 架构图
@@ -144,7 +145,7 @@ flowchart TB
 
     subgraph AGENTS[系统内部 Agent 层]
         MKA[Mockup Agent]
-        RVA[Review Agent]
+        MRA[Mockup Review Agent]
         TSA[Test Agent]
     end
 
@@ -168,7 +169,7 @@ flowchart TB
     DEVUI <--> ORC
 
     ORC --> MKA
-    ORC --> RVA
+    ORC --> MRA
     ORC --> TSA
 
     PRDUI --> PRD
@@ -177,7 +178,7 @@ flowchart TB
     DEVUI --> TEC
 
     MKA --> MCK
-    RVA --> ORC
+    MRA --> ORC
     ORC <--> ST
 
     PRD --> ORC
@@ -230,7 +231,7 @@ flowchart LR
 | `UI Designer Agent` | 用户可见 | 基于 `PRD` 生成 `UI Spec`、理解设计偏好与参考输入、处理设计返工会话、基于设计稿变更回写 `UI Spec` 建议 | 不修改 `PRD` 需求本身 |
 | `Dev Agent` | 用户可见 | 读取 `PRD / UI Spec / 设计稿 / Mockup`，生成结构化 `Tech Spec`，解释技术方案、边界、风险、假设 | 不在 `V1` 改代码，不直接修改 `PRD / UI Spec` |
 | `Mockup Agent` | 系统内部 | 基于上游资产执行 Mockup 构建、运行、重生成与交付预览链接 | 不作为前台对话 Agent，不负责需求归因 |
-| `Review Agent` | 系统内部 | 执行阶段前质量检查，尤其检查 `Mockup` 与设计稿的一致性、完整性和遗漏问题 | 不直接编辑资产，不与用户长期共创 |
+| `Mockup Review Agent` | 系统内部 | 只检查 `Mockup` 与 `PRD / UI Spec / 设计稿` 的一致性、完整性和漂移问题，并输出结构化检查结果 | 不直接编辑资产，不负责 `PRD / UI Spec / Tech Spec` 阶段内自检，不与用户长期共创 |
 | `Test Agent` | 系统内部 | 保留测试规格与后续自动化测试能力，为后续阶段做准备 | `V1` 不生成正式前台产物 |
 | `Orchestrator` | 系统内部 | 读取阶段状态与资产，执行 `阶段绑定 / 路由分发 / 状态迁移 / Gate 控制 / 任务触发`，并协调内部 Agent | 不直接生成文档，不直接修改用户资产正文，不以独立人格长期与用户对话 |
 
@@ -239,7 +240,7 @@ flowchart LR
 - `路由分发`：接收用户入口动作、反馈和系统事件，决定交给哪个阶段 Agent 或内部任务处理
 - `状态迁移`：统一维护 `Draft / In Review / Confirmed / Reopened / Outdated / Regenerating / Reconfirmed` 的合法迁移
 - `Gate 控制`：所有 `确认并进入下一阶段` 的动作都先经过 `Orchestrator` 检查，只有满足条件时才允许推进
-- `任务触发`：负责触发 `Review Agent`、`Mockup Agent`、设计稿读回、重生成等后台任务
+- `任务触发`：负责触发 `Mockup Review Agent`、`Mockup Agent`、设计稿读回、重生成等后台任务
 
 #### 触发与路由规则
 - 用户进入 `PRD` 阶段时，前台默认绑定 `PM Agent`
@@ -270,7 +271,7 @@ flowchart LR
 | `UI Designer Agent` | 已确认 `PRD`、设计偏好、参考截图/链接、设计返工入口意图、设计稿变更摘要 | `UI Spec` 草稿/更新、设计返工方案、回写建议 |
 | `Dev Agent` | `PRD / UI Spec / 设计稿 / Mockup`、阶段状态 | `Tech Spec`、实现风险、假设与边界说明 |
 | `Mockup Agent` | `PRD / UI Spec / 设计稿`、生成参数 | 可运行 `Mockup`、预览链接、重生成结果 |
-| `Review Agent` | 当前阶段产物、上游确认资产 | Review 结果、遗漏清单、一致性问题 |
+| `Mockup Review Agent` | `Mockup`、已确认 `PRD / UI Spec / 设计稿` | `Mockup` 一致性检查结果、漂移项、遗漏清单 |
 | `Orchestrator` | 所有阶段状态、当前资产摘要、用户入口动作与反馈 | 路由决定、系统状态变化、触发任务记录 |
 
 #### 质量与权限约束
@@ -287,7 +288,7 @@ flowchart LR
 - `Orchestrator` 不以 Agent 名称出现，只以系统动作文案呈现，例如：
   - `正在分析反馈归因`
   - `正在路由到 PM Agent`
-  - `正在触发阶段 Review`
+  - `正在触发 Mockup Review`
 - `Orchestrator` 可以发出系统确认消息，例如：
   - `该操作将重开 PRD，并把 UI Spec / 设计稿 / Mockup / Tech Spec 标记为 Outdated，是否确认？`
   - `系统无法高置信判断该问题属于需求还是设计，请选择处理方向`
@@ -298,6 +299,16 @@ flowchart LR
 ---
 
 ## 📋 迭代历史（AI 理解上下文时读这里）
+
+### v1.13 — Review 角色收口为 Mockup Review Agent（2026-03-26）
+**变更内容**：移除当前阶段中的通用 `Review Agent` 定义，改为仅保留 `Mockup Review Agent` 作为专用审查角色，并明确 `PRD / UI Spec / Tech Spec` 的质量检查由各自阶段 Agent 自检完成  
+**变更原因**：对照现有 `review.md` 和 `create-mockup.md` 的实际验证路径后，确认当前阶段真正需要的是 `Mockup` 一致性检查，而不是一个覆盖所有阶段的通用 `Review Agent`。继续保留泛化命名会与各阶段 Agent 自检机制重复，并混淆后续实现阶段的 Review 语义  
+
+**本次新增要点**
+- 删除当前阶段中的通用 `Review Agent` 定义
+- 明确当前阶段只保留 `Mockup Review Agent`
+- 明确 `PRD / UI Spec / Tech Spec` 的质量检查继续由各自阶段 Agent 自检完成
+- 将架构分层、职责边界、输入输出和流程角色中的 `Review Agent` 收口为 `Mockup Review Agent`
 
 ### v1.12 — 架构图与最新 Orchestrator 规则对齐（2026-03-24）
 **变更内容**：更新 `Agent 架构图` 与 `Mockup 反馈与路由架构图`，让图示与最新确认的 `Orchestrator` 最小职责、状态归属和低置信度路由规则保持一致  
@@ -734,7 +745,7 @@ flowchart TD
 ```
 
 ### Flow004: Mockup 反馈归因与再生成
-**涉及角色**: 用户 / 系统 / Review Agent  
+**涉及角色**: 用户 / 系统 / Mockup Review Agent  
 **关联功能**: F013, F014
 
 ```mermaid
