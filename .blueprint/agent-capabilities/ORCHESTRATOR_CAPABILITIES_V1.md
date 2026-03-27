@@ -12,6 +12,8 @@
 它的目标不是生成业务内容，而是确保系统能够：
 
 - 在正确的资产焦点下调用正确的后台 Agent
+- 在会话内维护单一 `active agent` 持续接管
+- 在需要时执行 `handoff` 裁决
 - 为目标 Agent 装配最小必要上下文
 - 统一维护资产状态迁移
 - 在确认动作前执行 Gate 检查
@@ -84,8 +86,27 @@ V1 路由范围：
 落地要求：
 
 - 路由结果必须可追溯到事件类型、资产焦点、来源资产和当前状态
+- 路由必须区分“会话首次命中”与“已有 `active agent` 的持续接管”
 - 对 `Mockup` 反馈必须先区分是需求问题、设计问题还是执行问题
 - 低置信度归因时必须回落到系统确认，而不是伪装成高置信路由
+
+### 2.3.1 `active agent` 持续接管与 `handoff` 能力
+
+必须能维护会话内单一 `active agent`，并在触发条件出现时裁决是否切换。
+
+V1 至少覆盖：
+
+- 会话内默认持续交给当前 `active agent`
+- 当前 Agent 返回 `handoff_request`
+- 高置信度自动切换
+- 低置信度切换先系统确认
+- 会话恢复时恢复最近一次有效的 `active agent`
+
+落地要求：
+
+- `Orchestrator` 是 `active agent` 的唯一写入者
+- `asset focus` 在已有 `active agent` 的情况下只作为弱信号
+- 每次 `handoff` 都必须写入显式系统事件，用于审计和策略优化
 
 ### 2.4 上下文装配能力
 
@@ -112,11 +133,17 @@ V1 至少支持 4 层装配策略：
 V1 最少字段：
 
 - `session_id`
-- `asset_focus`
+- `entry_asset_focus`
+- `current_asset_focus`
 - `based_on_versions`
+- `active_agent`
 - `current_topic`
 - `last_summary`
+- `last_handoff_reason`
+- `last_handoff_confidence`
 - `pending_confirmation`
+- `pending_task`
+- `resume_snapshot`
 - `relevant_decision_ids`
 - `relevant_issue_ids`
 - `relevant_impact_ids`
@@ -126,6 +153,8 @@ V1 最少字段：
 - 新建聊天时初始化会话快照
 - 每轮完成后更新 `last_summary` 与待确认状态
 - 当用户切换资产或来源意图时，能够新建或重绑会话上下文
+- 会话恢复时能够恢复最近一次有效的 `active_agent`
+- 快照内容必须足以支持“继续当前 Agent”而不是被迫每轮重路由
 
 ### 2.6 状态迁移控制能力
 
@@ -206,6 +235,7 @@ V1 至少覆盖：
 V1 至少包括：
 
 - 接收 `PM / UI Designer / Dev` 的自检摘要与确认建议
+- 接收 `PM / UI Designer / Dev / Mockup` 的 `handoff_request`
 - 接收 `Mockup Agent` 的运行结果、预览链接、失败摘要
 - 接收 `Mockup Review Agent` 的问题清单、严重级别和归因建议
 - 更新 `session_index / confirmation_log / impact_log / review_issue_log`
@@ -214,6 +244,7 @@ V1 至少包括：
 
 - 回收结果要结构化，不只保存自然语言
 - 回收结果要能支持下一轮装配和后续审计
+- 若结果包含 `handoff_request`、`needs_confirmation` 或 `affected_assets`，必须写入统一结果对象
 
 ### 2.11 系统透明化输出能力
 
@@ -276,6 +307,7 @@ V1 至少包括：
 - 写入 `confirmation_log`
 - 写入 `impact_log`
 - 读取并写入 `session_index`
+- 写入 `handoff_log`
 - 读取 `review_issue_log`
 
 用途：
@@ -356,6 +388,7 @@ V1 主要场景：
 - 当前用户输入
 - 来源页面或来源资产
 - 是否是新建聊天、变更、返工、反馈或确认回复
+- 当前会话是否已有 `active_agent`
 
 ### 5.3 当前上下文摘要
 
@@ -385,12 +418,14 @@ V1 主要场景：
 - `target_agent_or_task`
 - `routing_confidence`
 - `reason`
+- `routing_mode` (`initial_route` / `continue_active_agent` / `handoff`)
 
 ### 6.2 上下文包结果
 
 - `assembly_level`
 - `included_context_sources`
 - `based_on_versions`
+- `active_agent`
 - `pending_confirmation`
 - `blocking_items`
 
@@ -398,6 +433,7 @@ V1 主要场景：
 
 - `asset_status_updates`
 - `session_updates`
+- `active_agent_update`
 - `impact_updates`
 - `confirmation_updates`
 
@@ -413,6 +449,14 @@ V1 主要场景：
 - `task_status`
 - `task_output_summary`
 - `task_failure_reason`
+
+### 6.6 `handoff` 审计结果
+
+- `from_agent`
+- `to_agent`
+- `trigger_reason`
+- `handoff_confidence`
+- `user_confirmed`
 
 ---
 
@@ -491,4 +535,5 @@ V1 主要场景：
 
 | 版本 | 日期 | 变更说明 |
 |------|------|---------|
+| V1.1 | 2026-03-27 | 对齐 `PRD_V1.md` v1.19，新增 `active agent` 持续接管、`handoff` 裁决、会话恢复字段与审计输出 |
 | V1.0 | 2026-03-26 | 初始版本，定义 Orchestrator 在 Blueprint V1 中的可实现能力项、落地方式、最小输入依赖、标准输出结果、失败降级处理与禁止项 |
