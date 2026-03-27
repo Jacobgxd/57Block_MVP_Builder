@@ -92,7 +92,9 @@ Memory 的作用是：
 - 需求事实以 `PRD` 为准
 - 设计事实以 `UI Spec` 与设计稿摘要为准
 - 技术事实以 `Tech Spec` 为准
-- 系统状态以 `asset_registry` 为准
+- 资产状态以 `asset_registry` 为准
+- 会话状态以 `session_index` 为准
+- `handoff` 历史与切换审计以 `handoff_log` 为准
 
 ### 3.5 权限最小化
 
@@ -138,6 +140,7 @@ Memory 设计必须服务于 `Orchestrator` 的上下文装配，而不是为“
 - 确认日志
 - 影响分析日志
 - 会话索引
+- `handoff` 日志
 - 审查问题日志
 
 特点：
@@ -171,9 +174,13 @@ Memory 设计必须服务于 `Orchestrator` 的上下文装配，而不是为“
 
 - 当前会话属于哪个资产焦点
 - 基于哪个资产版本开始
+- 当前 `active agent`
 - 当前会话主题
 - 当前会话最后结论
+- 最近一次 `handoff` 原因与置信度
 - 待确认项
+- 待执行任务
+- 可恢复快照
 
 特点：
 
@@ -200,7 +207,7 @@ Memory 设计必须服务于 `Orchestrator` 的上下文装配，而不是为“
 
 ## 5. Memory 对象模型
 
-V1 第一版建议定义以下 7 个核心对象。
+V1 第一版建议定义以下 8 个核心对象。
 
 ### 5.1 `project_profile`
 
@@ -296,15 +303,40 @@ V1 第一版建议定义以下 7 个核心对象。
 | 字段 | 说明 |
 |------|------|
 | `session_id` | 会话 ID |
-| `asset_focus` | 当前资产焦点 |
-| `based_on_version` | 基于哪个版本开始 |
+| `entry_asset_focus` | 会话创建时的资产焦点 |
+| `current_asset_focus` | 当前资产焦点 |
+| `based_on_versions` | 基于哪些版本开始 |
 | `source_intent` | 新建 / 变更 / 返工 / 回流 |
+| `active_agent` | 当前持续处理该会话的 Agent |
 | `current_topic` | 当前会话主题 |
 | `last_summary` | 最近一轮摘要 |
+| `last_handoff_reason` | 最近一次切换原因 |
+| `last_handoff_confidence` | 最近一次切换置信度 |
+| `pending_confirmation` | 当前待确认事项 |
+| `pending_task` | 当前待执行任务 |
+| `resume_snapshot` | 会话恢复所需的最小快照 |
 | `created_at` | 创建时间 |
 | `last_active_at` | 最近活跃时间 |
 
-### 5.7 `review_issue_log`
+### 5.7 `handoff_log`
+
+记录会话中的 Agent 切换事件。
+
+建议字段：
+
+| 字段 | 说明 |
+|------|------|
+| `handoff_id` | 切换事件 ID |
+| `session_id` | 所属会话 |
+| `from_agent` | 原处理 Agent |
+| `to_agent` | 目标 Agent |
+| `trigger_reason` | 触发原因 |
+| `confidence` | 切换置信度 |
+| `user_confirmed` | 是否经过用户确认 |
+| `affected_assets` | 关联资产 |
+| `created_at` | 创建时间 |
+
+### 5.8 `review_issue_log`
 
 记录 Review 问题。
 
@@ -335,6 +367,7 @@ V1 第一版建议定义以下 7 个核心对象。
 - `confirmation_log`
 - `impact_log`
 - `session_index`
+- `handoff_log`
 - `review_issue_log`
 
 ### 6.2 仅资产 owner 可写的资产事实
@@ -354,9 +387,13 @@ V1 第一版建议定义以下 7 个核心对象。
 
 - `asset_registry.status`
 - `confirmation_log`
-- `impact_log.executed`
+- `impact_log.confirmed_to_apply / executed_at`
+- `session_index.active_agent`
+- `session_index.pending_confirmation`
+- `session_index.pending_task`
 - 会话入口意图
 - 当前待同步状态
+- `handoff_log`
 
 ### 6.4 Agent 私有短期记忆
 
@@ -381,12 +418,14 @@ Agent 私有短期记忆允许存在，但默认不落长期存储。
 ### 7.2 标准装配流程
 
 1. 识别当前事件类型
-2. 识别当前资产焦点
-3. 识别目标 Agent
-4. 从 Asset Memory 与 Shared Memory 中读取最小必要输入
-5. 组装上下文包
-6. 交给目标 Agent
-7. 回收结果并决定是否更新 Memory
+2. 读取会话级状态，判断是否已有 `active_agent`
+3. 判断当前轮是持续接管还是需要触发 `handoff`
+4. 识别当前资产焦点
+5. 识别目标 Agent
+6. 从 Asset Memory 与 Shared Memory 中读取最小必要输入
+7. 组装上下文包
+8. 交给目标 Agent
+9. 回收结果并决定是否更新 Memory
 
 ### 7.3 最小上下文原则
 
@@ -425,11 +464,17 @@ Agent 私有短期记忆允许存在，但默认不落长期存储。
 建议会话快照至少包括：
 
 - `session_id`
-- `asset_focus`
+- `entry_asset_focus`
+- `current_asset_focus`
 - `based_on_versions`
+- `active_agent`
 - `current_topic`
 - `last_summary`
+- `last_handoff_reason`
+- `last_handoff_confidence`
 - `pending_confirmation`
+- `pending_task`
+- `resume_snapshot`
 - `relevant_decision_ids`
 - `relevant_issue_ids`
 - `relevant_impact_ids`
@@ -440,19 +485,20 @@ Agent 私有短期记忆允许存在，但默认不落长期存储。
 
 ### 8.1 Memory 读写权限
 
-| Agent | 读 `project_profile` | 读 `asset_registry` | 读 `decision_log` | 读 `confirmation_log` | 读 `impact_log` | 读 `session_index` | 读 `review_issue_log` | 写资产正文 | 写系统状态 |
-|------|----------------------|---------------------|-------------------|-----------------------|-----------------|--------------------|-----------------------|-----------|-----------|
-| `Orchestrator` | Yes | Yes | Yes | Yes | Yes | Yes | Yes | No | Yes |
-| `PM Agent` | Yes | Yes | Yes | Yes | Yes | Yes | Yes | `PRD` | No |
-| `UI Designer Agent` | Yes | Yes | Yes | Yes | Yes | Yes | Yes | `UI Spec` / 设计摘要 | No |
-| `Dev Agent` | Yes | Yes | Yes | Yes | Yes | Yes | Yes | `Tech Spec` | No |
-| `Mockup Agent` | Yes | Yes | Limited | Limited | Yes | Yes | Yes | `Mockup` | No |
-| `Mockup Review Agent` | Yes | Yes | Limited | Limited | Yes | Yes | Yes | `Mockup Review` | No |
+| Agent | 读 `project_profile` | 读 `asset_registry` | 读 `decision_log` | 读 `confirmation_log` | 读 `impact_log` | 读 `session_index` | 读 `handoff_log` | 读 `review_issue_log` | 写资产正文 | 写系统状态 |
+|------|----------------------|---------------------|-------------------|-----------------------|-----------------|--------------------|------------------|-----------------------|-----------|-----------|
+| `Orchestrator` | Yes | Yes | Yes | Yes | Yes | Yes | Yes | Yes | No | Yes |
+| `PM Agent` | Yes | Yes | Yes | Yes | Yes | Yes | Yes | Yes | `PRD` | No |
+| `UI Designer Agent` | Yes | Yes | Yes | Yes | Yes | Yes | Yes | Yes | `UI Spec` / 设计摘要 | No |
+| `Dev Agent` | Yes | Yes | Yes | Yes | Yes | Yes | Yes | Yes | `Tech Spec` | No |
+| `Mockup Agent` | Yes | Yes | Limited | Limited | Yes | Yes | Limited | Yes | `Mockup` | No |
+| `Mockup Review Agent` | Yes | Yes | Limited | Limited | Yes | Yes | Limited | Yes | `Mockup Review` | No |
 
 ### 8.2 解释
 
 - `Limited` 表示只能读取与当前轮直接相关的最小子集
 - 所有 Agent 都可跨资产阅读，但不能跨资产写正文
+- `handoff_log` 默认由 `Orchestrator` 主写，其他 Agent 只读与当前轮直接相关的最小子集
 
 ---
 
@@ -494,6 +540,7 @@ Agent 中间推理不进入共享层。
 - `confirmation_log`
 - `impact_log`
 - `session_index`
+- `handoff_log`
 
 ### 第二阶段：执行与审查相关 Memory
 
@@ -522,6 +569,7 @@ V1 不做以下方案：
 - 仅靠向量检索替代结构化状态
 - 让 `Orchestrator` 直接写业务正文
 - 让 Agent 跨资产直接写正文
+- 让专业 Agent 绕过 `Orchestrator` 直接改写 `active_agent` 或切换审计状态
 
 ---
 
@@ -537,5 +585,6 @@ V1 不做以下方案：
 
 | 版本 | 日期 | 变更说明 |
 |------|------|---------|
+| V1.2 | 2026-03-27 | 对齐 `PRD_V1.md` v1.19，补充 `active agent` 会话状态、`handoff_log`、会话快照字段、单一真相源边界与 `Orchestrator` 的系统状态写权限 |
 | V1.1 | 2026-03-26 | 收口为纯 Memory 设计文档，移除能力矩阵、工具与 MCP 分层，仅保留 Memory 分层、对象模型、共享/私有规则、读写权限与装配关系 |
 | V1.0 | 2026-03-26 | 初始版本，定义 Agent Memory 分层、共享/私有边界、核心 Memory 对象模型、Agent 读写权限和首版能力矩阵 |

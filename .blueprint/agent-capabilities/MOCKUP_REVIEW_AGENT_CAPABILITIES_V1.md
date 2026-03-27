@@ -309,6 +309,7 @@ V1 至少包括：
 - 回传结构化审查结论
 - 回传建议路由
 - 回传是否允许推进
+- 必要时回传结构化 `handoff_request`
 
 ### 4.4 与 Mockup Agent 协作
 
@@ -348,6 +349,7 @@ V1 至少包括：
 - 当前审查范围
 - 当前版本信息
 - 当前触发原因
+- 当前 `active_agent`
 
 ### 5.4 可选增强输入
 
@@ -387,6 +389,18 @@ V1 至少包括：
 - `resolved_issue_ids`
 - `unresolved_issue_ids`
 - `new_issue_ids`
+
+### 6.5 协作结果
+
+- `handoff_request`
+- `needs_confirmation`
+- `affected_assets`
+
+规则：
+
+- 默认情况下，`handoff_request` 可为空
+- 若审查结果已足以明确指出建议处理方，必须返回结构化 `handoff_request`
+- `Mockup Review Agent` 只能建议切换，不得直接写入 `active_agent` 或执行资产状态迁移
 
 ---
 
@@ -458,4 +472,5 @@ V1 至少包括：
 
 | 版本 | 日期 | 变更说明 |
 |------|------|---------|
+| V1.1 | 2026-03-27 | 对齐 `PRD_V1.md` v1.19，补充 `active_agent` 输入、统一协作外壳与结构化 `handoff_request` / `needs_confirmation` 结果 |
 | V1.0 | 2026-03-26 | 初始版本，定义 Mockup Review Agent 的多资产对齐、页面完整性检查、流程可体验性检查、问题分级归因、阻断判断、建议路由、回归复查与结构化回传能力 |

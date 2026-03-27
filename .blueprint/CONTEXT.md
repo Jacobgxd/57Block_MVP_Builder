@@ -17,14 +17,15 @@
 
 | 文档 | 文件路径 | 当前版本 | 状态 | 最后更新 | 负责人 |
 |-----|---------|---------|------|---------|------|
-| PRD | `.blueprint/PRD_V1.md` | 1.0 | 🟡 进行中 / ✅ 已确认 / 📦 Archived | - | - |
+| PRD | `.blueprint/PRD_V1.md` | 1.19 | 🟡 进行中 / ✅ 已确认 / 📦 Archived | 2026-03-27 | 引入 `active agent` 持续接管与 `handoff` 协作机制 |
 | UI Spec | `.blueprint/UI_Spec.md` | 1.0 | ⚪ 待生成 | - | - |
 | Mockup | `.blueprint/mockup/` | - | ⚪ 待生成 | - | - |
 | Mockup Review | `reports/mockup-reviews/LATEST.md` | - | ⚪ 待生成 | - | - |
 | Tech Spec | `.blueprint/Tech_Spec.md` | 1.0 | ⚪ 待生成 | - | - |
 | Test Spec | `.blueprint/Test_Spec.md` | 1.0 | ⚪ 待生成 | - | - |
-| Agent Memory | `.blueprint/AGENT_MEMORY_SOLUTION_V1.md` | V1.1 | ✅ 已起草 | 2026-03-26 | 纯 Memory 设计文档，不包含能力与工具设计 |
-| Agent Capabilities | `.blueprint/AGENT_CAPABILITIES_V1.md` | V1.0 | ✅ 已起草 | 2026-03-26 | Agent 能力总索引文档，定义能力框架、落地方式与分文档拆分规划 |
+| Agent Memory | `.blueprint/AGENT_MEMORY_SOLUTION_V1.md` | V1.2 | ✅ 已起草 | 2026-03-27 | 纯 Memory 设计文档，已补充 `active agent` 会话状态、`handoff_log`、会话快照与 Orchestrator 真相源边界 |
+| Agent Capabilities | `.blueprint/AGENT_CAPABILITIES_V1.md` | V1.1 | ✅ 已起草 | 2026-03-27 | Agent 能力总索引文档，已补充 `active agent` 持续接管与统一协作外壳机制 |
+| Agent Mutation Guardrails | `.blueprint/AGENT_MUTATION_GUARDRAILS_V1.md` | V1.1 | ✅ 已起草 | 2026-03-27 | 已补充 `active agent` 真相源、统一协作外壳与结构化 `handoff_request` 底线 |
 | Global Verify | `reports/verify/LATEST.md` | - | ⚪ 待运行 | - | - |
 | Plan | `plans/[feature].md` | - | ⚪ 待生成 | - | - |
 
@@ -36,12 +37,12 @@
 
 | Agent | 文件路径 | 当前版本 | 状态 | 最后更新 | 说明 |
 |------|---------|---------|------|---------|------|
-| PM Agent | `.blueprint/agent-prompts/PM_AGENT_V1.md` | V1.0 | ✅ 已起草 | 2026-03-26 | 前台 PRD 阶段 Agent |
-| UI Designer Agent | `.blueprint/agent-prompts/UI_DESIGNER_AGENT_V1.md` | V1.0 | ✅ 已起草 | 2026-03-26 | 前台 UI 设计阶段 Agent |
-| Orchestrator | `.blueprint/agent-prompts/ORCHESTRATOR_AGENT_V1.md` | V1.0 | ✅ 已起草 | 2026-03-26 | 系统状态与路由中枢 |
-| Mockup Agent | `.blueprint/agent-prompts/MOCKUP_AGENT_V1.md` | V1.0 | ✅ 已起草 | 2026-03-26 | 后台 Mockup 构建执行 Agent |
-| Mockup Review Agent | `.blueprint/agent-prompts/MOCKUP_REVIEW_AGENT_V1.md` | V1.0 | ✅ 已起草 | 2026-03-26 | 后台 Mockup 专项审查 Agent |
-| Dev Agent | `.blueprint/agent-prompts/DEV_AGENT_V1.md` | V1.0 | ✅ 已起草 | 2026-03-26 | 前台 Tech Spec 阶段 Agent |
+| PM Agent | `.blueprint/agent-prompts/PM_AGENT_V1.md` | V1.1 | ✅ 已起草 | 2026-03-27 | 前台 PRD 阶段 Agent，已补充 `active agent` / `handoff_request` 协作语义 |
+| UI Designer Agent | `.blueprint/agent-prompts/UI_DESIGNER_AGENT_V1.md` | V1.1 | ✅ 已起草 | 2026-03-27 | 前台 UI 设计阶段 Agent，已补充 `active agent` / `handoff_request` 协作语义 |
+| Orchestrator | `.blueprint/agent-prompts/ORCHESTRATOR_AGENT_V1.md` | V1.1 | ✅ 已起草 | 2026-03-27 | 系统状态与路由中枢，已补充会话持续接管与 `handoff` 裁决语义 |
+| Mockup Agent | `.blueprint/agent-prompts/MOCKUP_AGENT_V1.md` | V1.1 | ✅ 已起草 | 2026-03-27 | 后台 Mockup 构建执行 Agent，已补充统一协作外壳与可选 `handoff_request` |
+| Mockup Review Agent | `.blueprint/agent-prompts/MOCKUP_REVIEW_AGENT_V1.md` | V1.1 | ✅ 已起草 | 2026-03-27 | 后台 Mockup 专项审查 Agent，已补充统一协作外壳与结构化 `handoff_request` |
+| Dev Agent | `.blueprint/agent-prompts/DEV_AGENT_V1.md` | V1.1 | ✅ 已起草 | 2026-03-27 | 前台 Tech Spec 阶段 Agent，已补充 `active agent` / `handoff_request` 协作语义 |
 
 **说明**：
 - 前台可继续使用 `Blueprint AI` 作为统一展示名，但它不再作为独立 Agent Prompt 存在。
@@ -54,12 +55,12 @@
 
 | Agent | 文件路径 | 当前版本 | 状态 | 最后更新 | 说明 |
 |------|---------|---------|------|---------|------|
-| Orchestrator | `.blueprint/agent-capabilities/ORCHESTRATOR_CAPABILITIES_V1.md` | V1.0 | ✅ 已起草 | 2026-03-26 | 定义系统执行中枢的事件识别、路由、装配、状态迁移、轻确认、任务触发与结果回收能力 |
-| PM Agent | `.blueprint/agent-capabilities/PM_AGENT_CAPABILITIES_V1.md` | V1.0 | ✅ 已起草 | 2026-03-26 | 定义需求澄清、结构化 PRD 生成、需求变更吸收、影响分析输入准备、自检与确认前准备能力 |
-| UI Designer Agent | `.blueprint/agent-capabilities/UI_DESIGNER_AGENT_CAPABILITIES_V1.md` | V1.0 | ✅ 已起草 | 2026-03-26 | 定义 UI Spec 生成、设计系统定义、Paper/Figma 设计稿生成与读回、同步判断、设计返工与自检能力 |
-| Mockup Agent | `.blueprint/agent-capabilities/MOCKUP_AGENT_CAPABILITIES_V1.md` | V1.0 | ✅ 已起草 | 2026-03-26 | 定义 Mockup 的上游资产读取、范围提取、构建运行、预览交付、Review 问题吸收、局部重生成与失败降级能力 |
-| Mockup Review Agent | `.blueprint/agent-capabilities/MOCKUP_REVIEW_AGENT_CAPABILITIES_V1.md` | V1.0 | ✅ 已起草 | 2026-03-26 | 定义 Mockup 的多资产对齐审查、问题分级归因、阻断判断、建议路由与回归复查能力 |
-| Dev Agent | `.blueprint/agent-capabilities/DEV_AGENT_CAPABILITIES_V1.md` | V1.0 | ✅ 已起草 | 2026-03-26 | 定义多资产收敛、技术选型、系统架构、Mockup 对齐、数据模型、接口契约、风险与未决项管理、Tech Spec 生成与自检能力 |
+| Orchestrator | `.blueprint/agent-capabilities/ORCHESTRATOR_CAPABILITIES_V1.md` | V1.1 | ✅ 已起草 | 2026-03-27 | 定义系统执行中枢的事件识别、路由、装配、状态迁移、轻确认、任务触发、`active agent` 持续接管与 `handoff` 裁决能力 |
+| PM Agent | `.blueprint/agent-capabilities/PM_AGENT_CAPABILITIES_V1.md` | V1.1 | ✅ 已起草 | 2026-03-27 | 定义需求澄清、结构化 PRD 生成、需求变更吸收、自检与面向 Orchestrator 的结构化协作结果 |
+| UI Designer Agent | `.blueprint/agent-capabilities/UI_DESIGNER_AGENT_CAPABILITIES_V1.md` | V1.1 | ✅ 已起草 | 2026-03-27 | 定义 UI Spec 生成、设计系统定义、Paper/Figma 设计稿生成与读回、自检与面向 Orchestrator 的结构化协作结果 |
+| Mockup Agent | `.blueprint/agent-capabilities/MOCKUP_AGENT_CAPABILITIES_V1.md` | V1.1 | ✅ 已起草 | 2026-03-27 | 定义 Mockup 的上游资产读取、范围提取、构建运行、预览交付、Review 问题吸收，以及统一协作外壳与结构化回传能力 |
+| Mockup Review Agent | `.blueprint/agent-capabilities/MOCKUP_REVIEW_AGENT_CAPABILITIES_V1.md` | V1.1 | ✅ 已起草 | 2026-03-27 | 定义 Mockup 的多资产对齐审查、问题分级归因、阻断判断、回归复查，以及统一协作外壳与结构化切换建议 |
+| Dev Agent | `.blueprint/agent-capabilities/DEV_AGENT_CAPABILITIES_V1.md` | V1.1 | ✅ 已起草 | 2026-03-27 | 定义多资产收敛、技术选型、系统架构、Mockup 对齐、Tech Spec 生成、自检与面向 Orchestrator 的结构化协作结果 |
 
 ---
 
@@ -106,6 +107,12 @@ YYYY-MM-DD  [步骤] [命令] — [做了什么，为什么]
 2026-03-26  [Architecture Spec] [manual] — 新增 Mockup Agent Capability 分文档，细化 Mockup 构建运行、预览链接、Review 问题吸收、局部重生成、结构化回传与失败降级能力
 2026-03-26  [Architecture Spec] [manual] — 新增 Mockup Review Agent Capability 分文档，细化多资产对齐审查、问题分级归因、阻断判断、建议路由、回归复查与结构化回传能力
 2026-03-26  [Architecture Spec] [manual] — 新增 Dev Agent Capability 分文档，细化多资产收敛、技术选型、系统架构、Mockup 对齐、数据模型、接口契约、风险与未决项管理、Tech Spec 生成与自检能力
+2026-03-26  [Architecture Spec] [manual] — 新增 Agent Mutation Guardrails 文档，收口“各 Agent 各自控制生成/更新，系统统一控制底线”的 readiness、确认门、gap 分级、结构化回传与 Orchestrator 职责边界
+2026-03-27  [PRD] [/create-prd] — 将 `PRD_V1.md` 更新到 v1.19，明确 `active agent` 会话持续接管、`Orchestrator` 旁路观察与结构化 `handoff` 机制
+2026-03-27  [Architecture Spec] [manual] — 更新 `AGENT_MEMORY_SOLUTION_V1.md` 到 V1.2，补齐 `active agent` 会话状态、`handoff_log`、会话快照、切换审计与 `Orchestrator` 系统状态写边界
+2026-03-27  [Architecture Spec] [manual] — 同步更新 `Orchestrator / PM Agent` 的 Prompt 与 Capability 文档，对齐 `active agent`、`handoff_request`、会话恢复与结构化协作契约
+2026-03-27  [Architecture Spec] [manual] — 继续同步更新 `UI Designer / Dev / Mockup` 的 Prompt 与 Capability 文档，以及 `AGENT_CAPABILITIES_V1.md` 总索引，对齐 `active agent`、统一协作外壳与结构化 `handoff_request` 机制
+2026-03-27  [Architecture Spec] [manual] — 同步更新 `Mockup Review Agent` 的 Prompt 与 Capability 文档，以及 `AGENT_MUTATION_GUARDRAILS_V1.md`，把审查型 Agent 和全局 guardrails 也纳入 `active agent` / 统一协作外壳机制
 ```
 
 ---

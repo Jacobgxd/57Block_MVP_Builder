@@ -383,6 +383,7 @@ V1 至少涉及：
 - 回传结构化执行结果
 - 在阻断时回传明确失败原因
 - 在重生成场景中回传受影响范围
+- 必要时回传结构化 `handoff_request`
 
 ### 4.5 与 Mockup Review Agent 协作
 
@@ -413,6 +414,7 @@ V1 至少涉及：
 - 当前版本信息
 - 当前生成范围
 - 当前变更摘要或 Review 问题清单
+- 当前 `active_agent`
 
 ### 5.3 运行输入
 
@@ -459,6 +461,18 @@ V1 至少涉及：
 - `regenerated_scope`
 - `resolved_review_items`
 - `remaining_review_risks`
+
+### 6.5 协作结果
+
+- `handoff_request`
+- `needs_confirmation`
+- `affected_assets`
+
+规则：
+
+- 默认情况下，`handoff_request` 为空
+- 若执行中发现问题本质上属于需求缺口、设计冲突或需先由系统确认范围，必须返回结构化 `handoff_request`
+- `Mockup Agent` 只能建议切换，不得直接写入 `active_agent` 或触发上游资产更新
 
 ---
 
@@ -553,4 +567,5 @@ V1 至少涉及：
 
 | 版本 | 日期 | 变更说明 |
 |------|------|---------|
+| V1.1 | 2026-03-27 | 对齐 `PRD_V1.md` v1.19，补充 `active_agent` 输入、统一协作外壳与结构化 `handoff_request` / `needs_confirmation` 结果 |
 | V1.0 | 2026-03-26 | 初始版本，定义 Mockup Agent 的上游资产读取、范围提取、构建运行、预览交付、Review 问题吸收、局部重生成、结构化回传与失败降级能力 |

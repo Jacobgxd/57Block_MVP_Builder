@@ -341,6 +341,7 @@ V1 至少检查：
 - 回传 `Tech Spec` 更新结果
 - 回传实现风险、未决项和确认建议
 - 回传上游冲突与建议路由
+- 必要时回传结构化 `handoff_request`
 
 ### 4.4 与上游 / 下游 Agent 协作
 
@@ -379,6 +380,7 @@ V1 至少检查：
 - 当前 `Tech Spec` 版本或空白骨架
 - 当前会话入口意图
 - 当前资产状态
+- 当前 `active_agent`
 
 ### 5.4 可选增强输入
 
@@ -425,6 +427,19 @@ V1 至少检查：
 - `self_check_summary`
 - `remaining_gaps`
 - `ready_for_confirmation`
+
+### 6.6 协作结果
+
+- `user_visible_reply`
+- `handoff_request`
+- `needs_confirmation`
+- `affected_assets`
+
+规则：
+
+- 若当前轮仍属于技术方案范围，`handoff_request` 默认为空
+- 若判断当前问题已进入需求层、设计层或需要执行型任务，必须返回结构化 `handoff_request`
+- `Dev Agent` 只能建议切换，不得直接写入 `active_agent`
 
 ---
 
@@ -501,4 +516,5 @@ V1 至少检查：
 
 | 版本 | 日期 | 变更说明 |
 |------|------|---------|
+| V1.1 | 2026-03-27 | 对齐 `PRD_V1.md` v1.19，补充 `active_agent` 输入、结构化 `handoff_request` 协作结果与 Orchestrator 协作契约 |
 | V1.0 | 2026-03-26 | 初始版本，定义 Dev Agent 的多资产收敛、技术选型、系统架构、Mockup 对齐、数据模型、接口契约、风险与未决项管理、Tech Spec 生成与自检能力 |

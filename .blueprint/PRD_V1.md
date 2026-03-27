@@ -2,7 +2,7 @@
 
 ## 📊 概述
 **大版本**: V1（覆盖迭代 1.0 -> 当前）  
-**当前迭代**: 1.16  
+**当前迭代**: 1.19  
 **状态**: Active  
 **创建日期**: 2026-03-24  
 **负责人**: TBD
@@ -45,6 +45,9 @@
 - 右侧永远是当前资产预览区；随当前聚焦资产切换为文档、设计稿、原型或交付摘要视图
 - 历史会话为项目级能力，但每条会话都绑定创建时的资产焦点与上下文来源
 - 新建会话默认继承当前项目上下文，并以当前聚焦资产作为起点
+- 每条会话除创建时的资产焦点与上下文来源外，还必须持久记录 `active agent`、最近一次 `handoff` 原因、待确认事项、受影响资产和待执行任务
+- 同一会话在任一时刻只允许一个 `active agent`；默认由该 Agent 连续处理多轮对话，`Orchestrator` 只做旁路观察，不应在每一轮都重新完整路由
+- 会话恢复时，系统必须恢复最近一次有效的 `active agent` 与相关待处理状态，避免用户返回后丢失当前讨论模式
 - `PRD` 是默认首个聚焦资产；项目创建后 AI 主动引导用户从 PRD 初稿共创开始
 - `UI Spec` 是主线设计资产，设计稿是可视化产物；若设计稿被人工修改，系统需识别变更摘要并提示是否同步回 `UI Spec`
 - `Mockup` 定义为接近真实网页体验的可交互前端原型，使用 mock 数据还原核心流程
@@ -57,12 +60,12 @@
 - 当用户提出新的需求、设计变更或反馈，且系统判断会影响上游文档、当前基线或需要重生成设计稿/Mockup 时，必须先给出影响分析，并由用户确认是否执行更新或重生成
 - 从下游资产返回分为两类：`需求变更` 与 `设计返工`；系统先由统一 AI 与用户澄清，再在必要时调用后台专业 Agent 完成对应文档更新与重生成
 - 后台由 `Orchestrator` 统一调度，但 `Orchestrator` 不以独立人格暴露给用户
-- `Orchestrator` 可读取所有资产状态和版本，但在 `V1` 中只承担 `意图路由 / 上下文装配 / 状态迁移 / 轻确认控制 / 任务触发` 这五类最小职责，不能直接修改用户资产正文，也不能直接生成文档
+- `Orchestrator` 可读取所有资产状态、会话状态和版本，但在 `V1` 中只承担 `初始路由 / 持续接管治理 / handoff 裁决 / 上下文装配 / 状态迁移 / 轻确认控制 / 任务触发 / 结果回收` 这些最小职责，不能直接修改用户资产正文，也不能直接生成文档
 - 当前阶段不设通用 `Review Agent`；`PRD / UI Spec / Tech Spec` 的质量检查由对应后台能力或自检机制完成
 - `Mockup Agent` 作为后台执行者存在，负责构建、运行和重生成 Mockup，但不作为前台可见 Agent 暴露
 - `Mockup Review Agent` 是当前阶段唯一保留的专用 Review 角色，只负责检查 `Mockup` 与 `PRD / UI Spec / 设计稿` 之间的一致性、完整性与漂移
 - `Orchestrator` 允许在对话中发出系统确认消息，例如提示影响范围、是否更新对应文档、是否重生成设计稿或 Mockup，但不以人格化 Agent 方式与用户进行多轮对话
-- `Orchestrator` 的路由策略以 AI 自动判断优先；只有在归因低置信度时，才要求用户显式选择处理方向
+- `Orchestrator` 的路由策略采用 `首次命中 + 会话持续接管 + 条件触发切换`：首次路由由 AI 自动判断优先；进入稳定会话后默认保持当前 `active agent`，只有在切换触发条件出现时才重新裁决；低置信度时再要求用户显式选择处理方向
 - Agent 必须遵守质量约束：不乱编需求、不跨资产越权修改、输出结构化、每次修改有原因、不确定时主动追问、关键资产确认前先自检、低置信度结果必须显式提醒
 
 ### V1 交付范围
@@ -127,10 +130,20 @@ V1 必须支持以下主链路：
 
 #### 总体架构原则
 - 用户前台始终只看到统一工作台、统一对话入口和当前资产视图，而不是看到内部专业 Agent
-- 系统后台由 `Orchestrator` 负责读取上下文、判断意图、选择调用哪个内部 Agent；被命中的专业 Agent 直接生成当前轮用户可见内容
+- 系统后台由 `Orchestrator` 负责读取会话状态、判断初始意图、选择调用哪个内部 Agent；被命中的专业 Agent 直接生成当前轮用户可见内容
+- 同一会话在任一时刻只有一个 `active agent`；若当前会话已存在 `active agent`，后续消息默认继续交给该 Agent 处理，`Orchestrator` 每轮只做旁路观察，不做默认重路由
+- 各专业 Agent 对各自资产拥有生成 / 更新控制权；`Orchestrator` 统一负责会话状态、路由 / handoff、上下文装配、确认门、状态迁移、任务触发与结果回收，但不统一接管所有资产的具体落地执行
+- `asset focus` 是重要上下文信号，但在已有 `active agent` 的会话中只作为弱信号，不能仅因用户切换左侧资产就强制打断当前话题
+- `active agent`、`handoff`、待确认事项和执行型任务必须保存在可恢复的会话状态中，并由 `Orchestrator` 作为唯一真相源维护
 - `Mockup` 是前台可预览资产，但 `Mockup Agent` 是后台执行者
 - `Mockup Review Agent` 不参与前台共创，只承担 `Mockup` 一致性与漂移检查职责
 - `Test Agent` 在 `V1` 作为后台保留能力存在，不前台暴露，也不进入当前交付包
+
+#### 实现分层原则
+- 该机制不能仅依赖各 Agent Prompt 自行“记住”当前处理模式；必须由 `Orchestrator` 所在的编排 / 状态层持久维护 `active agent`、`handoff` 和确认门状态
+- 专业 Agent 的返回结果必须支持结构化字段，例如 `user_visible_reply`、`confidence`、`handoff_request`、`needs_confirmation`、`affected_assets`
+- `agent-prompts/*` 负责定义各 Agent 的行为约束、切换意识与表达方式；`agent-capabilities/*` 负责定义能力边界、可执行动作和结构化返回契约
+- 真正的路由裁决、`active agent` 切换执行、状态持久化、审计日志记录和执行型任务触发，必须由工作流 / 后端编排层落地，而不是由 Prompt 文本单独承担
 
 #### Agent 架构图
 
@@ -199,7 +212,44 @@ flowchart TB
     TEC --> ORC
 ```
 
-##### 图 2：Mockup 反馈与路由架构
+##### 图 2：会话持续协作与 Handoff 架构
+```mermaid
+flowchart LR
+    U[用户发送消息]
+    CHAT[统一对话入口<br/>展示名：Blueprint AI]
+    ORC[Orchestrator]
+    HAS{当前会话是否已有<br/>active agent?}
+    INIT[按入口意图 + 上下文<br/>执行初始路由]
+    AG[当前 active agent]
+    RESP[结构化结果<br/>reply / confidence / handoff_request]
+    OBS[Orchestrator 旁路观察]
+    TRIGGER{是否触发切换 / 确认 / 任务?}
+    HIGH{切换置信度是否足够高?}
+    SYS[系统确认<br/>选择处理方向]
+    SWITCH[更新 active agent<br/>写入 handoff 事件]
+    TASK[触发执行型任务<br/>Review / 重生成 / 同步]
+    STATE[更新会话状态<br/>确认记录 / 影响记录]
+
+    U --> CHAT
+    CHAT --> ORC
+    ORC --> HAS
+    HAS -->|否| INIT
+    HAS -->|是| AG
+    INIT --> AG
+    AG --> RESP
+    RESP --> OBS
+    OBS --> TRIGGER
+    TRIGGER -->|否| STATE
+    TRIGGER -->|是| HIGH
+    HIGH -->|高置信度| SWITCH
+    HIGH -->|低置信度| SYS
+    SYS --> SWITCH
+    SWITCH --> TASK
+    TASK --> STATE
+    STATE --> ORC
+```
+
+##### 图 3：Mockup 反馈与路由架构
 ```mermaid
 flowchart LR
     U[用户在统一工作台中反馈]
@@ -210,6 +260,9 @@ flowchart LR
     PM[PM Agent]
     UID[UI Designer Agent]
     MKA[Mockup Agent]
+    PROP[专业 Agent 形成更新 / 重生成建议]
+    CONFIRM{用户是否确认执行?}
+    STATE[Orchestrator 更新状态<br/>确认记录 / 影响记录]
     PRD[PRD]
     UIS[UI Spec]
     MCK[Mockup]
@@ -226,12 +279,24 @@ flowchart LR
     SYS -->|交给 PM Agent| PM
     SYS -->|交给 UI Designer Agent| UID
 
-    PM --> PRD
-    UID --> UIS
+    PM --> PROP
+    UID --> PROP
+    MKA --> PROP
+
+    PROP --> CONFIRM
+
+    CONFIRM -->|确认更新 PRD| PRD
+    CONFIRM -->|确认更新 UI Spec| UIS
+    CONFIRM -->|确认重生成 Mockup| MKA
     MKA --> MCK
+
+    PRD --> STATE
+    UIS --> STATE
+    MCK --> STATE
 
     PRD -.影响重生成.-> MKA
     UIS -.影响重生成.-> MKA
+    STATE --> ORC
 ```
 
 #### 各 Agent 职责边界
@@ -244,52 +309,81 @@ flowchart LR
 | `Mockup Agent` | 系统内部 | 基于上游资产执行 Mockup 构建、运行、重生成与交付预览链接 | 不作为前台对话 Agent，不负责需求归因 |
 | `Mockup Review Agent` | 系统内部 | 只检查 `Mockup` 与 `PRD / UI Spec / 设计稿` 的一致性、完整性和漂移问题，并输出结构化检查结果 | 不直接编辑资产，不负责 `PRD / UI Spec / Tech Spec` 阶段内自检，不与用户长期共创 |
 | `Test Agent` | 系统内部 | 保留测试规格与后续自动化测试能力，为后续阶段做准备 | `V1` 不生成正式前台产物 |
-| `Orchestrator` | 系统内部 | 读取资产状态与会话上下文，执行 `意图路由 / 上下文装配 / 状态迁移 / 轻确认控制 / 任务触发`，并协调内部 Agent | 不直接生成文档，不直接修改用户资产正文，不以独立人格长期与用户对话 |
+| `Orchestrator` | 系统内部 | 读取资产状态与会话上下文，执行 `初始路由 / active agent 持续接管治理 / handoff 裁决 / 上下文装配 / 状态迁移 / 轻确认控制 / 任务触发 / 结果回收`，并协调内部 Agent | 不直接生成文档，不统一接管所有资产的具体落地执行，不以独立人格长期与用户对话 |
 
 #### Orchestrator V1 最小职责
-- `意图路由`：根据当前会话与资产焦点，将用户输入路由到正确的后台 Agent 或内部任务
+- `初始路由`：在会话启动或当前会话尚无 `active agent` 时，根据入口意图与上下文将用户输入路由到正确的后台 Agent
+- `持续接管治理`：在已有 `active agent` 的会话中，默认将后续消息继续交给当前 Agent，并维护其可恢复状态
+- `handoff 裁决`：当出现切换触发条件时，决定是否执行 `active agent` 切换，并在低置信度时发起系统确认
 - `上下文装配`：在统一对话入口下为后台 Agent 注入当前资产、相关上游资产、历史会话摘要和来源版本
 - `状态迁移`：统一维护资产的 `待完善 / 完善中 / 已确认 / 待同步 / 重生成中` 等用户可见状态，以及对应系统内部状态
 - `轻确认控制`：在关键资产确认、文档更新、影响范围同步、重生成等动作发生前，先生成系统确认并等待用户执行
 - `任务触发`：负责触发 `Mockup Review Agent`、`Mockup Agent`、设计稿读回、重生成等后台任务
+- `结果回收`：回收各专业 Agent 的结构化结果，并据此更新状态、确认记录和影响记录
+
+#### 会话状态模型
+- 每个会话必须至少维护以下字段：`session_id`、`entry_asset_focus`、`current_asset_focus`、`active_agent`、`last_handoff_reason`、`last_handoff_confidence`、`pending_confirmation`、`affected_assets`、`pending_task`、`resume_snapshot`
+- `Orchestrator` 是唯一允许写入上述系统会话状态的角色；专业 Agent 可以提出建议，但不能直接改写 `active_agent` 或系统确认状态
+- 用户重新进入既有会话时，系统必须优先恢复最近一次有效的 `resume_snapshot`，包括 `active agent`、未完成确认和待执行任务
+- `handoff` 必须记录为显式系统事件，至少包含 `from_agent`、`to_agent`、`trigger_reason`、`confidence`、`user_confirmed`、`affected_assets`，用于调试、审计和策略优化
 
 #### 触发与路由规则
 - 用户在统一工作台中点击某个资产时，系统切换当前资产焦点，但前台仍保持统一对话入口与统一展示名
-- 项目创建成功后，系统默认打开 `PRD`，并由被路由命中的专业 Agent 直接引导用户从 PRD 初稿共创开始
-- 用户在 `PRD` 相关对话中输入时，后台默认调用 `PM Agent`
-- 用户在 `UI Spec / 设计稿` 相关对话中输入时，后台默认调用 `UI Designer Agent`
-- 用户在 `Tech Spec` 相关对话中输入时，后台默认调用 `Dev Agent`
-- 用户在 `Mockup` 相关视图中提交反馈时，先由 `Orchestrator` 判断：
+- 项目创建成功后，系统默认打开 `PRD`；若当前会话尚无 `active agent`，则由 `Orchestrator` 首次命中 `PM Agent`，并由其直接引导用户从 PRD 初稿共创开始
+- 当会话已存在 `active agent` 时，后续消息默认继续交给该 Agent；`Orchestrator` 每轮只做旁路观察，不因普通连续对话而重新完整路由
+- `asset focus` 在已有 `active agent` 的情况下仅作为弱信号；若用户切换左侧资产但消息内容明显延续当前话题，应优先保持当前 `active agent`
+- 若当前会话尚无 `active agent`，或用户显式要求切换处理方向，则初始路由优先采用以下默认命中：
+  - `PRD` 相关对话优先命中 `PM Agent`
+  - `UI Spec / 设计稿` 相关对话优先命中 `UI Designer Agent`
+  - `Tech Spec` 相关对话优先命中 `Dev Agent`
+  - `Mockup` 相关执行或反馈优先由 `Orchestrator` 判断是否命中 `PM Agent / UI Designer Agent / Mockup Agent`
+- 出现以下任一情况时，当前 Agent 应将本轮结果标记为 `handoff_request`，并交由 `Orchestrator` 裁决：
+  - 用户明确切换到另一类资产或另一类任务
+  - 当前 Agent 判断问题已超出自身职责边界
+  - 当前输入低置信度，无法确定归属
+  - 涉及跨资产影响，需要统一确认
+  - 需要触发执行型任务，如 `Mockup` 重生成、`Mockup Review`、设计稿读回或同步
+  - 用户主动要求“换一个 Agent 处理”
+- 当前 `active agent` 必须具备主动请求切换的能力，但不能自行完成切换；切换最终只能由 `Orchestrator` 执行
+- 若 `handoff` 置信度足够高，则 `Orchestrator` 自动切换 `active agent` 并记录系统事件；若置信度不足，则先发起系统确认，再决定交给哪个 Agent
+- 用户在 `Mockup` 相关视图中提交反馈且当前会话需要重新判断时，先由 `Orchestrator` 判断：
   - 若属于需求问题，拉起 `PM Agent`
   - 若属于 UI / 设计问题，拉起 `UI Designer Agent`
   - 若仅需重生成 Mockup，则调用 `Mockup Agent`
-- 若 `Orchestrator` 对问题归因的置信度不足，不直接自动路由，而是先弹出系统确认，让用户选择交给 `PM Agent` 或 `UI Designer Agent`
 - 当用户提出会影响已有基线的新需求、设计修改或生成请求时，系统必须先展示影响范围，再等待用户确认是否执行更新或重生成
+- 在用户确认执行前，对应专业 Agent 应先形成本轮的更新建议、重生成建议或确认摘要；`Orchestrator` 不直接代替专业 Agent 生成业务正文或执行复杂资产落地
 
 #### 轻确认与影响控制规则
-- 所有关键资产的 `确认当前基线`、`更新对应文档`、`同步影响范围`、`重生成设计稿/Mockup` 都必须先由 AI 在对话中给出自检结果或影响分析摘要，再由用户在对话中明确确认，随后由 `Orchestrator` 执行最终裁决
+- 所有关键资产的 `确认当前基线`、`更新对应文档`、`同步影响范围`、`重生成设计稿/Mockup` 都必须先由对应专业 Agent 在对话中给出自检结果、更新建议或影响分析摘要，再由用户在对话中明确确认，随后由 `Orchestrator` 执行最终控制裁决
 - `Orchestrator` 在执行这些动作前，必须统一完成以下检查：
   - 当前资产是否已满足最低输入和前置条件
   - 是否需要触发该资产对应的自检或 `Mockup Review`
   - 是否存在未处理反馈、未处理设计变更或未确认的低置信度项
   - 本次动作会影响哪些其他资产，是否需要同步更新或标记待同步
-- 只有在检查通过且 `Owner` 在对话中明确确认后，`Orchestrator` 才能执行基线确认、文档更新或重生成
+- 只有在检查通过且 `Owner` 在对话中明确确认后，系统才允许对应 owner Agent 执行资产生成 / 更新 / 重生成；`Orchestrator` 负责触发动作、回收结果、更新状态并记录确认与影响
 - 若检查不通过，页面只展示失败原因和下一步引导，不允许自行跳过确认
 
 #### 输入上下文与输出资产
 
 | Agent | 读取上下文 | 输出结果 |
 |------|---------|---------|
-| `PM Agent` | 项目基础信息、当前 PRD 版本、历史会话、需求变更入口意图 | `PRD` 草稿/更新、需求澄清问题、需求变更方案 |
-| `UI Designer Agent` | 已确认 `PRD`、设计偏好、参考截图/链接、设计返工入口意图、设计稿变更摘要 | `UI Spec` 草稿/更新、设计返工方案、回写建议 |
-| `Dev Agent` | `PRD / UI Spec / 设计稿 / Mockup`、资产状态 | `Tech Spec`、实现风险、假设与边界说明 |
-| `Mockup Agent` | `PRD / UI Spec / 设计稿`、生成参数 | 可运行 `Mockup`、预览链接、重生成结果 |
-| `Mockup Review Agent` | `Mockup`、已确认 `PRD / UI Spec / 设计稿` | `Mockup` 一致性检查结果、漂移项、遗漏清单 |
-| `Orchestrator` | 所有资产状态、当前资产摘要、用户入口动作与反馈 | 路由决定、系统状态变化、触发任务记录 |
+| `PM Agent` | 项目基础信息、当前 PRD 版本、历史会话、需求变更入口意图、当前 `active agent` 上下文 | `PRD` 草稿/更新、需求澄清问题、需求变更方案、是否建议确认当前基线、可选 `handoff_request` |
+| `UI Designer Agent` | 已确认 `PRD`、设计偏好、参考截图/链接、设计返工入口意图、设计稿变更摘要、当前 `active agent` 上下文 | `UI Spec` 草稿/更新、设计返工方案、回写建议、是否建议确认当前基线、可选 `handoff_request` |
+| `Dev Agent` | `PRD / UI Spec / 设计稿 / Mockup`、资产状态、当前 `active agent` 上下文 | `Tech Spec`、实现风险、假设与边界说明、是否建议确认当前基线、可选 `handoff_request` |
+| `Mockup Agent` | `PRD / UI Spec / 设计稿`、生成参数、当前 `active agent` 上下文 | 可运行 `Mockup`、预览链接、重生成结果、执行状态与失败摘要、可选 `handoff_request` |
+| `Mockup Review Agent` | `Mockup`、已确认 `PRD / UI Spec / 设计稿` | `Mockup` 一致性检查结果、漂移项、遗漏清单、是否允许继续推进 |
+| `Orchestrator` | 所有资产状态、当前资产摘要、用户入口动作与反馈、会话状态、`handoff_request` | 初始路由决定、`active agent` 更新、系统确认、触发任务记录、`handoff` 审计事件、系统状态变化 |
+
+#### 结构化返回契约
+- 所有可持续对话的专业 Agent 在 `V1` 中都必须支持统一的结构化返回外壳，至少包含：`user_visible_reply`、`confidence`、`handoff_request`、`needs_confirmation`、`affected_assets`
+- `handoff_request` 为空时，默认表示继续由当前 `active agent` 接管后续对话；不允许用纯自然语言隐式表达切换意图而不输出结构化字段
+- `needs_confirmation=true` 时，必须由 `Orchestrator` 生成系统确认层，而不是让专业 Agent 直接越过确认门执行状态或资产修改
 
 #### 质量与权限约束
 - Agent 不得凭空补写未经用户确认的业务需求
 - Agent 不得跨资产直接修改不属于自己的资产正文
+- 各专业 Agent 自主控制各自资产的生成 / 更新，但必须遵守统一的 readiness、确认门、gap 分级与结构化回传底线
+- `active agent` 的持续接管不能依赖 Prompt 的短时记忆假设；若会话状态与 Agent 自述冲突，必须以 `Orchestrator` 持久状态为准
 - 所有交付资产必须保持结构化输出，便于后续 Agent 消费
 - Agent 每次建议修改时，必须说明修改原因或触发依据
 - 当上下文不充分或低置信度时，Agent 必须先追问或显式提示风险
@@ -299,10 +393,13 @@ flowchart LR
 #### 前台可见方式
 - 用户只看到统一 AI 助手、当前资产焦点和系统动作提示
 - `Orchestrator` 不以 Agent 名称出现，只以系统动作文案呈现，例如：
+  - `正在恢复上次的需求讨论模式`
+  - `当前话题更适合设计处理，正在切换`
   - `正在分析反馈归因`
   - `正在整理本次修改会影响的资产`
   - `正在触发 Mockup Review`
 - `Orchestrator` 可以发出系统确认消息，例如：
+  - `当前话题可能已从需求讨论切换到设计返工，是否改由设计处理继续？`
   - `这次修改会更新 PRD，并影响 UI Spec / Mockup / Tech Spec，是否确认同步？`
   - `这次调整需要重新生成设计稿与 Mockup，是否现在执行？`
   - `系统无法高置信判断该问题属于需求还是设计，请选择处理方向`
@@ -313,6 +410,40 @@ flowchart LR
 ---
 
 ## 📋 迭代历史（AI 理解上下文时读这里）
+
+### v1.19 — 引入 active agent 持续接管与 handoff 协作机制（2026-03-27）
+**变更内容**：补充 `active agent` 会话级持续接管机制，明确 `Orchestrator` 采用“旁路观察 + 条件触发切换”而非逐轮重路由；同时新增实现分层原则、会话状态模型、结构化 `handoff` 协议、恢复规则与相关埋点指标  
+**变更原因**：若每次用户发言都要求 `Orchestrator` 重新完整路由，会造成会话连续性变差、切换抖动、实现复杂度上升，并让“统一 AI 持续协作”的体验不自然。更合理的模型是：同一会话始终由一个 `active agent` 连续主导，`Orchestrator` 仅在切换触发条件、确认门或执行型任务出现时介入裁决  
+
+**本次新增要点**
+- 明确同一会话同一时刻只允许一个 `active agent`
+- 明确 `Orchestrator` 每轮旁路观察，但默认不重新完整路由
+- 明确 `asset focus` 在已有 `active agent` 时只作为弱信号
+- 明确专业 Agent 可主动提出 `handoff_request`，但切换执行权只属于 `Orchestrator`
+- 明确高置信度自动切换、低置信度先系统确认
+- 明确 `active agent` 恢复、`handoff` 审计事件、结构化返回契约和实现分层原则
+
+### v1.18 — Agent 生成/更新控制口径与架构图对齐（2026-03-26）
+**变更内容**：更新 `Agent System Architecture` 中的总体原则、`图 2：Mockup 反馈与路由架构`、`轻确认与影响控制规则`、输入输出表和权限约束，使其与“各专业 Agent 各自控制生成/更新，`Orchestrator` 统一控制底线”的最新原则保持一致  
+**变更原因**：随着 `AGENT_MUTATION_GUARDRAILS_V1.md` 成型，原有 PRD 表述仍容易让人误解为 `Orchestrator` 会统一接管所有资产的具体写入或重生成执行。需要在 PRD 中正式澄清：`Orchestrator` 负责路由、确认门、状态迁移、任务触发和结果回收，而对应专业 Agent 负责各自资产的生成、更新或执行型落地  
+
+**本次新增要点**
+- 明确各专业 Agent 对各自资产拥有生成 / 更新控制权
+- 明确 `Orchestrator` 统一控制底线，但不统一接管所有资产的具体落地执行
+- 将 `图 2` 从纯路由图补充为“路由 + 确认门 + owner Agent 执行 + 状态回收”
+- 在输入输出表中补充各专业 Agent 的确认建议、执行状态和推进建议结果
+- 在权限约束中补充统一的 mutation guardrails 原则
+
+### v1.17 — 在 PRD 中补充 Agent 设计文档索引（2026-03-26）
+**变更内容**：在 `PRD_V1.md` 的附录中新增 `Agent 设计相关文档` 索引，显式关联 `Agent Prompt`、`Agent Capability` 与 `Agent Memory` 三类设计文档  
+**变更原因**：当前 `PRD` 已经定义了 `Agent System Architecture`，但没有把相关设计文档显式串起来。补充文档索引后，后续实现或维护时可以从 `PRD` 直接追溯到各 Agent 的行为规则、能力边界与 Memory 设计，降低文档脱节风险  
+
+**本次新增要点**
+- 在附录中新增 `Agent 设计相关文档`
+- 明确 `PRD` 负责产品层 Agent 架构与职责边界定义
+- 明确 `agent-prompts/*` 负责行为规则与交互约束
+- 明确 `agent-capabilities/*` 负责可实现能力与落地方式
+- 明确 `AGENT_MEMORY_SOLUTION_V1.md` 负责 Memory 分层、共享边界与装配原则
 
 ### v1.16 — 移除 Blueprint AI 的独立 Agent 定位（2026-03-26）
 **变更内容**：将 `Blueprint AI` 从 Agent System 中移除，不再把它定义为独立 Prompt 或独立智能层，而是收口为前台统一展示名与统一对话入口；同时同步调整架构图、职责边界和相关 Prompt 语义  
@@ -1748,6 +1879,10 @@ Page: Delivery Summary
 | tech_spec_baseline_confirmed | 用户确认 Tech Spec 当前基线 | project_id, version | 衡量技术方案成熟度 |
 | chat_created | 用户创建新聊天 | project_id, asset_focus, based_on_version | 衡量项目级分支讨论使用情况 |
 | chat_viewed | 用户切换历史聊天 | project_id, asset_focus, session_id | 分析历史聊天回看频率 |
+| active_agent_restored | 用户重新进入会话并恢复最近一次处理模式 | project_id, session_id, active_agent | 评估会话恢复与连续协作稳定性 |
+| handoff_requested | 当前 `active agent` 请求切换处理方 | project_id, session_id, from_agent, suggested_to_agent, confidence | 分析切换触发来源与频率 |
+| handoff_completed | `Orchestrator` 完成一次 Agent 切换 | project_id, session_id, from_agent, to_agent, trigger_reason, user_confirmed | 审计切换链路并优化路由策略 |
+| handoff_confirmation_requested | 因低置信度切换而弹出系统确认 | project_id, session_id, from_agent, candidate_agents | 监控低置信度切换比例 |
 | change_request_submitted | 用户发起需求变更 | project_id, asset_focus, affected_asset_count | 统计真实变更发生量 |
 | change_request_clarification_started | 需求变更分析启动 | project_id, source_asset, based_on_version | 衡量需求变更分析成功率 |
 | change_request_confirmed | 用户确认按方案同步更新 | project_id, affected_asset_count | 衡量从澄清到执行的转化率 |
@@ -1775,6 +1910,8 @@ Page: Delivery Summary
 | Mockup 平均迭代轮次 | Mockup 确认前总迭代次数 / 确认项目数 | > 3 |
 | UI Spec 无大改占比 | 首次生成后未标记大改项目数 / UI Spec 生成项目数 | < 95% |
 | Agent 任务失败率 | 失败任务数 / 总任务数 | > 10% |
+| 低置信度切换占比 | `handoff_confirmation_requested` / `handoff_requested` | > 35% |
+| 错误切换回退率 | 切换后 3 轮内再次切回原 Agent 的次数 / `handoff_completed` | > 15% |
 | 邀请注册链接成功率 | 完成注册用户数 / 打开邀请链接用户数 | < 80% |
 | Mockup 可预览成功率 | 成功打开预览次数 / Mockup 生成次数 | < 95% |
 
@@ -1841,7 +1978,29 @@ Page: Delivery Summary
 - `待同步`：该资产因上游变化需要更新，暂不应继续作为最新基线
 - `重生成中`：系统正在基于上游更新重新生成该资产或其关联产物
 
+### Agent 设计相关文档
+- `PRD_V1.md`：定义产品层面的 Agent 架构、职责边界、路由规则、确认机制与流程位置
+- `.blueprint/AGENT_MEMORY_SOLUTION_V1.md`：定义 Agent Memory 分层、共享/私有边界、对象模型与上下文装配原则
+- `.blueprint/AGENT_CAPABILITIES_V1.md`：定义 6 个核心 Agent 的能力总框架、落地方式与分文档拆分规划
+- `.blueprint/AGENT_MUTATION_GUARDRAILS_V1.md`：定义各 Agent 各自控制生成 / 更新时必须共享的 readiness、确认门、gap 分级、结构化回传与 `Orchestrator` 控制底线
+- `.blueprint/agent-prompts/PM_AGENT_V1.md`：定义 `PM Agent` 的行为规则、对话策略与 PRD 输出约束
+- `.blueprint/agent-prompts/UI_DESIGNER_AGENT_V1.md`：定义 `UI Designer Agent` 的行为规则、设计推进策略与 UI Spec 输出约束
+- `.blueprint/agent-prompts/ORCHESTRATOR_AGENT_V1.md`：定义 `Orchestrator` 的系统消息风格、路由规则、上下文装配与 Gate 控制规则
+- `.blueprint/agent-prompts/MOCKUP_AGENT_V1.md`：定义 `Mockup Agent` 的输入契约、生成流程与结构化执行回执要求
+- `.blueprint/agent-prompts/MOCKUP_REVIEW_AGENT_V1.md`：定义 `Mockup Review Agent` 的审查流程、阻断规则与结构化审查结果要求
+- `.blueprint/agent-prompts/DEV_AGENT_V1.md`：定义 `Dev Agent` 的技术判断边界、Tech Spec 结构要求与对话策略
+- `.blueprint/agent-capabilities/ORCHESTRATOR_CAPABILITIES_V1.md`：定义 `Orchestrator` 的事件识别、路由、装配、状态迁移、轻确认与任务触发能力
+- `.blueprint/agent-capabilities/PM_AGENT_CAPABILITIES_V1.md`：定义 `PM Agent` 的需求澄清、PRD 生成、需求变更吸收、自检与确认前准备能力
+- `.blueprint/agent-capabilities/UI_DESIGNER_AGENT_CAPABILITIES_V1.md`：定义 `UI Designer Agent` 的 UI Spec 生成、设计稿生成与读回、同步判断、设计返工与自检能力
+- `.blueprint/agent-capabilities/MOCKUP_AGENT_CAPABILITIES_V1.md`：定义 `Mockup Agent` 的资产读取、构建运行、预览交付、局部重生成与失败降级能力
+- `.blueprint/agent-capabilities/MOCKUP_REVIEW_AGENT_CAPABILITIES_V1.md`：定义 `Mockup Review Agent` 的多资产对齐审查、问题分级归因、阻断判断、建议路由与回归复查能力
+- `.blueprint/agent-capabilities/DEV_AGENT_CAPABILITIES_V1.md`：定义 `Dev Agent` 的多资产收敛、技术选型、系统架构、Mockup 对齐、风险与未决项管理、自检与确认前准备能力
+
 ### 版本历史
+- v1.19 (2026-03-27): 引入 `active agent` 持续接管与 `handoff` 协作机制，明确会话状态、恢复规则、结构化切换协议与实现分层
+- v1.18 (2026-03-26): 更新 Agent 架构与 Mockup 路由图表述，使其与“各专业 Agent 各自控制生成/更新，Orchestrator 统一控制底线”的最新原则对齐
+- v1.17 (2026-03-26): 在附录中新增 Agent 设计相关文档索引，显式关联 Prompt、Capability 与 Memory 文档
+- v1.16 (2026-03-26): 将 `Blueprint AI` 从独立 Agent 收口为前台展示名与统一对话入口，并同步调整相关架构语义
 - v1.15 (2026-03-26): 将关键资产确认机制进一步收口为“先自检、后在对话中输出确认摘要、再由用户通过对话明确确认”，并同步更新相关页面交互、验收标准与 Agent 协作表述
 - v1.14 (2026-03-26): 将产品前台模型重构为“统一工作台 + 项目交付包 + 单一 AI 助手”，弱化阶段 Gate，改为关键资产轻确认与影响范围确认，并重写 Flow002-Flow007 及 Page007-Page012
 - v1.10 (2026-03-24): 新增 Agent System Architecture Mermaid 架构图与 Mockup 路由图

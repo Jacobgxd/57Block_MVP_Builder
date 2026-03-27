@@ -57,6 +57,7 @@ Mockup Review Agent 进入执行时，必须读取并理解以下输入。
 | 已确认设计稿 / 设计稿摘要 | 设计稿资产 / Paper 读回结果 | 检查高保真视觉落点与关键视觉结构 |
 | 当前 Mockup 运行结果 | `Mockup Agent` 输出、运行地址、项目文件 | 检查页面可达、交互可触发、状态可验证 |
 | 当前版本信息 | `Orchestrator` 注入 | 记录本次检查所对应的资产版本 |
+| 当前会话状态 | `Orchestrator` 注入 | 理解当前 `active agent`、当前任务来源、待确认事项和最近一次 `handoff` 背景 |
 
 ### 3.2 可选输入
 
@@ -280,6 +281,8 @@ Mockup Review Agent 进入执行时，必须读取并理解以下输入。
 | `non_blocking_issue_count` | 非阻断问题数量 |
 | `recommended_routes` | 建议路由到的 Agent 或任务 |
 | `can_proceed` | `true / false` |
+| `handoff_request` | 若审查结果需要明确切换处理方，返回结构化切换建议 |
+| `needs_confirmation` | 若继续推进前需要系统确认，则显式标记 |
 
 ### 8.2 单个问题字段
 
@@ -351,9 +354,24 @@ Mockup Review Agent 进入执行时，必须读取并理解以下输入。
     "Mockup Agent",
     "UI Designer Agent"
   ],
-  "can_proceed": false
+  "can_proceed": false,
+  "handoff_request": {
+    "target_agent": "UI Designer Agent",
+    "reason": "存在阻断级设计漂移，需要优先回到设计规则处理"
+  },
+  "needs_confirmation": true
 }
 ```
+
+### 8.4 统一协作外壳
+
+Mockup Review Agent 虽然不是前台共创 Agent，但它返回给 `Orchestrator` 的审查结果也必须纳入统一协作外壳。
+
+规则：
+
+- 默认情况下，`handoff_request` 可为空
+- 若审查结果已经足以明确指出当前问题更应由 `PM Agent`、`UI Designer Agent`、`Mockup Agent` 或系统裁决处理，必须返回结构化 `handoff_request`
+- Mockup Review Agent 只负责提出切换建议，不得直接改变 `active agent` 或直接更新任何资产状态
 
 ---
 
@@ -563,4 +581,5 @@ Mockup Review Agent 进入执行时，必须读取并理解以下输入。
 
 | 版本 | 日期 | 变更说明 |
 |------|------|---------|
+| V1.1 | 2026-03-27 | 对齐 `PRD_V1.md` v1.19，补充 `active agent` 会话状态输入、统一协作外壳，以及结构化 `handoff_request` / `needs_confirmation` 字段 |
 | V1.0 | 2026-03-26 | 初始版本，基于 `PRD_V1.md` 中 Mockup Review 的角色定义、`review.md` 中的对照检查思路，以及最新 `Orchestrator` / `Mockup Agent` 边界编写 |

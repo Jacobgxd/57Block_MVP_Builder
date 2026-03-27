@@ -56,6 +56,7 @@ Mockup Agent 进入执行时，必须读取并理解以下输入。
 | 已确认设计稿 / 设计稿摘要 | 设计稿资产 / Paper 读回结果 | 作为高保真视觉基准 |
 | 当前生成参数 | `Orchestrator` 注入 | 判断是首次生成、局部更新还是重生成 |
 | 当前版本信息 | 版本状态存储 | 记录本次 Mockup 对应的上游版本 |
+| 当前会话状态 | `Orchestrator` 注入 | 理解当前 `active agent`、待确认事项、当前任务来源和最近一次 `handoff` 背景 |
 
 ### 3.2 可选输入
 
@@ -137,6 +138,8 @@ Mockup 不是：
 | `fallback_items` | 使用默认值或降级处理的项 |
 | `risk_items` | 当前结果中的已知风险 |
 | `error_summary` | 若失败或阻断，提供错误摘要 |
+| `handoff_request` | 若执行中发现问题需要回到其他专业 Agent，返回结构化切换建议 |
+| `needs_confirmation` | 若继续执行前需要系统确认，则显式标记 |
 
 ### 5.3 示例
 
@@ -162,9 +165,21 @@ Mockup 不是：
   "risk_items": [
     "设计稿未提供某个 Hover 状态细节，按 UI Spec 默认规则生成"
   ],
-  "error_summary": null
+  "error_summary": null,
+  "handoff_request": null,
+  "needs_confirmation": false
 }
 ```
+
+### 5.4 结构化协作契约
+
+Mockup Agent 虽然不是前台共创 Agent，但它返回给 `Orchestrator` 的执行回执也必须纳入统一协作外壳。
+
+规则：
+
+- 默认情况下，`handoff_request` 为 `null`
+- 若执行中发现问题本质上属于需求缺口、设计冲突或需要系统先确认范围，必须返回结构化 `handoff_request`
+- Mockup Agent 可以建议切换，但不能自行改变 `active agent` 或直接触发上游资产更新
 
 ---
 
@@ -510,4 +525,5 @@ Mockup 不是：
 
 | 版本 | 日期 | 变更说明 |
 |------|------|---------|
+| V1.1 | 2026-03-27 | 对齐 `PRD_V1.md` v1.19，补充统一协作外壳、可选 `handoff_request` / `needs_confirmation` 字段与 `active agent` 会话状态输入 |
 | V1.0 | 2026-03-26 | 初始版本，基于 `create-mockup.md`、`PRD_V1.md` 中的 Mockup 阶段定义以及最新 Agent 架构边界编写 |

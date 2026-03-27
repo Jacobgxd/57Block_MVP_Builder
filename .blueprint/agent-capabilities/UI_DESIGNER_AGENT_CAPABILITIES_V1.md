@@ -334,6 +334,7 @@ MCP 相关能力落地方式包括：
 - 回传设计稿生成结果
 - 回传设计稿变更同步建议
 - 回传自检摘要与确认建议
+- 必要时回传结构化 `handoff_request`
 
 ### 4.5 与下游 Agent 协作
 
@@ -361,6 +362,7 @@ MCP 相关能力落地方式包括：
 - 当前 `UI Spec` 版本或空白骨架
 - 当前资产状态
 - 当前会话入口意图
+- 当前 `active_agent`
 
 ### 5.2 设计输入
 
@@ -424,6 +426,19 @@ MCP 相关能力落地方式包括：
 - `affected_assets`
 - `recommended_action`
 - `requires_upstream_change`
+
+### 6.6 协作结果
+
+- `user_visible_reply`
+- `handoff_request`
+- `needs_confirmation`
+- `affected_assets`
+
+规则：
+
+- 若当前轮仍属于 UI 设计范围，`handoff_request` 默认为空
+- 若判断当前问题已进入需求层、技术层或执行链路，必须返回结构化 `handoff_request`
+- `UI Designer Agent` 只能建议切换，不得直接写入 `active_agent`
 
 ---
 
@@ -514,4 +529,5 @@ MCP 相关能力落地方式包括：
 
 | 版本 | 日期 | 变更说明 |
 |------|------|---------|
+| V1.1 | 2026-03-27 | 对齐 `PRD_V1.md` v1.19，补充 `active_agent` 输入、结构化 `handoff_request` 协作结果与 Orchestrator 协作契约 |
 | V1.0 | 2026-03-26 | 初始版本，定义 UI Designer Agent 的 UI Spec 生成、设计系统定义、Paper/Figma 设计稿生成与读回、同步判断、设计返工、自检与降级处理能力 |
