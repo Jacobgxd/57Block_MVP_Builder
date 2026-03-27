@@ -23,6 +23,8 @@
 | Mockup Review | `reports/mockup-reviews/LATEST.md` | - | ⚪ 待生成 | - | - |
 | Tech Spec | `.blueprint/Tech_Spec.md` | 1.0 | ⚪ 待生成 | - | - |
 | Test Spec | `.blueprint/Test_Spec.md` | 1.0 | ⚪ 待生成 | - | - |
+| Agent Memory | `.blueprint/AGENT_MEMORY_SOLUTION_V1.md` | V1.1 | ✅ 已起草 | 2026-03-26 | 纯 Memory 设计文档，不包含能力与工具设计 |
+| Agent Capabilities | `.blueprint/AGENT_CAPABILITIES_V1.md` | V1.0 | ✅ 已起草 | 2026-03-26 | Agent 能力总索引文档，定义能力框架、落地方式与分文档拆分规划 |
 | Global Verify | `reports/verify/LATEST.md` | - | ⚪ 待运行 | - | - |
 | Plan | `plans/[feature].md` | - | ⚪ 待生成 | - | - |
 
@@ -42,8 +44,22 @@
 | Dev Agent | `.blueprint/agent-prompts/DEV_AGENT_V1.md` | V1.0 | ✅ 已起草 | 2026-03-26 | 前台 Tech Spec 阶段 Agent |
 
 **说明**：
+- 前台可继续使用 `Blueprint AI` 作为统一展示名，但它不再作为独立 Agent Prompt 存在。
 - `Mockup Agent` 与 `Mockup Review Agent` 都是系统内部 Agent，不作为前台人格化共创身份暴露。
 - 当前阶段不设通用 `Review Agent` Prompt；`/review` 保留给后续实现阶段的代码审查与漂移检测流程。
+
+---
+
+## Agent Capability Spec 状态
+
+| Agent | 文件路径 | 当前版本 | 状态 | 最后更新 | 说明 |
+|------|---------|---------|------|---------|------|
+| Orchestrator | `.blueprint/agent-capabilities/ORCHESTRATOR_CAPABILITIES_V1.md` | V1.0 | ✅ 已起草 | 2026-03-26 | 定义系统执行中枢的事件识别、路由、装配、状态迁移、轻确认、任务触发与结果回收能力 |
+| PM Agent | `.blueprint/agent-capabilities/PM_AGENT_CAPABILITIES_V1.md` | V1.0 | ✅ 已起草 | 2026-03-26 | 定义需求澄清、结构化 PRD 生成、需求变更吸收、影响分析输入准备、自检与确认前准备能力 |
+| UI Designer Agent | `.blueprint/agent-capabilities/UI_DESIGNER_AGENT_CAPABILITIES_V1.md` | V1.0 | ✅ 已起草 | 2026-03-26 | 定义 UI Spec 生成、设计系统定义、Paper/Figma 设计稿生成与读回、同步判断、设计返工与自检能力 |
+| Mockup Agent | `.blueprint/agent-capabilities/MOCKUP_AGENT_CAPABILITIES_V1.md` | V1.0 | ✅ 已起草 | 2026-03-26 | 定义 Mockup 的上游资产读取、范围提取、构建运行、预览交付、Review 问题吸收、局部重生成与失败降级能力 |
+| Mockup Review Agent | `.blueprint/agent-capabilities/MOCKUP_REVIEW_AGENT_CAPABILITIES_V1.md` | V1.0 | ✅ 已起草 | 2026-03-26 | 定义 Mockup 的多资产对齐审查、问题分级归因、阻断判断、建议路由与回归复查能力 |
+| Dev Agent | `.blueprint/agent-capabilities/DEV_AGENT_CAPABILITIES_V1.md` | V1.0 | ✅ 已起草 | 2026-03-26 | 定义多资产收敛、技术选型、系统架构、Mockup 对齐、数据模型、接口契约、风险与未决项管理、Tech Spec 生成与自检能力 |
 
 ---
 
@@ -80,6 +96,16 @@
 ```
 YYYY-MM-DD  [步骤] [命令] — [做了什么，为什么]
 2026-03-26  [Agent Prompt Spec] [manual] — 新增 Mockup Agent、Mockup Review Agent、Dev Agent Prompt 索引，并统一澄清 /review 的语义不是当前阶段的通用 Review Agent
+2026-03-26  [Agent Prompt Spec] [manual] — 移除 Blueprint AI 独立 Prompt 索引，收口为前台统一展示名，不再作为独立 Agent 存在
+2026-03-26  [Architecture Spec] [manual] — 新增 Agent Memory & Capabilities 文档，定义 Memory 分层、共享/私有边界、核心对象模型、读写权限和首版能力矩阵
+2026-03-26  [Architecture Spec] [manual] — 将 Agent Memory & Capabilities 文档收口为纯 Memory 设计文档，移除能力矩阵、工具与 MCP 分层
+2026-03-26  [Architecture Spec] [manual] — 新增 Agent Capabilities 总索引文档，明确 6 个核心 Agent 的能力框架、MCP/文件读写/命令执行三类落地方式，以及后续分 Agent 文档拆分路径
+2026-03-26  [Architecture Spec] [manual] — 新增 Orchestrator Capability 分文档，细化事件识别、路由、装配、状态迁移、轻确认控制、任务触发、结果回收与失败降级规则
+2026-03-26  [Architecture Spec] [manual] — 新增 PM Agent Capability 分文档，细化需求澄清、结构化 PRD 生成、需求变更吸收、影响分析输入准备、自检与确认前准备能力
+2026-03-26  [Architecture Spec] [manual] — 新增 UI Designer Agent Capability 分文档，细化 UI Spec 生成、Paper/Figma 设计稿生成与读回、同步判断、设计返工、自检与降级处理能力
+2026-03-26  [Architecture Spec] [manual] — 新增 Mockup Agent Capability 分文档，细化 Mockup 构建运行、预览链接、Review 问题吸收、局部重生成、结构化回传与失败降级能力
+2026-03-26  [Architecture Spec] [manual] — 新增 Mockup Review Agent Capability 分文档，细化多资产对齐审查、问题分级归因、阻断判断、建议路由、回归复查与结构化回传能力
+2026-03-26  [Architecture Spec] [manual] — 新增 Dev Agent Capability 分文档，细化多资产收敛、技术选型、系统架构、Mockup 对齐、数据模型、接口契约、风险与未决项管理、Tech Spec 生成与自检能力
 ```
 
 ---
