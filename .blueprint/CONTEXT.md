@@ -18,7 +18,7 @@
 | 文档 | 文件路径 | 当前版本 | 状态 | 最后更新 | 负责人 |
 |-----|---------|---------|------|---------|------|
 | PRD | `.blueprint/PRD_V1.md` | 1.19 | 🟡 进行中 / ✅ 已确认 / 📦 Archived | 2026-03-27 | 引入 `active agent` 持续接管与 `handoff` 协作机制 |
-| UI Spec | `.blueprint/UI_Spec.md` | 1.0 | ⚪ 待生成 | - | - |
+| UI Spec | `.blueprint/UI_Spec.md` | 1.2 | 🟡 进行中 | 2026-03-27 | 已补充高保真原型产出规格、Paper 落图约束、画板范围与工作台示例内容，达到可直接驱动原型绘制的粒度 |
 | Mockup | `.blueprint/mockup/` | - | ⚪ 待生成 | - | - |
 | Mockup Review | `reports/mockup-reviews/LATEST.md` | - | ⚪ 待生成 | - | - |
 | Tech Spec | `.blueprint/Tech_Spec.md` | 1.0 | ⚪ 待生成 | - | - |
@@ -79,7 +79,7 @@
 | 步骤 | 命令 | 状态 | 完成时间 | 备注 |
 |-----|-----|------|---------|------|
 | 1. PM Agent | `/create-prd` | ⚪ | - | - |
-| 2. UI Design Agent | `/create-ui-spec` | ⚪ | - | - |
+| 2. UI Design Agent | `/create-ui-spec` | 🟡 | 2026-03-27 | 已生成 `.blueprint/UI_Spec.md` 首版，待继续迭代与确认基线 |
 | 3. Mockup Agent | `/create-mockup` | ⚪ | - | - |
 | 3a. Mockup Review + 人工确认 | `/review-mockup` | ⚪ | - | 迭代次数：0 |
 | 4. Dev Agent | `/create-tech-spec` | ⚪ | - | - |
@@ -113,6 +113,9 @@ YYYY-MM-DD  [步骤] [命令] — [做了什么，为什么]
 2026-03-27  [Architecture Spec] [manual] — 同步更新 `Orchestrator / PM Agent` 的 Prompt 与 Capability 文档，对齐 `active agent`、`handoff_request`、会话恢复与结构化协作契约
 2026-03-27  [Architecture Spec] [manual] — 继续同步更新 `UI Designer / Dev / Mockup` 的 Prompt 与 Capability 文档，以及 `AGENT_CAPABILITIES_V1.md` 总索引，对齐 `active agent`、统一协作外壳与结构化 `handoff_request` 机制
 2026-03-27  [Architecture Spec] [manual] — 同步更新 `Mockup Review Agent` 的 Prompt 与 Capability 文档，以及 `AGENT_MUTATION_GUARDRAILS_V1.md`，把审查型 Agent 和全局 guardrails 也纳入 `active agent` / 统一协作外壳机制
+2026-03-27  [UI Spec] [/create-ui-spec] — 生成 `.blueprint/UI_Spec.md` 首版，确定浅色主题、57Blocks 风格继承策略、首页品牌叙事与统一工作台框架
+2026-03-27  [UI Spec] [/create-ui-spec] — 将 `UI_Spec.md` 细化到 v1.1，补充首页区块、工作台列布局、交付节点、对话输入区与自检摘要卡的精确规则
+2026-03-27  [UI Spec] [/create-ui-spec] — 将 `UI_Spec.md` 细化到 v1.2，新增高保真原型产出规格、Paper 命名与组件复用规范、画板尺寸与真实示例内容
 ```
 
 ---

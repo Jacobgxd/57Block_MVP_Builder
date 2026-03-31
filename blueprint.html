@@ -1,0 +1,3498 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Blueprint — From idea to MVP delivery</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,300;1,400&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+/* ── 57blocks-accurate tokens ── */
+:root {
+  --white:   #ffffff;
+  --off:     #f8f8fc;
+  --ink:     #212529;   /* 57blocks body text */
+  --ink-2:   #192f3f;   /* 57blocks dark navy */
+  --muted:   #6c757d;
+  --light:   #e9edf5;
+
+  /* 57blocks exact gradient */
+  --grad:        linear-gradient(99.28deg, #EE53FF -14.33%, #31E1F8 117.46%);
+  --grad-purple: linear-gradient(90deg, #CD5CF3, #8371F3);
+  --grad-blue:   linear-gradient(293.9deg, #3AABFE 30.81%, #8463F8 58.17%);
+  --grad-text:   linear-gradient(99.28deg, #a855f7 0%, #22d3ee 100%);
+
+  /* Soft background glow – the 57blocks "wave" effect */
+  --glow-purple: rgba(168, 85, 247, 0.08);
+  --glow-blue:   rgba(34, 211, 238, 0.08);
+  --glow-pink:   rgba(238, 83, 255, 0.06);
+
+  --sans:  'Plus Jakarta Sans', 'Helvetica Neue', sans-serif;
+  --serif: 'Instrument Serif', Georgia, serif;
+  --r:  8px;
+  --r-pill: 800px;
+  --max: 1200px;
+}
+
+html { scroll-behavior: smooth; }
+body {
+  background: var(--white);
+  color: var(--ink);
+  font-family: var(--sans);
+  font-size: 15px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+}
+
+/* ──────────────────────────────────────
+   NAV — exact 57blocks white navbar
+────────────────────────────────────── */
+nav {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 200;
+  height: 68px;
+  background: rgba(255,255,255,0.92);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid rgba(0,0,0,0.06);
+  display: flex; align-items: center;
+  padding: 0 40px;
+  transition: box-shadow 0.3s;
+}
+nav.scrolled { box-shadow: 0 2px 20px rgba(0,0,0,0.07); }
+
+.nav-logo {
+  display: flex; align-items: center; gap: 9px;
+  font-family: var(--sans); font-size: 17px; font-weight: 700;
+  color: var(--ink-2); text-decoration: none; cursor: pointer;
+  letter-spacing: -0.02em;
+}
+.nav-logo-icon {
+  width: 32px; height: 32px; border-radius: 7px;
+  background: var(--grad); display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.nav-logo-icon svg { width: 16px; height: 16px; }
+
+.nav-center {
+  display: flex; gap: 4px; align-items: center;
+  position: absolute; left: 50%; transform: translateX(-50%);
+}
+.nav-item {
+  font-size: 14px; font-weight: 500; color: var(--ink);
+  padding: 7px 14px; border-radius: 6px; cursor: pointer;
+  border: 1px solid transparent; transition: all 0.15s;
+  position: relative;
+}
+.nav-item:hover { color: var(--ink-2); background: rgba(0,0,0,0.03); }
+.nav-item.has-sub::after { content: ' ▾'; font-size: 10px; }
+
+/* Dropdown */
+.nav-item .dropdown {
+  display: none; position: absolute; top: 100%; left: 0; min-width: 200px;
+  background: white; border-radius: 10px; padding: 8px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.12); border: 1px solid rgba(0,0,0,0.06);
+  margin-top: 4px;
+}
+.nav-item:hover .dropdown { display: block; }
+.dropdown a {
+  display: block; padding: 9px 12px; border-radius: 6px;
+  font-size: 13px; color: var(--ink); text-decoration: none;
+  transition: background 0.12s;
+}
+.dropdown a:hover { background: var(--off); }
+
+.nav-right { margin-left: auto; display: flex; gap: 10px; align-items: center; }
+.btn-nav-ghost {
+  font-family: var(--sans); font-size: 14px; font-weight: 500;
+  color: var(--ink-2); padding: 8px 18px; border-radius: var(--r);
+  border: 1.5px solid rgba(25,47,63,0.2); background: transparent;
+  cursor: pointer; transition: all 0.15s;
+}
+.btn-nav-ghost:hover { border-color: rgba(25,47,63,0.4); background: rgba(0,0,0,0.02); }
+.btn-nav-cta {
+  font-family: var(--sans); font-size: 14px; font-weight: 600;
+  color: white; padding: 9px 22px; border-radius: var(--r-pill);
+  border: none; background: var(--grad); cursor: pointer;
+  transition: all 0.2s; box-shadow: 0 4px 16px rgba(168,85,247,0.25);
+}
+.btn-nav-cta:hover { transform: translateY(-1px); box-shadow: 0 6px 24px rgba(168,85,247,0.35); opacity: 0.92; }
+
+/* ──────────────────────────────────────
+   HERO — centered, 57blocks style
+────────────────────────────────────── */
+.hero {
+  min-height: 100vh;
+  display: flex; align-items: center; justify-content: center;
+  padding: 100px 40px 60px;
+  position: relative; overflow: hidden; text-align: center;
+}
+
+/* Wavy soft background — the 57blocks signature */
+.hero-bg {
+  position: absolute; inset: 0; pointer-events: none; overflow: hidden;
+}
+.wave-1 {
+  position: absolute;
+  width: 900px; height: 700px;
+  border-radius: 50%;
+  background: radial-gradient(ellipse, rgba(168,85,247,0.10) 0%, transparent 65%);
+  top: -200px; right: -200px;
+}
+.wave-2 {
+  position: absolute;
+  width: 700px; height: 600px;
+  border-radius: 50%;
+  background: radial-gradient(ellipse, rgba(34,211,238,0.09) 0%, transparent 65%);
+  bottom: -100px; left: -100px;
+}
+.wave-3 {
+  position: absolute;
+  width: 500px; height: 400px;
+  border-radius: 50%;
+  background: radial-gradient(ellipse, rgba(238,83,255,0.07) 0%, transparent 65%);
+  top: 30%; left: 20%;
+}
+/* Subtle flowing lines like 57blocks hero */
+.hero-mesh {
+  position: absolute; inset: 0;
+  background:
+    url("data:image/svg+xml,%3Csvg width='1440' height='900' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 600 Q360 500 720 580 T1440 520' stroke='rgba(168,85,247,0.06)' stroke-width='2' fill='none'/%3E%3Cpath d='M0 650 Q400 550 800 630 T1440 570' stroke='rgba(34,211,238,0.05)' stroke-width='2' fill='none'/%3E%3Cpath d='M0 700 Q300 600 700 680 T1440 620' stroke='rgba(168,85,247,0.04)' stroke-width='1.5' fill='none'/%3E%3C/svg%3E")
+    no-repeat center/cover;
+}
+
+.hero-content { position: relative; z-index: 1; max-width: 860px; margin: 0 auto; }
+
+/* Eyebrow pill */
+.hero-eyebrow {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 6px 16px; border-radius: var(--r-pill);
+  border: 1.5px solid rgba(168,85,247,0.25);
+  background: rgba(168,85,247,0.06);
+  font-size: 11px; font-weight: 600;
+  letter-spacing: 0.08em; text-transform: uppercase;
+  margin-bottom: 28px;
+  background-clip: text; -webkit-background-clip: initial;
+}
+.hero-eyebrow-text {
+  background: var(--grad-text); -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent; background-clip: text;
+  font-size: 11px; font-weight: 700; letter-spacing: 0.08em;
+}
+.eyebrow-dot {
+  width: 6px; height: 6px; border-radius: 50%;
+  background: var(--grad); flex-shrink: 0;
+  animation: glow-pulse 2s ease-in-out infinite;
+}
+@keyframes glow-pulse {
+  0%,100% { box-shadow: 0 0 0 0 rgba(168,85,247,0.4); }
+  50% { box-shadow: 0 0 0 5px rgba(168,85,247,0); }
+}
+
+/* H1 — 57blocks uses huge bold serif/sans mix */
+.hero-h1 {
+  font-family: var(--sans); font-size: clamp(56px, 7vw, 96px);
+  font-weight: 800; line-height: 1.0; letter-spacing: -0.035em;
+  color: var(--ink-2); margin-bottom: 12px;
+}
+.hero-h1 .word-idea { color: var(--ink-2); }
+.hero-h1 .word-mvp {
+  background: var(--grad-text); -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent; background-clip: text;
+}
+.hero-h1 .word-serif { font-family: var(--serif); font-style: italic; font-weight: 400; }
+.hero-h1 .word-scale { color: var(--ink-2); }
+
+/* Dashed arrow decorations — 57blocks style */
+.hero-arrows {
+  position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+  pointer-events: none; z-index: 0; width: 700px;
+}
+.hero-arrows svg { width: 100%; height: auto; }
+
+.hero-sub {
+  font-size: 17px; color: var(--muted); line-height: 1.75;
+  font-weight: 400; max-width: 600px; margin: 0 auto 36px;
+}
+.hero-sub strong { color: var(--ink-2); font-weight: 600; }
+
+.hero-cta-group { display: flex; gap: 14px; justify-content: center; align-items: center; flex-wrap: wrap; }
+.btn-hero-primary {
+  display: inline-flex; align-items: center; gap: 9px;
+  font-family: var(--sans); font-size: 15px; font-weight: 600;
+  color: white; padding: 14px 32px; border-radius: var(--r-pill);
+  border: none; background: var(--grad); cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: 0 6px 24px rgba(168,85,247,0.28);
+}
+.btn-hero-primary:hover { transform: translateY(-2px); box-shadow: 0 10px 32px rgba(168,85,247,0.38); opacity: 0.9; }
+.btn-hero-ghost {
+  display: inline-flex; align-items: center; gap: 8px;
+  font-family: var(--sans); font-size: 14px; font-weight: 500;
+  color: var(--ink-2); padding: 13px 24px; border-radius: var(--r-pill);
+  border: 1.5px solid rgba(25,47,63,0.18); background: transparent;
+  cursor: pointer; transition: all 0.15s;
+}
+.btn-hero-ghost:hover { border-color: rgba(168,85,247,0.4); color: #8371F3; }
+
+.hero-footnote {
+  margin-top: 20px; font-size: 12px; color: #adb5bd;
+  letter-spacing: 0.04em;
+}
+
+/* ──────────────────────────────────────
+   SCROLL ANCHOR INDICATOR
+────────────────────────────────────── */
+.scroll-down {
+  position: absolute; bottom: 32px; left: 50%; transform: translateX(-50%);
+  display: flex; flex-direction: column; align-items: center; gap: 8px;
+  cursor: pointer; animation: float 2.5s ease-in-out infinite;
+}
+@keyframes float { 0%,100%{transform:translateX(-50%) translateY(0)} 50%{transform:translateX(-50%) translateY(6px)} }
+.scroll-down-label { font-size: 10px; color: #adb5bd; letter-spacing: 0.1em; text-transform: uppercase; }
+.scroll-down-arrow { width: 32px; height: 32px; border-radius: 50%; border: 1.5px solid rgba(0,0,0,0.1); display: flex; align-items: center; justify-content: center; }
+.scroll-down-arrow svg { width: 14px; height: 14px; color: #adb5bd; }
+
+/* ──────────────────────────────────────
+   SHARED SECTION STYLES
+────────────────────────────────────── */
+.section { padding: 100px 40px; }
+.section-inner { max-width: var(--max); margin: 0 auto; }
+.section-divider { width: 48px; height: 3px; background: var(--grad-purple); border-radius: 2px; margin: 0 auto 20px; }
+.section-divider.left { margin: 0 0 20px; }
+.s-eyebrow {
+  font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em;
+  background: var(--grad-text); -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent; background-clip: text;
+  margin-bottom: 12px;
+}
+.s-h2 {
+  font-family: var(--sans); font-size: clamp(28px, 3vw, 42px);
+  font-weight: 800; color: var(--ink-2); letter-spacing: -0.025em;
+  line-height: 1.15; margin-bottom: 16px;
+}
+.s-h2 em { font-family: var(--serif); font-style: italic; font-weight: 400; }
+.s-body { font-size: 15px; color: var(--muted); line-height: 1.8; font-weight: 400; max-width: 520px; }
+.s-center { text-align: center; }
+.s-center .s-body { margin: 0 auto; }
+.s-center .section-divider { margin: 0 auto 20px; }
+
+/* ──────────────────────────────────────
+   PHASE 1 CAPABILITIES
+────────────────────────────────────── */
+.cap-section { background: var(--off); }
+.cap-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 72px; align-items: start; }
+.cap-left { padding-top: 8px; }
+
+.asset-cards { display: flex; flex-direction: column; gap: 0; border-radius: 16px; overflow: hidden; border: 1px solid rgba(0,0,0,0.06); box-shadow: 0 4px 24px rgba(0,0,0,0.05); }
+.asset-card {
+  display: grid; grid-template-columns: 44px 120px 1fr auto;
+  align-items: center; gap: 0;
+  padding: 0 20px; height: 62px;
+  background: white;
+  border-bottom: 1px solid rgba(0,0,0,0.05);
+  transition: background 0.15s; cursor: default;
+  position: relative;
+}
+.asset-card:last-child { border-bottom: none; }
+.asset-card:hover { background: #fafbff; }
+.asset-card.active::before {
+  content: ''; position: absolute; left: 0; top: 0; bottom: 0;
+  width: 3px; background: var(--grad-purple);
+}
+.asset-card.upcoming { opacity: 0.45; }
+.asset-num { font-size: 11px; font-weight: 600; color: #ced4da; font-variant-numeric: tabular-nums; }
+.asset-card.active .asset-num {
+  background: var(--grad-text); -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent; background-clip: text;
+}
+.asset-name { font-size: 13px; font-weight: 700; color: var(--ink-2); }
+.asset-card.upcoming .asset-name { color: var(--muted); font-weight: 600; }
+.asset-desc { font-size: 13px; color: var(--muted); }
+.asset-pill {
+  font-size: 10px; font-weight: 700; padding: 3px 10px; border-radius: var(--r-pill);
+  letter-spacing: 0.05em; text-transform: uppercase;
+}
+.pill-live {
+  background: linear-gradient(135deg, rgba(168,85,247,0.12), rgba(34,211,238,0.12));
+  border: 1px solid rgba(168,85,247,0.2);
+  background-clip: initial;
+  color: #8B5CF6;
+}
+.pill-soon { background: var(--off); color: #adb5bd; border: 1px solid rgba(0,0,0,0.08); }
+
+.cap-note {
+  margin-top: 20px; padding: 18px 22px;
+  border-radius: 12px; border: 1px solid rgba(0,0,0,0.06);
+  background: white;
+}
+.cap-note-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: #adb5bd; margin-bottom: 10px; }
+.cap-note-row { display: flex; align-items: center; gap: 10px; padding: 5px 0; font-size: 13px; color: var(--muted); }
+.cap-note-n { font-size: 10px; font-weight: 700; color: #ced4da; }
+
+/* ──────────────────────────────────────
+   WORKFLOW
+────────────────────────────────────── */
+.flow-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 80px; align-items: start; }
+
+.flow-chain { display: flex; flex-direction: column; gap: 0; margin-top: 40px; }
+.flow-item {
+  display: flex; gap: 20px; padding: 22px 0;
+  border-bottom: 1px solid rgba(0,0,0,0.06);
+  transition: all 0.15s; cursor: default;
+}
+.flow-item:last-child { border-bottom: none; }
+.flow-item:hover .flow-n { background: var(--grad); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+.flow-n { font-size: 12px; font-weight: 700; color: #ced4da; width: 28px; flex-shrink: 0; padding-top: 2px; font-variant-numeric: tabular-nums; }
+.flow-body {}
+.flow-title { font-size: 15px; font-weight: 700; color: var(--ink-2); margin-bottom: 4px; }
+.flow-desc { font-size: 13px; color: var(--muted); line-height: 1.55; }
+
+/* Chat mockup */
+.chat-mock-wrap {
+  background: white; border-radius: 16px;
+  border: 1px solid rgba(0,0,0,0.08);
+  box-shadow: 0 8px 40px rgba(0,0,0,0.08);
+  overflow: hidden; margin-top: 8px;
+}
+.cm-header {
+  padding: 14px 18px; border-bottom: 1px solid rgba(0,0,0,0.05);
+  display: flex; align-items: center; gap: 10px; background: var(--off);
+}
+.cm-header-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--grad); }
+.cm-header-label { font-size: 12px; font-weight: 700; color: var(--ink-2); }
+.cm-header-sub { font-size: 11px; color: var(--muted); margin-left: auto; }
+.cm-body { padding: 16px; display: flex; flex-direction: column; gap: 12px; }
+.cm-msg { max-width: 88%; }
+.cm-msg.ai { align-self: flex-start; }
+.cm-msg.user { align-self: flex-end; }
+.cm-who { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: #adb5bd; margin-bottom: 4px; }
+.cm-msg.user .cm-who { text-align: right; }
+.cm-bubble { font-size: 12px; line-height: 1.55; padding: 10px 14px; border-radius: 12px; }
+.cm-msg.ai .cm-bubble { background: var(--off); color: var(--ink); border: 1px solid rgba(0,0,0,0.06); border-bottom-left-radius: 4px; }
+.cm-msg.user .cm-bubble { background: var(--grad); color: white; border-bottom-right-radius: 4px; }
+.cm-confirm {
+  display: flex; align-items: center; gap: 8px; padding: 9px 14px;
+  border-radius: 10px; background: rgba(168,85,247,0.06);
+  border: 1px solid rgba(168,85,247,0.2); font-size: 12px; font-weight: 600;
+  color: #8B5CF6; margin-top: 4px;
+}
+
+/* ──────────────────────────────────────
+   ROADMAP
+────────────────────────────────────── */
+.roadmap-section { background: var(--off); }
+.roadmap-cards {
+  display: grid; grid-template-columns: repeat(3, 1fr);
+  gap: 20px; margin-top: 56px;
+}
+.rmap {
+  background: white; border-radius: 16px;
+  border: 1px solid rgba(0,0,0,0.06);
+  padding: 32px 28px; position: relative; overflow: hidden;
+  transition: transform 0.2s, box-shadow 0.2s;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.04);
+}
+.rmap:hover { transform: translateY(-3px); box-shadow: 0 12px 40px rgba(0,0,0,0.10); }
+.rmap.current {
+  border-color: rgba(168,85,247,0.25);
+  box-shadow: 0 4px 24px rgba(168,85,247,0.12);
+}
+.rmap.current::before {
+  content: ''; position: absolute; top: 0; left: 0; right: 0;
+  height: 3px; background: var(--grad-purple);
+}
+.rmap-phase {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 20px;
+}
+.rmap-phase-num { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: #adb5bd; }
+.rmap.current .rmap-phase-num {
+  background: var(--grad-text); -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent; background-clip: text;
+}
+.rmap-status {
+  font-size: 10px; font-weight: 700; padding: 3px 10px; border-radius: var(--r-pill);
+  text-transform: uppercase; letter-spacing: 0.06em;
+}
+.status-open { background: rgba(168,85,247,0.1); color: #8B5CF6; border: 1px solid rgba(168,85,247,0.2); }
+.status-plan { background: var(--off); color: #adb5bd; border: 1px solid rgba(0,0,0,0.07); }
+.rmap-title { font-size: 18px; font-weight: 800; color: var(--ink-2); margin-bottom: 10px; letter-spacing: -0.02em; }
+.rmap-body { font-size: 13px; color: var(--muted); line-height: 1.65; }
+.rmap-list { margin-top: 18px; list-style: none; display: flex; flex-direction: column; gap: 8px; }
+.rmap-list li { display: flex; align-items: center; gap: 9px; font-size: 12px; color: #adb5bd; }
+.rmap-list li::before { content: '→'; font-size: 11px; color: #ced4da; }
+.rmap.current .rmap-list li { color: var(--muted); }
+.rmap.current .rmap-list li::before {
+  background: var(--grad-text); -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent; background-clip: text;
+}
+
+/* ──────────────────────────────────────
+   DIFFERENTIATION
+────────────────────────────────────── */
+.diff-split { display: grid; grid-template-columns: 1fr 1fr; gap: 0; margin-top: 56px; border-radius: 16px; overflow: hidden; border: 1px solid rgba(0,0,0,0.07); }
+.diff-side { padding: 40px 36px; }
+.diff-side.them { background: var(--off); border-right: 1px solid rgba(0,0,0,0.07); }
+.diff-side.us { background: white; position: relative; }
+.diff-side.us::before {
+  content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+  background: var(--grad-purple);
+}
+.diff-head {
+  display: flex; align-items: center; gap: 10px;
+  font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em;
+  color: #adb5bd; margin-bottom: 28px;
+}
+.diff-side.us .diff-head {
+  background: var(--grad-text); -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent; background-clip: text;
+}
+.diff-icon {
+  width: 24px; height: 24px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px; font-weight: 700; flex-shrink: 0;
+}
+.diff-side.them .diff-icon { background: rgba(0,0,0,0.06); color: #adb5bd; }
+.diff-side.us .diff-icon { background: var(--grad); color: white; }
+.diff-items { list-style: none; display: flex; flex-direction: column; gap: 16px; }
+.diff-items li { display: flex; gap: 12px; font-size: 14px; color: var(--muted); line-height: 1.55; align-items: flex-start; }
+.diff-bullet { flex-shrink: 0; width: 20px; height: 20px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 700; margin-top: 1px; }
+.diff-side.them .diff-bullet { background: rgba(0,0,0,0.05); color: #adb5bd; }
+.diff-side.us .diff-bullet { background: var(--grad); color: white; }
+.diff-side.us .diff-items li { color: var(--ink-2); }
+
+/* ──────────────────────────────────────
+   QUOTE BAND
+────────────────────────────────────── */
+.quote-section {
+  padding: 80px 40px;
+  background: linear-gradient(135deg, rgba(168,85,247,0.04) 0%, rgba(34,211,238,0.04) 100%);
+  border-top: 1px solid rgba(0,0,0,0.05); border-bottom: 1px solid rgba(0,0,0,0.05);
+}
+.quote-inner { max-width: 800px; margin: 0 auto; text-align: center; }
+.quote-mark { font-family: var(--serif); font-size: 80px; color: rgba(168,85,247,0.15); line-height: 1; margin-bottom: -10px; }
+.quote-text {
+  font-family: var(--sans); font-size: clamp(18px, 2.2vw, 26px);
+  font-weight: 500; color: var(--ink-2); line-height: 1.55;
+  letter-spacing: -0.01em; margin-bottom: 20px;
+}
+.quote-text em {
+  font-family: var(--serif); font-style: italic; font-weight: 400;
+  background: var(--grad-text); -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent; background-clip: text;
+}
+.quote-source { font-size: 12px; color: #adb5bd; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; }
+
+/* ──────────────────────────────────────
+   FINAL CTA
+────────────────────────────────────── */
+.cta-section { padding: 120px 40px; text-align: center; position: relative; overflow: hidden; }
+.cta-bg-1 { position: absolute; width: 700px; height: 500px; border-radius: 50%; background: radial-gradient(ellipse, rgba(168,85,247,0.08) 0%, transparent 65%); top: 50%; left: 30%; transform: translate(-50%,-50%); pointer-events: none; }
+.cta-bg-2 { position: absolute; width: 500px; height: 400px; border-radius: 50%; background: radial-gradient(ellipse, rgba(34,211,238,0.07) 0%, transparent 65%); top: 50%; left: 70%; transform: translate(-50%,-50%); pointer-events: none; }
+.cta-inner { position: relative; z-index: 1; max-width: 680px; margin: 0 auto; }
+.cta-badge {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 6px 16px; border-radius: var(--r-pill);
+  background: rgba(168,85,247,0.07); border: 1.5px solid rgba(168,85,247,0.2);
+  margin-bottom: 24px;
+}
+.cta-badge-text {
+  font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em;
+  background: var(--grad-text); -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent; background-clip: text;
+}
+.cta-h2 {
+  font-family: var(--sans); font-size: clamp(36px, 5vw, 64px);
+  font-weight: 800; color: var(--ink-2); letter-spacing: -0.035em;
+  margin-bottom: 18px; line-height: 1.05;
+}
+.cta-h2 em { font-family: var(--serif); font-style: italic; font-weight: 400; }
+.cta-sub { font-size: 16px; color: var(--muted); max-width: 460px; margin: 0 auto 44px; line-height: 1.75; }
+.cta-buttons { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; }
+.btn-cta-large {
+  display: inline-flex; align-items: center; gap: 10px;
+  font-family: var(--sans); font-size: 15px; font-weight: 600;
+  color: white; padding: 15px 36px; border-radius: var(--r-pill);
+  border: none; background: var(--grad); cursor: pointer;
+  box-shadow: 0 6px 24px rgba(168,85,247,0.28); transition: all 0.2s;
+}
+.btn-cta-large:hover { transform: translateY(-2px); box-shadow: 0 12px 36px rgba(168,85,247,0.38); opacity: 0.9; }
+.btn-outline-large {
+  display: inline-flex; align-items: center; gap: 8px;
+  font-family: var(--sans); font-size: 14px; font-weight: 600;
+  color: var(--ink-2); padding: 15px 28px; border-radius: var(--r-pill);
+  border: 1.5px solid rgba(25,47,63,0.18); background: transparent;
+  cursor: pointer; transition: all 0.2s;
+}
+.btn-outline-large:hover { border-color: rgba(168,85,247,0.4); color: #8B5CF6; background: rgba(168,85,247,0.04); }
+.cta-note { margin-top: 22px; font-size: 12px; color: #adb5bd; letter-spacing: 0.04em; }
+
+/* ──────────────────────────────────────
+   FOOTER
+────────────────────────────────────── */
+footer {
+  border-top: 1px solid rgba(0,0,0,0.07);
+  padding: 32px 40px; background: white;
+  display: flex; align-items: center; gap: 24px;
+  max-width: 100%; flex-wrap: wrap;
+}
+.footer-brand { font-size: 14px; font-weight: 700; color: var(--ink-2); display: flex; align-items: center; gap: 8px; }
+.footer-dot {
+  display: inline-block; width: 18px; height: 18px; border-radius: 4px;
+  background: var(--grad); flex-shrink: 0;
+}
+.footer-sub { font-size: 12px; color: #adb5bd; }
+.footer-links { margin-left: auto; display: flex; gap: 24px; }
+.footer-link { font-size: 13px; color: var(--muted); cursor: pointer; text-decoration: none; transition: color 0.15s; }
+.footer-link:hover { color: var(--ink-2); }
+
+/* ──────────────────────────────────────
+   SCROLL ANIMATIONS
+────────────────────────────────────── */
+.reveal { opacity: 0; transform: translateY(24px); transition: opacity 0.65s ease, transform 0.65s ease; }
+.reveal.in { opacity: 1; transform: none; }
+.d1 { transition-delay: 0.10s; }
+.d2 { transition-delay: 0.20s; }
+.d3 { transition-delay: 0.30s; }
+.d4 { transition-delay: 0.40s; }
+
+/* ──────────────────────────────────────
+   SCROLLBAR
+────────────────────────────────────── */
+::-webkit-scrollbar { width: 5px; }
+::-webkit-scrollbar-track { background: var(--off); }
+::-webkit-scrollbar-thumb { background: #ced4da; border-radius: 5px; }
+::-webkit-scrollbar-thumb:hover { background: #adb5bd; }
+</style>
+</head>
+<body>
+
+<!-- ══ NAV ══ -->
+<nav id="nav">
+  <a class="nav-logo" href="#">
+    <div class="nav-logo-icon">
+      <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect x="1.5" y="1.5" width="5.5" height="5.5" rx="1" fill="white"/>
+        <rect x="9" y="1.5" width="5.5" height="5.5" rx="1" fill="white" opacity="0.5"/>
+        <rect x="1.5" y="9" width="5.5" height="5.5" rx="1" fill="white" opacity="0.5"/>
+        <rect x="9" y="9" width="5.5" height="5.5" rx="1" fill="white"/>
+      </svg>
+    </div>
+    Blueprint
+  </a>
+  <div class="nav-center">
+    <div class="nav-item has-sub">
+      Capabilities
+      <div class="dropdown">
+        <a href="#">PRD Generation</a>
+        <a href="#">UI Spec &amp; Design</a>
+        <a href="#">Mockup Builder</a>
+        <a href="#">Tech Spec</a>
+      </div>
+    </div>
+    <span class="nav-item" onclick="scrollTo('#roadmap')">Roadmap</span>
+    <span class="nav-item" onclick="scrollTo('#how')">How It Works</span>
+    <span class="nav-item" href="https://57blocks.com">57Blocks</span>
+  </div>
+  <div class="nav-right">
+    <button class="btn-nav-ghost" onclick="scrollTo('#cta')">Sign in</button>
+    <button class="btn-nav-cta" onclick="scrollTo('#cta')">Contact Us »</button>
+  </div>
+</nav>
+
+<!-- ══ HERO ══ -->
+<section class="hero" id="hero">
+  <div class="hero-bg">
+    <div class="wave-1"></div>
+    <div class="wave-2"></div>
+    <div class="wave-3"></div>
+    <div class="hero-mesh"></div>
+  </div>
+
+  <!-- 57blocks-style dashed arrows between words -->
+  <div class="hero-arrows" aria-hidden="true">
+    <svg viewBox="0 0 700 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M 160 60 Q 220 20 280 60" stroke="url(#g1)" stroke-width="1.5" stroke-dasharray="4 4" fill="none"/>
+      <polygon points="276,54 286,62 274,68" fill="url(#g1)" opacity="0.6"/>
+      <path d="M 420 60 Q 480 20 540 60" stroke="url(#g2)" stroke-width="1.5" stroke-dasharray="4 4" fill="none"/>
+      <polygon points="536,54 546,62 534,68" fill="url(#g2)" opacity="0.6"/>
+      <defs>
+        <linearGradient id="g1" x1="0%" y1="0%" x2="100%" y2="0%">
+          <stop offset="0%" stop-color="#a855f7"/>
+          <stop offset="100%" stop-color="#22d3ee"/>
+        </linearGradient>
+        <linearGradient id="g2" x1="0%" y1="0%" x2="100%" y2="0%">
+          <stop offset="0%" stop-color="#22d3ee"/>
+          <stop offset="100%" stop-color="#a855f7"/>
+        </linearGradient>
+      </defs>
+    </svg>
+  </div>
+
+  <div class="hero-content">
+    <div class="hero-eyebrow reveal">
+      <span class="eyebrow-dot"></span>
+      <span class="hero-eyebrow-text">AI-powered MVP delivery — Phase 1 now open</span>
+    </div>
+
+    <h1 class="hero-h1 reveal d1">
+      Idea &nbsp;<span class="word-mvp">MVP</span>&nbsp; <span class="word-serif">Deliver</span>
+    </h1>
+
+    <p class="hero-sub reveal d2">
+      We help <strong>Visionary Founders</strong> and <strong>Product Teams</strong> turn vague ideas into
+      structured, deliverable assets — PRD, design, prototype, and tech spec — 
+      that engineering can actually build from.
+    </p>
+
+    <div class="hero-cta-group reveal d3">
+      <button class="btn-hero-primary" onclick="scrollTo('#cta')">
+        Request Access »
+      </button>
+      <button class="btn-hero-ghost" onclick="scrollTo('#cta')">
+        Already invited? Sign in →
+      </button>
+    </div>
+    <p class="hero-footnote reveal d4">Invite-only · No self-registration · Phase 1 open</p>
+  </div>
+
+  <div class="scroll-down" onclick="scrollTo('#capabilities')">
+    <span class="scroll-down-label">Explore</span>
+    <div class="scroll-down-arrow">
+      <svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M7 2v10M3 8l4 4 4-4"/>
+      </svg>
+    </div>
+  </div>
+</section>
+
+<!-- ══ CAPABILITIES ══ -->
+<section class="section cap-section" id="capabilities">
+  <div class="section-inner">
+    <div class="cap-layout">
+      <div class="cap-left reveal">
+        <div class="section-divider left"></div>
+        <div class="s-eyebrow">Current Phase</div>
+        <h2 class="s-h2">Services Offerings —<br><em>AI-Driven Delivery</em></h2>
+        <p class="s-body">
+          Blueprint builds the full structured delivery chain for your MVP —
+          from requirements to interactive prototype to engineering spec.
+          Our goal: give your dev team a package they can build from, not just look at.
+        </p>
+        <div class="cap-note">
+          <div class="cap-note-label">Coming next</div>
+          <div class="cap-note-row">
+            <span class="cap-note-n">06</span>
+            Code repository generation from the delivery package
+          </div>
+          <div class="cap-note-row">
+            <span class="cap-note-n">07</span>
+            Automated deployment &amp; live MVP handoff
+          </div>
+        </div>
+      </div>
+      <div class="reveal d1">
+        <div class="asset-cards">
+          <div class="asset-card active">
+            <span class="asset-num">01</span>
+            <span class="asset-name">PRD</span>
+            <span class="asset-desc">Product requirements doc</span>
+            <span class="asset-pill pill-live">Live</span>
+          </div>
+          <div class="asset-card active">
+            <span class="asset-num">02</span>
+            <span class="asset-name">UI Spec</span>
+            <span class="asset-desc">Interface specification</span>
+            <span class="asset-pill pill-live">Live</span>
+          </div>
+          <div class="asset-card active">
+            <span class="asset-num">03</span>
+            <span class="asset-name">Design</span>
+            <span class="asset-desc">Hi-fi visuals + Paper edit</span>
+            <span class="asset-pill pill-live">Live</span>
+          </div>
+          <div class="asset-card active">
+            <span class="asset-num">04</span>
+            <span class="asset-name">Mockup</span>
+            <span class="asset-desc">Clickable web prototype</span>
+            <span class="asset-pill pill-live">Live</span>
+          </div>
+          <div class="asset-card active">
+            <span class="asset-num">05</span>
+            <span class="asset-name">Tech Spec</span>
+            <span class="asset-desc">Engineering specification</span>
+            <span class="asset-pill pill-live">Live</span>
+          </div>
+          <div class="asset-card upcoming">
+            <span class="asset-num">06</span>
+            <span class="asset-name">Code</span>
+            <span class="asset-desc">Repository generation</span>
+            <span class="asset-pill pill-soon">Phase 2</span>
+          </div>
+          <div class="asset-card upcoming">
+            <span class="asset-num">07</span>
+            <span class="asset-name">Deploy</span>
+            <span class="asset-desc">Auto deploy &amp; handoff</span>
+            <span class="asset-pill pill-soon">Phase 3</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══ HOW IT WORKS ══ -->
+<section class="section" id="how">
+  <div class="section-inner">
+    <div class="flow-layout">
+      <div>
+        <div class="section-divider left reveal"></div>
+        <div class="s-eyebrow reveal">How It Works</div>
+        <h2 class="s-h2 reveal d1">Each step feeds<br><em>the next</em></h2>
+        <p class="s-body reveal d2">
+          Every asset Blueprint generates becomes the input for the next.
+          Requirements drive design. Design drives prototype. Prototype drives the tech spec.
+          Nothing lives in isolation.
+        </p>
+        <div class="flow-chain reveal d3">
+          <div class="flow-item">
+            <span class="flow-n">00</span>
+            <div class="flow-body">
+              <div class="flow-title">Idea clarification</div>
+              <div class="flow-desc">Describe your product idea — Blueprint AI handles the rest</div>
+            </div>
+          </div>
+          <div class="flow-item">
+            <span class="flow-n">01</span>
+            <div class="flow-body">
+              <div class="flow-title">PRD — confirm requirements baseline</div>
+              <div class="flow-desc">Structured requirements doc, versioned and confirmed by you</div>
+            </div>
+          </div>
+          <div class="flow-item">
+            <span class="flow-n">02</span>
+            <div class="flow-body">
+              <div class="flow-title">UI Spec + Design — visual direction locked</div>
+              <div class="flow-desc">Interface spec drives hi-fi design; edit in Paper, sync back</div>
+            </div>
+          </div>
+          <div class="flow-item">
+            <span class="flow-n">03</span>
+            <div class="flow-body">
+              <div class="flow-title">Mockup — validate the experience</div>
+              <div class="flow-desc">Clickable prototype; feedback gets attributed back to PRD or design</div>
+            </div>
+          </div>
+          <div class="flow-item">
+            <span class="flow-n">04</span>
+            <div class="flow-body">
+              <div class="flow-title">Tech Spec — engineering-ready handoff</div>
+              <div class="flow-desc">Architecture, APIs, risk flags — your dev team can start building</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="reveal d2">
+        <div class="chat-mock-wrap">
+          <div class="cm-header">
+            <div class="cm-header-dot"></div>
+            <span class="cm-header-label">Blueprint AI</span>
+            <span class="cm-header-sub">Unified workspace · PRD</span>
+          </div>
+          <div class="cm-body">
+            <div class="cm-msg ai">
+              <div class="cm-who">Blueprint AI · PM Agent</div>
+              <div class="cm-bubble">PRD looks solid — I've structured the requirements across 12 sections and flagged 2 edge cases for your review. Ready to set this as the confirmed baseline?</div>
+            </div>
+            <div class="cm-msg user">
+              <div class="cm-who">You</div>
+              <div class="cm-bubble">Yes — confirm v1.2 as the current requirements baseline.</div>
+            </div>
+            <div class="cm-confirm">
+              <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 6.5L4.5 9L10 3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              PRD v1.2 confirmed as baseline
+            </div>
+            <div class="cm-msg ai">
+              <div class="cm-who">Blueprint AI · UI Designer Agent</div>
+              <div class="cm-bubble">UI Spec and Design are flagged for update based on the confirmed PRD. Shall we start the design phase?</div>
+            </div>
+          </div>
+        </div>
+        <div style="margin-top:12px;padding:14px 18px;background:var(--off);border:1px solid rgba(0,0,0,0.06);border-radius:12px;display:flex;align-items:center;gap:12px;">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="7" stroke="#adb5bd" stroke-width="1.5"/><path d="M8 5v4M8 11v.5" stroke="#adb5bd" stroke-width="1.5" stroke-linecap="round"/></svg>
+          <span style="font-size:12px;color:var(--muted);">One AI assistant. Multiple specialist agents behind the scenes. You only interact with Blueprint AI.</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══ ROADMAP ══ -->
+<section class="section roadmap-section" id="roadmap">
+  <div class="section-inner">
+    <div class="s-center reveal">
+      <div class="section-divider"></div>
+      <div class="s-eyebrow">Blueprint Roadmap</div>
+      <h2 class="s-h2">Idea &nbsp;→&nbsp; MVP &nbsp;→&nbsp; Scale</h2>
+      <p class="s-body">Blueprint accelerates every stage of the product delivery life cycle — from structured assets to shipped code.</p>
+    </div>
+    <div class="roadmap-cards reveal d1">
+      <div class="rmap current">
+        <div class="rmap-phase">
+          <span class="rmap-phase-num">Phase 01</span>
+          <span class="rmap-status status-open">Open now</span>
+        </div>
+        <div class="rmap-title">Structured Product Assets</div>
+        <div class="rmap-body">From vague idea to a reviewed, versioned delivery package your team can build from.</div>
+        <ul class="rmap-list">
+          <li>PRD / UI Spec / Design</li>
+          <li>Mockup / Tech Spec</li>
+          <li>Version snapshots &amp; baselines</li>
+          <li>Impact analysis &amp; safe rollback</li>
+        </ul>
+      </div>
+      <div class="rmap">
+        <div class="rmap-phase">
+          <span class="rmap-phase-num">Phase 02</span>
+          <span class="rmap-status status-plan">Planned</span>
+        </div>
+        <div class="rmap-title">Deliverable Code Repo</div>
+        <div class="rmap-body">Generate a runnable codebase from your confirmed delivery package. Self-deploy and validate.</div>
+        <ul class="rmap-list">
+          <li>Code repository generation</li>
+          <li>Local run &amp; deploy guide</li>
+          <li>Linked to Phase 1 assets</li>
+        </ul>
+      </div>
+      <div class="rmap">
+        <div class="rmap-phase">
+          <span class="rmap-phase-num">Phase 03</span>
+          <span class="rmap-status status-plan">Planned</span>
+        </div>
+        <div class="rmap-title">Deploy &amp; Scale</div>
+        <div class="rmap-body">Blueprint deploys your MVP. Accept the live product, receive the full repo and documentation.</div>
+        <ul class="rmap-list">
+          <li>One-click cloud deployment</li>
+          <li>Live MVP acceptance testing</li>
+          <li>Full repo + package handoff</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══ DIFFERENTIATION ══ -->
+<section class="section">
+  <div class="section-inner">
+    <div class="s-center reveal">
+      <div class="section-divider"></div>
+      <div class="s-eyebrow">Why Blueprint</div>
+      <h2 class="s-h2">Not a demo tool.<br><em>A delivery chain.</em></h2>
+    </div>
+    <div class="diff-split reveal d1">
+      <div class="diff-side them">
+        <div class="diff-head"><div class="diff-icon">✕</div>Typical AI / prototyping tools</div>
+        <ul class="diff-items">
+          <li><div class="diff-bullet">✕</div>Produces demos that look like a product but can't be handed off</li>
+          <li><div class="diff-bullet">✕</div>Requirements, design, and tech exist in isolation</li>
+          <li><div class="diff-bullet">✕</div>No versioning — every change is a full regeneration</li>
+          <li><div class="diff-bullet">✕</div>Dev team still needs to re-derive requirements from scratch</li>
+          <li><div class="diff-bullet">✕</div>Downstream bugs have no traceable upstream source</li>
+        </ul>
+      </div>
+      <div class="diff-side us">
+        <div class="diff-head"><div class="diff-icon">✓</div>Blueprint</div>
+        <ul class="diff-items">
+          <li><div class="diff-bullet">✓</div>Every asset structured for real delivery, not just presentation</li>
+          <li><div class="diff-bullet">✓</div>Requirements → design → prototype → tech spec form a closed loop</li>
+          <li><div class="diff-bullet">✓</div>Every asset has a version snapshot and confirmed baseline</li>
+          <li><div class="diff-bullet">✓</div>Delivery package handed directly to engineering — no re-derivation</li>
+          <li><div class="diff-bullet">✓</div>Downstream feedback attributed and safely rolled back upstream</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══ QUOTE ══ -->
+<div class="quote-section reveal">
+  <div class="quote-inner">
+    <div class="quote-mark">"</div>
+    <p class="quote-text">
+      Blueprint solves the core problem: how do you turn a one-off AI conversation
+      into a <em>reviewable, iterable, and deliverable</em> product package
+      that your whole team can actually build from?
+    </p>
+    <div class="quote-source">— Blueprint product thesis · 57Blocks</div>
+  </div>
+</div>
+
+<!-- ══ CTA ══ -->
+<section class="cta-section" id="cta">
+  <div class="cta-bg-1"></div>
+  <div class="cta-bg-2"></div>
+  <div class="cta-inner reveal">
+    <div class="cta-badge">
+      <span class="eyebrow-dot"></span>
+      <span class="cta-badge-text">Phase 1 · Invite-Only Access Now Open</span>
+    </div>
+    <h2 class="cta-h2">Start building with<br><em>Blueprint</em></h2>
+    <p class="cta-sub">Turn your next product idea into a structured, deliverable asset package — ready for your engineering team to build from.</p>
+    <div class="cta-buttons">
+      <button class="btn-cta-large">Request Access »</button>
+      <button class="btn-outline-large">Already invited? Sign in</button>
+      <button class="btn-outline-large">Contact 57Blocks</button>
+    </div>
+    <p class="cta-note">Invite-only · No self-registration · Phase 1 open now</p>
+  </div>
+</section>
+
+<!-- ══ FOOTER ══ -->
+<footer>
+  <div class="footer-brand">
+    <div class="footer-dot"></div>
+    Blueprint
+  </div>
+  <div class="footer-sub">by 57Blocks — AI-powered MVP delivery platform</div>
+  <div class="footer-links">
+    <a class="footer-link" href="#">Product</a>
+    <a class="footer-link" href="#">Roadmap</a>
+    <a class="footer-link" href="#">Contact</a>
+    <a class="footer-link" href="https://57blocks.com" target="_blank">57blocks.com</a>
+  </div>
+</footer>
+
+<script>
+// ─── Nav scroll (homepage only) ───
+const nav = document.getElementById('nav');
+window.addEventListener('scroll', () => nav.classList.toggle('scrolled', scrollY > 40));
+
+// ─── Smooth scroll helper ───
+function smoothTo(id) {
+  const el = document.querySelector(id);
+  if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+// ─── Intersection observer reveals ───
+const io = new IntersectionObserver(entries => {
+  entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('in'); });
+}, { threshold: 0.10 });
+document.querySelectorAll('.reveal').forEach(el => io.observe(el));
+</script>
+
+<!-- ══════════════════════════════════════════════════════════════════
+     PAGE OVERLAY SYSTEM — Sign In, Request Access, Onboarding, Workspace
+══════════════════════════════════════════════════════════════════ -->
+<style>
+/* ── Page overlay base ── */
+.bp-overlay {
+  display: none;
+  position: fixed; inset: 0; z-index: 1000;
+  background: var(--white);
+  font-family: var(--sans);
+  overflow-y: auto;
+  animation: overlayIn 0.25s ease;
+}
+.bp-overlay.active { display: block; }
+@keyframes overlayIn {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── Auth layout shared ── */
+.auth-page {
+  min-height: 100vh;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+}
+@media (max-width: 768px) {
+  .auth-page { grid-template-columns: 1fr; }
+  .auth-side-art { display: none; }
+}
+
+/* Left panel — form */
+.auth-form-panel {
+  display: flex; flex-direction: column;
+  padding: 40px 56px;
+  background: var(--white);
+}
+.auth-form-logo {
+  display: flex; align-items: center; gap: 9px;
+  font-size: 17px; font-weight: 700; color: var(--ink-2);
+  letter-spacing: -0.02em; cursor: pointer; text-decoration: none;
+  margin-bottom: 48px;
+}
+.auth-form-logo-icon {
+  width: 30px; height: 30px; border-radius: 7px;
+  background: var(--grad); display: flex; align-items: center; justify-content: center;
+}
+.auth-form-logo-icon svg { width: 15px; height: 15px; }
+
+.auth-form-body { flex: 1; display: flex; flex-direction: column; justify-content: center; max-width: 400px; }
+.auth-form-title { font-size: 28px; font-weight: 800; color: var(--ink-2); letter-spacing: -0.03em; margin-bottom: 6px; }
+.auth-form-sub { font-size: 14px; color: var(--muted); margin-bottom: 36px; }
+.auth-form-footer { margin-top: auto; padding-top: 32px; font-size: 12px; color: #adb5bd; }
+
+/* Right panel — artwork */
+.auth-side-art {
+  background: linear-gradient(145deg, #f0e8ff 0%, #e8f0ff 50%, #e0f8ff 100%);
+  display: flex; align-items: center; justify-content: center;
+  position: relative; overflow: hidden; padding: 40px;
+}
+.auth-art-blob-1 {
+  position: absolute; width: 500px; height: 500px; border-radius: 50%;
+  background: radial-gradient(ellipse, rgba(168,85,247,0.18) 0%, transparent 65%);
+  top: -100px; right: -100px;
+}
+.auth-art-blob-2 {
+  position: absolute; width: 400px; height: 400px; border-radius: 50%;
+  background: radial-gradient(ellipse, rgba(34,211,238,0.15) 0%, transparent 65%);
+  bottom: -80px; left: -80px;
+}
+.auth-art-card {
+  position: relative; z-index: 1;
+  background: rgba(255,255,255,0.7); backdrop-filter: blur(16px);
+  border: 1px solid rgba(255,255,255,0.9);
+  border-radius: 20px; padding: 32px; width: 100%; max-width: 360px;
+  box-shadow: 0 24px 64px rgba(168,85,247,0.12);
+}
+.auth-art-heading {
+  font-size: 13px; font-weight: 700; color: var(--ink-2);
+  margin-bottom: 20px; text-transform: uppercase; letter-spacing: 0.06em;
+}
+.auth-art-step {
+  display: flex; align-items: center; gap: 14px; padding: 12px 0;
+  border-bottom: 1px solid rgba(0,0,0,0.05);
+}
+.auth-art-step:last-child { border-bottom: none; }
+.auth-art-step-icon {
+  width: 36px; height: 36px; border-radius: 10px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 16px;
+}
+.icon-prd  { background: linear-gradient(135deg,#f3e8ff,#e8d5ff); }
+.icon-ui   { background: linear-gradient(135deg,#e0f2fe,#bae6fd); }
+.icon-mock { background: linear-gradient(135deg,#dcfce7,#bbf7d0); }
+.icon-tech { background: linear-gradient(135deg,#fef3c7,#fde68a); }
+.auth-art-step-text .step-name { font-size: 13px; font-weight: 600; color: var(--ink-2); }
+.auth-art-step-text .step-desc { font-size: 11px; color: var(--muted); margin-top: 1px; }
+.auth-art-badge {
+  margin-left: auto; font-size: 10px; font-weight: 700; padding: 3px 8px;
+  border-radius: 20px; background: rgba(168,85,247,0.1);
+  color: #8B5CF6; border: 1px solid rgba(168,85,247,0.2);
+  white-space: nowrap;
+}
+
+/* ── Form fields ── */
+.f-field { margin-bottom: 18px; }
+.f-label {
+  display: block; font-size: 12px; font-weight: 600;
+  color: var(--ink-2); margin-bottom: 6px; letter-spacing: 0.01em;
+}
+.f-input {
+  width: 100%; padding: 11px 14px; font-family: var(--sans); font-size: 14px;
+  border: 1.5px solid #e2e8f0; border-radius: 10px;
+  background: var(--white); color: var(--ink-2);
+  outline: none; transition: border-color 0.15s, box-shadow 0.15s;
+}
+.f-input:focus {
+  border-color: #a855f7;
+  box-shadow: 0 0 0 3px rgba(168,85,247,0.1);
+}
+.f-input.error { border-color: #ef4444; box-shadow: 0 0 0 3px rgba(239,68,68,0.08); }
+.f-input::placeholder { color: #cbd5e1; }
+.f-hint { font-size: 11px; color: var(--muted); margin-top: 5px; }
+.f-error { font-size: 11px; color: #ef4444; margin-top: 5px; display: none; }
+.f-error.show { display: block; }
+
+/* ── Invite chip ── */
+.invite-chip {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 14px; border-radius: 10px;
+  background: rgba(34,197,94,0.06); border: 1.5px solid rgba(34,197,94,0.25);
+  margin-bottom: 22px;
+}
+.invite-chip-dot { width: 7px; height: 7px; border-radius: 50%; background: #22c55e; flex-shrink: 0; animation: chip-pulse 2s ease-in-out infinite; }
+@keyframes chip-pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+.invite-chip-email { font-size: 13px; font-weight: 600; color: var(--ink-2); }
+.invite-chip-tag { margin-left: auto; font-size: 10px; font-weight: 700; color: #16a34a; background: rgba(22,163,74,0.1); padding: 2px 8px; border-radius: 20px; }
+
+/* ── Buttons ── */
+.btn-primary-full {
+  width: 100%; padding: 13px; font-family: var(--sans); font-size: 14px; font-weight: 700;
+  color: white; border: none; border-radius: var(--r-pill);
+  background: var(--grad); cursor: pointer; transition: all 0.2s;
+  box-shadow: 0 4px 20px rgba(168,85,247,0.25);
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+}
+.btn-primary-full:hover { opacity: 0.88; transform: translateY(-1px); box-shadow: 0 8px 28px rgba(168,85,247,0.32); }
+.btn-primary-full:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+.btn-link { background: none; border: none; font-family: var(--sans); font-size: 13px; cursor: pointer; padding: 0; font-weight: 600; }
+.btn-link.purple { color: #8B5CF6; }
+.btn-link.purple:hover { text-decoration: underline; }
+.btn-link.muted { color: var(--muted); }
+.btn-link.muted:hover { color: var(--ink-2); }
+.auth-divider { display: flex; align-items: center; gap: 12px; margin: 20px 0; }
+.auth-divider-line { flex: 1; height: 1px; background: #e2e8f0; }
+.auth-divider-text { font-size: 12px; color: #adb5bd; }
+.forgot-row { display: flex; justify-content: space-between; align-items: center; margin-top: -10px; margin-bottom: 18px; }
+
+/* ── Error banner ── */
+.error-banner {
+  display: none; padding: 11px 14px; border-radius: 8px;
+  background: rgba(239,68,68,0.06); border: 1px solid rgba(239,68,68,0.2);
+  color: #dc2626; font-size: 13px; margin-bottom: 18px;
+}
+.error-banner.show { display: flex; align-items: center; gap: 8px; }
+
+/* ── Success state ── */
+.success-state { display: none; text-align: center; padding: 32px 0; }
+.success-state.show { display: block; }
+.success-icon {
+  width: 56px; height: 56px; border-radius: 50%; margin: 0 auto 16px;
+  background: linear-gradient(135deg, #dcfce7, #bbf7d0);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 24px;
+}
+.success-title { font-size: 20px; font-weight: 800; color: var(--ink-2); margin-bottom: 8px; }
+.success-sub { font-size: 14px; color: var(--muted); line-height: 1.6; }
+
+/* ── Password strength ── */
+.pw-strength { margin-top: 6px; display: flex; gap: 4px; }
+.pw-bar { flex: 1; height: 3px; border-radius: 2px; background: #e2e8f0; transition: background 0.3s; }
+.pw-bar.weak { background: #ef4444; }
+.pw-bar.ok   { background: #f59e0b; }
+.pw-bar.good { background: #22c55e; }
+.pw-label { font-size: 11px; margin-top: 4px; }
+.pw-label.weak { color: #ef4444; }
+.pw-label.ok   { color: #f59e0b; }
+.pw-label.good { color: #22c55e; }
+
+/* ── Progress steps (Onboarding) ── */
+.ob-wrap { min-height: 100vh; display: grid; grid-template-columns: 300px 1fr; }
+.ob-sidebar {
+  background: linear-gradient(180deg, #f8f0ff 0%, #eef4ff 100%);
+  border-right: 1px solid #e9edf5; padding: 40px 28px;
+  display: flex; flex-direction: column;
+}
+.ob-sidebar-logo { margin-bottom: 48px; }
+.ob-steps-list { display: flex; flex-direction: column; gap: 4px; flex: 1; }
+.ob-step-item {
+  display: flex; align-items: flex-start; gap: 14px;
+  padding: 12px 14px; border-radius: 12px;
+  cursor: pointer; transition: background 0.15s;
+}
+.ob-step-item:hover { background: rgba(168,85,247,0.06); }
+.ob-step-item.active { background: rgba(168,85,247,0.1); }
+.ob-step-num {
+  width: 28px; height: 28px; border-radius: 50%; flex-shrink: 0; margin-top: 1px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 12px; font-weight: 700; border: 1.5px solid #ddd6fe;
+  color: #c4b5fd; background: white; transition: all 0.2s;
+}
+.ob-step-item.active .ob-step-num {
+  background: var(--grad); border-color: transparent; color: white;
+  box-shadow: 0 2px 10px rgba(168,85,247,0.3);
+}
+.ob-step-item.done .ob-step-num {
+  background: linear-gradient(135deg, #dcfce7, #bbf7d0);
+  border-color: #86efac; color: #16a34a;
+}
+.ob-step-text .ob-step-title { font-size: 13px; font-weight: 600; color: var(--muted); }
+.ob-step-item.active .ob-step-title,
+.ob-step-item.done .ob-step-title  { color: var(--ink-2); }
+.ob-step-text .ob-step-desc { font-size: 11px; color: #adb5bd; margin-top: 2px; }
+
+.ob-main { padding: 48px 64px; display: flex; flex-direction: column; }
+.ob-header { margin-bottom: 8px; }
+.ob-step-tag { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; background: var(--grad-text); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; margin-bottom: 14px; }
+.ob-title { font-size: 32px; font-weight: 800; color: var(--ink-2); letter-spacing: -0.03em; line-height: 1.15; margin-bottom: 12px; }
+.ob-title em { font-family: var(--serif); font-style: italic; font-weight: 400; }
+.ob-body { font-size: 15px; color: var(--muted); line-height: 1.8; max-width: 560px; flex: 1; }
+.ob-body strong { color: var(--ink-2); font-weight: 600; }
+.ob-body ul { padding-left: 20px; margin-top: 12px; display: flex; flex-direction: column; gap: 8px; }
+
+.ob-footer { margin-top: 48px; display: flex; align-items: center; justify-content: space-between; }
+.ob-progress { display: flex; gap: 6px; align-items: center; }
+.ob-dot { width: 30px; height: 4px; border-radius: 2px; background: #e2e8f0; transition: all 0.3s; }
+.ob-dot.active { background: var(--grad-purple); width: 44px; }
+.ob-dot.done { background: #86efac; }
+.ob-actions { display: flex; gap: 10px; }
+.btn-ob-next {
+  display: inline-flex; align-items: center; gap: 8px;
+  font-family: var(--sans); font-size: 14px; font-weight: 700;
+  color: white; padding: 11px 26px; border-radius: var(--r-pill);
+  border: none; background: var(--grad); cursor: pointer;
+  box-shadow: 0 4px 16px rgba(168,85,247,0.22); transition: all 0.2s;
+}
+.btn-ob-next:hover { opacity: 0.88; transform: translateY(-1px); }
+.btn-ob-back {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-family: var(--sans); font-size: 14px; font-weight: 600;
+  color: var(--muted); padding: 11px 20px; border-radius: var(--r-pill);
+  border: 1.5px solid #e2e8f0; background: transparent; cursor: pointer; transition: all 0.15s;
+}
+.btn-ob-back:hover { color: var(--ink-2); border-color: #c4b5fd; }
+
+/* ── Project Create ── */
+.pj-page { min-height: 100vh; background: var(--off); display: flex; flex-direction: column; }
+.pj-topbar {
+  height: 64px; background: white; border-bottom: 1px solid #e9edf5;
+  display: flex; align-items: center; padding: 0 40px; gap: 12px;
+  position: sticky; top: 0; z-index: 10;
+}
+.pj-breadcrumb { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--muted); }
+.pj-breadcrumb .sep { color: #ddd; }
+.pj-breadcrumb .cur { color: var(--ink-2); font-weight: 600; }
+.pj-body { flex: 1; display: flex; justify-content: center; padding: 48px 40px; }
+.pj-form-wrap { width: 100%; max-width: 640px; }
+.pj-title { font-size: 26px; font-weight: 800; color: var(--ink-2); letter-spacing: -0.03em; margin-bottom: 4px; }
+.pj-subtitle { font-size: 14px; color: var(--muted); margin-bottom: 32px; }
+.pj-card { background: white; border: 1px solid #e9edf5; border-radius: 18px; padding: 32px; box-shadow: 0 4px 24px rgba(0,0,0,0.04); }
+.pj-grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; }
+.pj-divider { height: 1px; background: #e9edf5; margin: 22px 0; }
+.pj-footer-note { margin-top: 14px; font-size: 11px; color: #adb5bd; text-align: center; }
+
+/* Tags below input */
+.tag-row { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
+.tag { font-size: 11px; padding: 3px 10px; border-radius: 20px; background: rgba(168,85,247,0.08); color: #7c3aed; border: 1px solid rgba(168,85,247,0.2); cursor: pointer; font-weight: 600; transition: all 0.12s; }
+.tag:hover { background: rgba(168,85,247,0.15); }
+.tag.selected { background: rgba(168,85,247,0.15); border-color: rgba(168,85,247,0.4); }
+
+/* select & textarea reuse f-input */
+select.f-input { appearance: none; background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 12 8' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23adb5bd' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; background-size: 12px; padding-right: 36px; }
+textarea.f-input { resize: vertical; min-height: 80px; }
+
+/* ── Loading spinner ── */
+.spinner { display: inline-block; width: 16px; height: 16px; border: 2px solid rgba(255,255,255,0.4); border-top-color: white; border-radius: 50%; animation: spin 0.6s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── Back link ── */
+.back-link {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: 13px; font-weight: 600; color: var(--muted);
+  cursor: pointer; background: none; border: none; font-family: var(--sans);
+  padding: 0; transition: color 0.15s; margin-bottom: 0;
+}
+.back-link:hover { color: var(--ink-2); }
+</style>
+
+<!-- ════════════════════════════════
+  PAGE: SIGN IN  (id=page-signin)
+════════════════════════════════ -->
+<div class="bp-overlay" id="page-signin">
+  <div class="auth-page">
+    <!-- Left: Form -->
+    <div class="auth-form-panel">
+      <a class="auth-form-logo" onclick="showPage(null)">
+        <div class="auth-form-logo-icon">
+          <svg viewBox="0 0 16 16" fill="none"><rect x="1.5" y="1.5" width="5.5" height="5.5" rx="1" fill="white"/><rect x="9" y="1.5" width="5.5" height="5.5" rx="1" fill="white" opacity="0.5"/><rect x="1.5" y="9" width="5.5" height="5.5" rx="1" fill="white" opacity="0.5"/><rect x="9" y="9" width="5.5" height="5.5" rx="1" fill="white"/></svg>
+        </div>
+        Blueprint
+      </a>
+      <div class="auth-form-body">
+        <div class="auth-form-title">Welcome back</div>
+        <div class="auth-form-sub">Sign in with your invited email and password</div>
+
+        <div class="error-banner" id="signin-error">
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="6" stroke="#dc2626" stroke-width="1.5"/><path d="M7 4v3.5M7 9.5v.5" stroke="#dc2626" stroke-width="1.5" stroke-linecap="round"/></svg>
+          Email or password is incorrect. Please try again.
+        </div>
+
+        <div class="f-field">
+          <label class="f-label">Email address</label>
+          <input class="f-input" id="signin-email" type="email" placeholder="you@company.com" autocomplete="email">
+        </div>
+        <div class="f-field">
+          <label class="f-label">Password</label>
+          <input class="f-input" id="signin-password" type="password" placeholder="Enter your password" autocomplete="current-password">
+        </div>
+        <div class="forgot-row">
+          <span></span>
+          <button class="btn-link purple" onclick="showPage('page-forgot')">Forgot password?</button>
+        </div>
+
+        <button class="btn-primary-full" id="signin-btn" onclick="doSignIn()">
+          Sign in
+        </button>
+
+        <div class="auth-divider">
+          <div class="auth-divider-line"></div>
+          <span class="auth-divider-text">or</span>
+          <div class="auth-divider-line"></div>
+        </div>
+
+        <p style="font-size:13px;color:var(--muted);text-align:center;">
+          Don't have an account? 
+          <button class="btn-link purple" onclick="showPage('page-request')">Request access →</button>
+        </p>
+      </div>
+      <div class="auth-form-footer">
+        <button class="back-link" onclick="showPage(null)">
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M9 2L4 7l5 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          Back to homepage
+        </button>
+      </div>
+    </div>
+
+    <!-- Right: Art panel -->
+    <div class="auth-side-art">
+      <div class="auth-art-blob-1"></div>
+      <div class="auth-art-blob-2"></div>
+      <div class="auth-art-card">
+        <div class="auth-art-heading">Your delivery package</div>
+        <div class="auth-art-step">
+          <div class="auth-art-step-icon icon-prd">📋</div>
+          <div class="auth-art-step-text">
+            <div class="step-name">PRD</div>
+            <div class="step-desc">Requirements baseline · v1.2</div>
+          </div>
+          <span class="auth-art-badge">✓ Confirmed</span>
+        </div>
+        <div class="auth-art-step">
+          <div class="auth-art-step-icon icon-ui">🎨</div>
+          <div class="auth-art-step-text">
+            <div class="step-name">UI Spec + Design</div>
+            <div class="step-desc">10 screens · Paper linked</div>
+          </div>
+          <span class="auth-art-badge">✓ Confirmed</span>
+        </div>
+        <div class="auth-art-step">
+          <div class="auth-art-step-icon icon-mock">⚡</div>
+          <div class="auth-art-step-text">
+            <div class="step-name">Mockup</div>
+            <div class="step-desc">Clickable prototype · 2 rounds</div>
+          </div>
+          <span class="auth-art-badge">✓ Confirmed</span>
+        </div>
+        <div class="auth-art-step">
+          <div class="auth-art-step-icon icon-tech">⚙️</div>
+          <div class="auth-art-step-text">
+            <div class="step-name">Tech Spec</div>
+            <div class="step-desc">LangGraph architecture</div>
+          </div>
+          <span class="auth-art-badge" style="background:rgba(168,85,247,0.1);color:#8B5CF6;border-color:rgba(168,85,247,0.2);">In progress</span>
+        </div>
+        <div style="margin-top:16px;padding-top:14px;border-top:1px solid rgba(0,0,0,0.06);font-size:12px;color:var(--muted);">
+          Blueprint MVP Platform · Phase 1
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════
+  PAGE: REQUEST ACCESS  (id=page-request)
+════════════════════════════════ -->
+<div class="bp-overlay" id="page-request">
+  <div class="auth-page">
+    <div class="auth-form-panel">
+      <a class="auth-form-logo" onclick="showPage(null)">
+        <div class="auth-form-logo-icon">
+          <svg viewBox="0 0 16 16" fill="none"><rect x="1.5" y="1.5" width="5.5" height="5.5" rx="1" fill="white"/><rect x="9" y="1.5" width="5.5" height="5.5" rx="1" fill="white" opacity="0.5"/><rect x="1.5" y="9" width="5.5" height="5.5" rx="1" fill="white" opacity="0.5"/><rect x="9" y="9" width="5.5" height="5.5" rx="1" fill="white"/></svg>
+        </div>
+        Blueprint
+      </a>
+      <div class="auth-form-body">
+        <!-- State A: Request form -->
+        <div id="req-form-state">
+          <div class="auth-form-title">Request access</div>
+          <div class="auth-form-sub">Blueprint is invite-only. Tell us about yourself and we'll be in touch.</div>
+
+          <div class="f-field">
+            <label class="f-label">Full name</label>
+            <input class="f-input" id="req-name" type="text" placeholder="Jane Smith">
+          </div>
+          <div class="f-field">
+            <label class="f-label">Work email</label>
+            <input class="f-input" id="req-email" type="email" placeholder="jane@company.com">
+          </div>
+          <div class="f-field">
+            <label class="f-label">Company / Team</label>
+            <input class="f-input" id="req-company" type="text" placeholder="Acme Corp">
+          </div>
+          <div class="f-field">
+            <label class="f-label">What are you building?</label>
+            <textarea class="f-input" id="req-desc" placeholder="Briefly describe your product idea or use case…" style="min-height:80px;resize:none;"></textarea>
+          </div>
+          <div class="f-field">
+            <label class="f-label">Role</label>
+            <div class="tag-row" id="req-roles">
+              <span class="tag" onclick="toggleTag(this)">PM / Product</span>
+              <span class="tag" onclick="toggleTag(this)">Designer</span>
+              <span class="tag" onclick="toggleTag(this)">Founder</span>
+              <span class="tag" onclick="toggleTag(this)">Engineer</span>
+              <span class="tag" onclick="toggleTag(this)">Other</span>
+            </div>
+          </div>
+
+          <button class="btn-primary-full" id="req-btn" onclick="doRequest()" style="margin-top:8px;">
+            Submit request »
+          </button>
+          <p style="font-size:12px;color:#adb5bd;text-align:center;margin-top:12px;">
+            Already have an invite? 
+            <button class="btn-link purple" onclick="showPage('page-invite')">Set up your account →</button>
+          </p>
+        </div>
+
+        <!-- State B: Success -->
+        <div class="success-state" id="req-success-state">
+          <div class="success-icon">✓</div>
+          <div class="success-title">Request received!</div>
+          <div class="success-sub">Thanks for your interest in Blueprint. We'll review your request and send you an invite link within 2–3 business days.</div>
+          <div style="margin-top:28px;">
+            <button class="btn-primary-full" onclick="showPage(null)" style="width:auto;padding:11px 28px;display:inline-flex;">
+              Back to homepage
+            </button>
+          </div>
+          <p style="margin-top:16px;font-size:12px;color:#adb5bd;">In the meantime, visit <a href="https://57blocks.com" target="_blank" style="color:#8B5CF6;">57blocks.com</a> to learn more</p>
+        </div>
+      </div>
+      <div class="auth-form-footer">
+        <button class="back-link" onclick="showPage(null)">
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M9 2L4 7l5 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          Back to homepage
+        </button>
+      </div>
+    </div>
+
+    <!-- Right: Art -->
+    <div class="auth-side-art">
+      <div class="auth-art-blob-1"></div>
+      <div class="auth-art-blob-2"></div>
+      <div class="auth-art-card">
+        <div class="auth-art-heading">What you'll get in Phase 1</div>
+        <div class="auth-art-step">
+          <div class="auth-art-step-icon icon-prd">📋</div>
+          <div class="auth-art-step-text">
+            <div class="step-name">Structured PRD</div>
+            <div class="step-desc">Versioned requirements baseline</div>
+          </div>
+        </div>
+        <div class="auth-art-step">
+          <div class="auth-art-step-icon icon-ui">🎨</div>
+          <div class="auth-art-step-text">
+            <div class="step-name">UI Spec + Hi-fi Design</div>
+            <div class="step-desc">Interface spec drives the visuals</div>
+          </div>
+        </div>
+        <div class="auth-art-step">
+          <div class="auth-art-step-icon icon-mock">⚡</div>
+          <div class="auth-art-step-text">
+            <div class="step-name">Clickable Mockup</div>
+            <div class="step-desc">Validate UX before you build</div>
+          </div>
+        </div>
+        <div class="auth-art-step">
+          <div class="auth-art-step-icon icon-tech">⚙️</div>
+          <div class="auth-art-step-text">
+            <div class="step-name">Tech Spec</div>
+            <div class="step-desc">Ready-to-hand-off to engineering</div>
+          </div>
+        </div>
+        <div style="margin-top:16px;padding-top:14px;border-top:1px solid rgba(0,0,0,0.06);font-size:12px;color:var(--muted);">
+          Invite-only · by 57Blocks
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════
+  PAGE: INVITE ACCEPT  (id=page-invite)
+  Route: /invite/accept
+════════════════════════════════ -->
+<div class="bp-overlay" id="page-invite">
+  <div class="auth-page">
+    <div class="auth-form-panel">
+      <a class="auth-form-logo" onclick="showPage(null)">
+        <div class="auth-form-logo-icon">
+          <svg viewBox="0 0 16 16" fill="none"><rect x="1.5" y="1.5" width="5.5" height="5.5" rx="1" fill="white"/><rect x="9" y="1.5" width="5.5" height="5.5" rx="1" fill="white" opacity="0.5"/><rect x="1.5" y="9" width="5.5" height="5.5" rx="1" fill="white" opacity="0.5"/><rect x="9" y="9" width="5.5" height="5.5" rx="1" fill="white"/></svg>
+        </div>
+        Blueprint
+      </a>
+      <div class="auth-form-body">
+        <div class="auth-form-title">Complete registration</div>
+        <div class="auth-form-sub">You've been invited by 57Blocks. Set your password to continue.</div>
+
+        <div class="invite-chip">
+          <div class="invite-chip-dot"></div>
+          <span class="invite-chip-email"><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="90f9fee6f9e4f5f4d0e9ffe5e2f3fffde0f1fee9bef3fffd">[email&#160;protected]</a></span>
+          <span class="invite-chip-tag">Verified ✓</span>
+        </div>
+
+        <div class="f-field">
+          <label class="f-label">New password</label>
+          <input class="f-input" id="inv-pw" type="password" placeholder="At least 8 characters" oninput="checkPwStrength(this.value)">
+          <div class="pw-strength" id="pw-strength-bars">
+            <div class="pw-bar" id="pw-bar-1"></div>
+            <div class="pw-bar" id="pw-bar-2"></div>
+            <div class="pw-bar" id="pw-bar-3"></div>
+            <div class="pw-bar" id="pw-bar-4"></div>
+          </div>
+          <div class="pw-label" id="pw-label"></div>
+        </div>
+        <div class="f-field" style="margin-bottom:28px;">
+          <label class="f-label">Confirm password</label>
+          <input class="f-input" id="inv-pw2" type="password" placeholder="Re-enter your password">
+          <div class="f-error" id="inv-pw-error">Passwords don't match</div>
+        </div>
+
+        <button class="btn-primary-full" id="inv-btn" onclick="doInviteAccept()">
+          Complete registration &amp; get started →
+        </button>
+        <div class="auth-divider">
+          <div class="auth-divider-line"></div>
+          <span class="auth-divider-text">or</span>
+          <div class="auth-divider-line"></div>
+        </div>
+        <p style="font-size:13px;color:var(--muted);text-align:center;">
+          Already set up? <button class="btn-link purple" onclick="showPage('page-signin')">Sign in →</button>
+        </p>
+      </div>
+      <div class="auth-form-footer">
+        <button class="back-link" onclick="showPage(null)">
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M9 2L4 7l5 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          Back to homepage
+        </button>
+      </div>
+    </div>
+    <div class="auth-side-art">
+      <div class="auth-art-blob-1"></div>
+      <div class="auth-art-blob-2"></div>
+      <div class="auth-art-card">
+        <div class="auth-art-heading">You're almost in</div>
+        <div style="font-size:13px;color:var(--muted);line-height:1.7;">
+          Once you complete registration, you'll land in Blueprint and can start building your first delivery package immediately.
+        </div>
+        <div style="margin-top:20px;display:flex;flex-direction:column;gap:10px;">
+          <div style="display:flex;align-items:center;gap:10px;font-size:13px;color:var(--ink-2);">
+            <div style="width:22px;height:22px;border-radius:50%;background:linear-gradient(135deg,rgba(168,85,247,0.15),rgba(34,211,238,0.15));display:flex;align-items:center;justify-content:center;font-size:11px;flex-shrink:0;">1</div>
+            Complete registration
+          </div>
+          <div style="display:flex;align-items:center;gap:10px;font-size:13px;color:var(--muted);">
+            <div style="width:22px;height:22px;border-radius:50%;background:#f8f8fc;border:1px solid #e2e8f0;display:flex;align-items:center;justify-content:center;font-size:11px;flex-shrink:0;color:#adb5bd;">2</div>
+            Quick onboarding walkthrough
+          </div>
+          <div style="display:flex;align-items:center;gap:10px;font-size:13px;color:var(--muted);">
+            <div style="width:22px;height:22px;border-radius:50%;background:#f8f8fc;border:1px solid #e2e8f0;display:flex;align-items:center;justify-content:center;font-size:11px;flex-shrink:0;color:#adb5bd;">3</div>
+            Create your first project
+          </div>
+        </div>
+        <div style="margin-top:20px;padding-top:14px;border-top:1px solid rgba(0,0,0,0.06);font-size:12px;color:var(--muted);">
+          Invite-only · by 57Blocks
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════
+  PAGE: FORGOT PASSWORD  (id=page-forgot)
+════════════════════════════════ -->
+<div class="bp-overlay" id="page-forgot">
+  <div class="auth-page">
+    <div class="auth-form-panel">
+      <a class="auth-form-logo" onclick="showPage(null)">
+        <div class="auth-form-logo-icon">
+          <svg viewBox="0 0 16 16" fill="none"><rect x="1.5" y="1.5" width="5.5" height="5.5" rx="1" fill="white"/><rect x="9" y="1.5" width="5.5" height="5.5" rx="1" fill="white" opacity="0.5"/><rect x="1.5" y="9" width="5.5" height="5.5" rx="1" fill="white" opacity="0.5"/><rect x="9" y="9" width="5.5" height="5.5" rx="1" fill="white"/></svg>
+        </div>
+        Blueprint
+      </a>
+      <div class="auth-form-body">
+        <div id="forgot-form-state">
+          <div class="auth-form-title">Reset your password</div>
+          <div class="auth-form-sub">Enter your registered email and we'll send a reset link.</div>
+          <div class="f-field" style="margin-bottom:28px;">
+            <label class="f-label">Registered email</label>
+            <input class="f-input" id="forgot-email" type="email" placeholder="you@company.com">
+          </div>
+          <button class="btn-primary-full" id="forgot-btn" onclick="doForgot()">
+            Send reset link
+          </button>
+          <div style="text-align:center;margin-top:16px;">
+            <button class="btn-link muted" onclick="showPage('page-signin')">← Back to sign in</button>
+          </div>
+        </div>
+        <div class="success-state" id="forgot-success-state">
+          <div class="success-icon">✉️</div>
+          <div class="success-title">Check your inbox</div>
+          <div class="success-sub">We've sent a password reset link to your email. It expires in 30 minutes.</div>
+          <div style="margin-top:28px;">
+            <button class="btn-primary-full" onclick="showPage('page-signin')" style="width:auto;padding:11px 28px;display:inline-flex;">
+              Back to sign in
+            </button>
+          </div>
+        </div>
+      </div>
+      <div class="auth-form-footer">
+        <button class="back-link" onclick="showPage(null)">
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M9 2L4 7l5 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          Back to homepage
+        </button>
+      </div>
+    </div>
+    <div class="auth-side-art">
+      <div class="auth-art-blob-1"></div>
+      <div class="auth-art-blob-2"></div>
+      <div class="auth-art-card" style="text-align:center;padding:40px 28px;">
+        <div style="font-size:48px;margin-bottom:16px;">🔐</div>
+        <div style="font-size:16px;font-weight:700;color:var(--ink-2);margin-bottom:8px;">Secure &amp; invite-only</div>
+        <div style="font-size:13px;color:var(--muted);line-height:1.65;">Blueprint uses invite-only access. If you don't have an account yet, request access from the homepage.</div>
+        <div style="margin-top:20px;">
+          <button class="btn-link purple" onclick="showPage('page-request')">Request access →</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════
+  PAGE: ONBOARDING  (id=page-onboarding)
+════════════════════════════════ -->
+<div class="bp-overlay" id="page-onboarding">
+  <div class="ob-wrap">
+    <!-- Sidebar -->
+    <div class="ob-sidebar">
+      <div class="ob-sidebar-logo">
+        <div style="display:flex;align-items:center;gap:9px;font-size:16px;font-weight:700;color:var(--ink-2);">
+          <div style="width:28px;height:28px;border-radius:7px;background:var(--grad);display:flex;align-items:center;justify-content:center;">
+            <svg viewBox="0 0 16 16" fill="none" width="14" height="14"><rect x="1.5" y="1.5" width="5.5" height="5.5" rx="1" fill="white"/><rect x="9" y="1.5" width="5.5" height="5.5" rx="1" fill="white" opacity="0.5"/><rect x="1.5" y="9" width="5.5" height="5.5" rx="1" fill="white" opacity="0.5"/><rect x="9" y="9" width="5.5" height="5.5" rx="1" fill="white"/></svg>
+          </div>
+          Blueprint
+        </div>
+      </div>
+      <div class="ob-steps-list" id="ob-steps-nav">
+        <div class="ob-step-item active" data-step="0" onclick="obGoTo(0)">
+          <div class="ob-step-num" id="ob-num-0">1</div>
+          <div class="ob-step-text">
+            <div class="ob-step-title">What is Blueprint?</div>
+            <div class="ob-step-desc">Platform overview</div>
+          </div>
+        </div>
+        <div class="ob-step-item" data-step="1" onclick="obGoTo(1)">
+          <div class="ob-step-num" id="ob-num-1">2</div>
+          <div class="ob-step-text">
+            <div class="ob-step-title">The delivery chain</div>
+            <div class="ob-step-desc">6-step workflow</div>
+          </div>
+        </div>
+        <div class="ob-step-item" data-step="2" onclick="obGoTo(2)">
+          <div class="ob-step-num" id="ob-num-2">3</div>
+          <div class="ob-step-text">
+            <div class="ob-step-title">What you provide</div>
+            <div class="ob-step-desc">Inputs &amp; timing</div>
+          </div>
+        </div>
+        <div class="ob-step-item" data-step="3" onclick="obGoTo(3)">
+          <div class="ob-step-num" id="ob-num-3">4</div>
+          <div class="ob-step-text">
+            <div class="ob-step-title">Confirm &amp; iterate</div>
+            <div class="ob-step-desc">Baselines &amp; rollback</div>
+          </div>
+        </div>
+      </div>
+      <div style="margin-top:auto;padding-top:24px;font-size:12px;color:#adb5bd;">
+        You can always re-read this from inside the workspace.
+      </div>
+    </div>
+
+    <!-- Main content -->
+    <div class="ob-main">
+      <div id="ob-content" style="flex:1;display:flex;flex-direction:column;">
+        <div class="ob-step-tag" id="ob-tag">Step 01 — Overview</div>
+        <h2 class="ob-title" id="ob-title">What is Blueprint, and <em>what does it solve?</em></h2>
+        <div class="ob-body" id="ob-body">
+          You have a product idea. But turning that into something your engineering team can actually build requires structured requirements, design specs, a prototype, and a technical blueprint — all connected and versioned.<br><br>
+          <strong>Blueprint does that for you.</strong> One AI assistant. One unified workspace. A complete delivery package at the end — not a one-off demo.
+          <ul>
+            <li>PRD — structured requirements doc</li>
+            <li>UI Spec + Design — interface specification &amp; hi-fi visuals</li>
+            <li>Mockup — clickable prototype to validate UX</li>
+            <li>Tech Spec — architecture &amp; API design ready for engineering</li>
+          </ul>
+        </div>
+      </div>
+      <div class="ob-footer">
+        <div class="ob-progress" id="ob-progress">
+          <div class="ob-dot active" id="ob-dot-0"></div>
+          <div class="ob-dot" id="ob-dot-1"></div>
+          <div class="ob-dot" id="ob-dot-2"></div>
+          <div class="ob-dot" id="ob-dot-3"></div>
+        </div>
+        <div class="ob-actions">
+          <button class="btn-ob-back" id="ob-back-btn" style="visibility:hidden;" onclick="obNav(-1)">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M9 2L4 7l5 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            Back
+          </button>
+          <button class="btn-ob-next" id="ob-next-btn" onclick="obNav(1)">
+            Next →
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════
+  PAGE: NEW PROJECT  (id=page-newproject)
+════════════════════════════════ -->
+<div class="bp-overlay" id="page-newproject">
+  <div class="pj-page">
+    <div class="pj-topbar">
+      <div style="display:flex;align-items:center;gap:9px;font-size:16px;font-weight:700;color:var(--ink-2);">
+        <div style="width:28px;height:28px;border-radius:7px;background:var(--grad);display:flex;align-items:center;justify-content:center;">
+          <svg viewBox="0 0 16 16" fill="none" width="14" height="14"><rect x="1.5" y="1.5" width="5.5" height="5.5" rx="1" fill="white"/><rect x="9" y="1.5" width="5.5" height="5.5" rx="1" fill="white" opacity="0.5"/><rect x="1.5" y="9" width="5.5" height="5.5" rx="1" fill="white" opacity="0.5"/><rect x="9" y="9" width="5.5" height="5.5" rx="1" fill="white"/></svg>
+        </div>
+        Blueprint
+      </div>
+      <div class="pj-breadcrumb">
+        <span class="sep">/</span>
+        <span>Projects</span>
+        <span class="sep">/</span>
+        <span class="cur">New project</span>
+      </div>
+      <div style="margin-left:auto;display:flex;align-items:center;gap:8px;">
+        <div style="width:28px;height:28px;border-radius:50%;background:var(--grad);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:white;">J</div>
+        <span style="font-size:13px;font-weight:600;color:var(--ink-2);">Jane Smith</span>
+      </div>
+    </div>
+    <div class="pj-body">
+      <div class="pj-form-wrap">
+        <div class="pj-title">Create a new Blueprint project</div>
+        <div class="pj-subtitle">Fill in the basics — Blueprint will initialize your full delivery package automatically</div>
+        <div class="pj-card">
+          <div class="f-field">
+            <label class="f-label">Project name *</label>
+            <input class="f-input" id="pj-name" type="text" placeholder="e.g. Blueprint MVP Platform">
+          </div>
+          <div class="f-field">
+            <label class="f-label">Product description *</label>
+            <textarea class="f-input" id="pj-desc" placeholder="Briefly describe what your product does and the core problem it solves…"></textarea>
+          </div>
+          <div class="pj-grid-3 f-field">
+            <div>
+              <label class="f-label">Industry / Type *</label>
+              <select class="f-input" id="pj-industry">
+                <option value="">Select…</option>
+                <option>SaaS / Tools</option>
+                <option>Education / Learning</option>
+                <option>HR / Recruiting</option>
+                <option>Fintech</option>
+                <option>Healthcare</option>
+                <option>E-commerce</option>
+                <option>Consumer App</option>
+                <option>Enterprise</option>
+                <option>Other</option>
+              </select>
+            </div>
+            <div>
+              <label class="f-label">Target users *</label>
+              <input class="f-input" id="pj-users" type="text" placeholder="e.g. Small team PMs">
+            </div>
+            <div>
+              <label class="f-label">Target platform</label>
+              <select class="f-input" disabled>
+                <option>Web (default)</option>
+              </select>
+            </div>
+          </div>
+          <div class="pj-divider"></div>
+          <button class="btn-primary-full" id="pj-btn" onclick="doCreateProject()">
+            Create project and go to PRD →
+          </button>
+          <div class="pj-footer-note">Blueprint will auto-initialize 6 delivery assets: PRD · UI Spec · Design · Mockup · Tech Spec · Delivery Summary</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
+/* ════════════════════════════════════════════════
+   ROUTING
+════════════════════════════════════════════════ */
+const overlays = ['page-signin','page-request','page-invite','page-forgot','page-onboarding','page-newproject'];
+
+function showPage(id) {
+  overlays.forEach(oid => {
+    document.getElementById(oid).classList.toggle('active', oid === id);
+  });
+  if (!id) {
+    document.body.style.overflow = '';
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  } else {
+    document.body.style.overflow = 'hidden';
+    const el = document.getElementById(id);
+    if (el) el.scrollTop = 0;
+  }
+}
+
+// Wire homepage buttons
+document.querySelectorAll('[onclick="scrollTo(\'#cta\')"]').forEach(btn => {
+  // already handled
+});
+
+// Override nav buttons on the homepage nav
+document.querySelector('.btn-nav-ghost').addEventListener('click', () => showPage('page-signin'));
+document.querySelector('.btn-nav-cta').addEventListener('click',   () => showPage('page-request'));
+
+// Hero CTA buttons — target the actual homepage buttons
+document.querySelectorAll('.btn-hero-primary').forEach(b => b.addEventListener('click', () => showPage('page-request')));
+document.querySelectorAll('.btn-hero-ghost').forEach(b =>   b.addEventListener('click', () => showPage('page-signin')));
+
+// Section CTAs
+document.querySelectorAll('.btn-cta-large').forEach((b,i) => {
+  if (i === 0) b.addEventListener('click', () => showPage('page-request'));
+});
+document.querySelectorAll('.btn-outline-large').forEach((b,i) => {
+  if (i === 0) b.addEventListener('click', () => showPage('page-signin'));
+});
+
+/* ════════════════════════════════════════════════
+   SIGN IN LOGIC
+════════════════════════════════════════════════ */
+function doSignIn() {
+  const email = document.getElementById('signin-email').value.trim();
+  const pw    = document.getElementById('signin-password').value;
+  const err   = document.getElementById('signin-error');
+  const btn   = document.getElementById('signin-btn');
+
+  err.classList.remove('show');
+  if (!email || !pw) { err.innerHTML = '⚠ Please enter your email and password.'; err.classList.add('show'); return; }
+
+  // Simulate: any valid-looking email + pw >= 6 chars passes
+  btn.innerHTML = '<span class="spinner"></span> Signing in…';
+  btn.disabled = true;
+  setTimeout(() => {
+    btn.innerHTML = 'Sign in';
+    btn.disabled = false;
+    if (pw.length >= 6 && email.includes('@')) {
+      showPage('page-onboarding');
+      obReset();
+    } else {
+      err.innerHTML = '⚠ Email or password is incorrect. Please try again.';
+      err.classList.add('show');
+      document.getElementById('signin-password').classList.add('error');
+      setTimeout(() => document.getElementById('signin-password').classList.remove('error'), 2000);
+    }
+  }, 1200);
+}
+
+document.getElementById('signin-password').addEventListener('keydown', e => {
+  if (e.key === 'Enter') doSignIn();
+});
+
+/* ════════════════════════════════════════════════
+   REQUEST ACCESS LOGIC
+════════════════════════════════════════════════ */
+function toggleTag(el) { el.classList.toggle('selected'); }
+
+function doRequest() {
+  const name  = document.getElementById('req-name').value.trim();
+  const email = document.getElementById('req-email').value.trim();
+  const btn   = document.getElementById('req-btn');
+
+  if (!name || !email) {
+    document.getElementById('req-name').classList.toggle('error', !name);
+    document.getElementById('req-email').classList.toggle('error', !email);
+    setTimeout(() => {
+      document.getElementById('req-name').classList.remove('error');
+      document.getElementById('req-email').classList.remove('error');
+    }, 2000);
+    return;
+  }
+
+  btn.innerHTML = '<span class="spinner"></span> Submitting…';
+  btn.disabled = true;
+  setTimeout(() => {
+    btn.innerHTML = 'Submit request »';
+    btn.disabled = false;
+    document.getElementById('req-form-state').style.display = 'none';
+    document.getElementById('req-success-state').classList.add('show');
+  }, 1400);
+}
+
+/* ════════════════════════════════════════════════
+   INVITE ACCEPT LOGIC
+════════════════════════════════════════════════ */
+function checkPwStrength(pw) {
+  const bars  = [1,2,3,4].map(i => document.getElementById('pw-bar-'+i));
+  const label = document.getElementById('pw-label');
+  bars.forEach(b => { b.className = 'pw-bar'; });
+
+  if (!pw) { label.textContent = ''; return; }
+  let score = 0;
+  if (pw.length >= 8)  score++;
+  if (/[A-Z]/.test(pw)) score++;
+  if (/[0-9]/.test(pw)) score++;
+  if (/[^A-Za-z0-9]/.test(pw)) score++;
+
+  const lvl = score <= 1 ? 'weak' : score <= 2 ? 'ok' : 'good';
+  const labels = { weak: 'Weak', ok: 'Fair', good: 'Strong' };
+  for (let i = 0; i < score; i++) bars[i].classList.add(lvl);
+  label.textContent = labels[lvl] || '';
+  label.className = 'pw-label ' + lvl;
+}
+
+function doInviteAccept() {
+  const pw1 = document.getElementById('inv-pw').value;
+  const pw2 = document.getElementById('inv-pw2').value;
+  const err = document.getElementById('inv-pw-error');
+  const btn = document.getElementById('inv-btn');
+
+  err.classList.remove('show');
+  if (pw1.length < 6) { err.textContent = 'Password must be at least 6 characters'; err.classList.add('show'); return; }
+  if (pw1 !== pw2)    { err.classList.add('show'); return; }
+
+  btn.innerHTML = '<span class="spinner"></span> Setting up your account…';
+  btn.disabled = true;
+  setTimeout(() => {
+    btn.innerHTML = 'Complete registration & get started →';
+    btn.disabled = false;
+    showPage('page-onboarding');
+    obReset();
+  }, 1500);
+}
+
+/* ════════════════════════════════════════════════
+   FORGOT PASSWORD LOGIC
+════════════════════════════════════════════════ */
+function doForgot() {
+  const email = document.getElementById('forgot-email').value.trim();
+  const btn   = document.getElementById('forgot-btn');
+  if (!email || !email.includes('@')) {
+    document.getElementById('forgot-email').classList.add('error');
+    setTimeout(() => document.getElementById('forgot-email').classList.remove('error'), 2000);
+    return;
+  }
+  btn.innerHTML = '<span class="spinner"></span> Sending…';
+  btn.disabled = true;
+  setTimeout(() => {
+    btn.innerHTML = 'Send reset link';
+    btn.disabled = false;
+    document.getElementById('forgot-form-state').style.display = 'none';
+    document.getElementById('forgot-success-state').classList.add('show');
+  }, 1200);
+}
+
+/* ════════════════════════════════════════════════
+   ONBOARDING LOGIC
+════════════════════════════════════════════════ */
+const OB_STEPS = [
+  {
+    tag: 'Step 01 — Overview',
+    title: 'What is Blueprint, and <em>what does it solve?</em>',
+    body: `You have a product idea. But turning that into something your engineering team can actually build requires structured requirements, design specs, a prototype, and a technical blueprint — all connected and versioned.<br><br>
+<strong>Blueprint does that for you.</strong> One AI assistant. One unified workspace. A complete delivery package at the end — not a one-off demo.
+<ul>
+<li>PRD — structured requirements doc</li>
+<li>UI Spec + Design — interface specification &amp; hi-fi visuals</li>
+<li>Mockup — clickable prototype to validate UX</li>
+<li>Tech Spec — architecture &amp; API design ready for engineering</li>
+</ul>`
+  },
+  {
+    tag: 'Step 02 — The Workflow',
+    title: 'Six steps. <em>Each feeds the next.</em>',
+    body: `Blueprint guides you through a structured delivery chain where every asset becomes the input for the next:<br><br>
+<ul>
+<li><strong>Idea clarification</strong> — describe what you're building in plain language</li>
+<li><strong>PRD</strong> — AI generates structured requirements; you review, iterate, confirm</li>
+<li><strong>UI Spec + Design</strong> — interface spec drives hi-fi design; edit in Paper, sync back</li>
+<li><strong>Mockup</strong> — clickable prototype to validate the core experience</li>
+<li><strong>Tech Spec</strong> — architecture, APIs, risk flags — ready for engineering handoff</li>
+</ul><br>
+You only talk to <strong>Blueprint AI</strong>. Multiple specialist agents run in the background automatically.`
+  },
+  {
+    tag: 'Step 03 — Your Input',
+    title: 'What you need <em>to provide</em>',
+    body: `Blueprint handles all the generation. Here's what you bring:<br><br>
+<ul>
+<li><strong>Your idea</strong> — describe it in plain language, no structure needed</li>
+<li><strong>Feedback &amp; review</strong> — tell Blueprint AI what to change or confirm</li>
+<li><strong>Optional design inputs</strong> — reference screenshots, brand colors, or style preferences for the design phase</li>
+<li><strong>Baseline confirmations</strong> — explicitly confirm each asset version before moving on</li>
+</ul><br>
+Estimated time to a full delivery package: <strong>2–4 hours of active collaboration</strong>.`
+  },
+  {
+    tag: 'Step 04 — Confirm &amp; Iterate',
+    title: 'Baselines, <em>rollback, and safe iteration</em>',
+    body: `Every asset in Blueprint has a version snapshot system:<br><br>
+<ul>
+<li>When you're happy with an asset, <strong>confirm it as the baseline</strong> — Blueprint AI surfaces a summary in chat, you reply to confirm</li>
+<li>If downstream feedback reveals an issue, the system <strong>traces it back</strong> to the right upstream asset and proposes targeted updates</li>
+<li>Blueprint always shows you <strong>impact analysis</strong> before making changes across assets</li>
+<li>Nothing changes without your explicit confirmation</li>
+</ul><br>
+You can always re-visit this workflow guide from inside the workspace.`
+  }
+];
+
+let obStep = 0;
+
+function obReset() {
+  obStep = 0;
+  obRender();
+}
+
+function obRender() {
+  const s = OB_STEPS[obStep];
+  document.getElementById('ob-tag').textContent = s.tag;
+  document.getElementById('ob-title').innerHTML = s.title;
+  document.getElementById('ob-body').innerHTML  = s.body;
+
+  // Progress dots
+  for (let i = 0; i < 4; i++) {
+    const dot = document.getElementById('ob-dot-'+i);
+    dot.className = 'ob-dot' + (i < obStep ? ' done' : i === obStep ? ' active' : '');
+  }
+
+  // Sidebar steps
+  document.querySelectorAll('.ob-step-item').forEach((item, i) => {
+    item.className = 'ob-step-item' + (i < obStep ? ' done' : i === obStep ? ' active' : '');
+    const num = document.getElementById('ob-num-'+i);
+    num.textContent = i < obStep ? '✓' : (i+1);
+  });
+
+  // Buttons
+  const backBtn = document.getElementById('ob-back-btn');
+  const nextBtn = document.getElementById('ob-next-btn');
+  backBtn.style.visibility = obStep === 0 ? 'hidden' : 'visible';
+  nextBtn.textContent = obStep === 3 ? 'Create my first project →' : 'Next →';
+}
+
+function obNav(dir) {
+  if (dir === 1 && obStep === 3) {
+    showPage('page-newproject');
+    return;
+  }
+  obStep = Math.max(0, Math.min(3, obStep + dir));
+  obRender();
+}
+
+function obGoTo(i) {
+  if (i <= obStep) { obStep = i; obRender(); }
+}
+
+/* ════════════════════════════════════════════════
+   NEW PROJECT LOGIC
+════════════════════════════════════════════════ */
+function doCreateProject() {
+  const name  = document.getElementById('pj-name').value.trim();
+  const desc  = document.getElementById('pj-desc').value.trim();
+  const ind   = document.getElementById('pj-industry').value;
+  const users = document.getElementById('pj-users').value.trim();
+  const btn   = document.getElementById('pj-btn');
+
+  // Highlight empty required fields
+  [['pj-name',name],['pj-desc',desc],['pj-industry',ind],['pj-users',users]].forEach(([id,val]) => {
+    document.getElementById(id).classList.toggle('error', !val);
+  });
+  if (!name || !desc || !ind || !users) {
+    setTimeout(() => document.querySelectorAll('.f-input.error').forEach(el => el.classList.remove('error')), 2000);
+    return;
+  }
+
+  btn.innerHTML = '<span class="spinner"></span> Initializing delivery package…';
+  btn.disabled = true;
+
+  setTimeout(() => {
+    btn.innerHTML = 'Create project and go to PRD →';
+    btn.disabled = false;
+    // Store project info for workspace
+    wsProjectName = document.getElementById('pj-name').value.trim() || 'My Project';
+    document.getElementById('ws-project-name').textContent = wsProjectName;
+    document.getElementById('ws-header-title').textContent = wsProjectName;
+    showPage('page-workspace');
+    wsSetAsset('prd');
+    wsStartConversation();
+  }, 2000);
+}
+
+/* ════════════════════════════════════════════════
+   TOAST
+════════════════════════════════════════════════ */
+function showToast(msg) {
+  const t = document.createElement('div');
+  t.style.cssText = `position:fixed;bottom:32px;left:50%;transform:translateX(-50%);background:var(--ink-2);color:white;padding:13px 24px;border-radius:var(--r-pill);font-family:var(--sans);font-size:13px;font-weight:600;z-index:9999;box-shadow:0 8px 32px rgba(0,0,0,0.18);animation:toastIn 0.3s ease;white-space:nowrap;`;
+  t.textContent = msg;
+  const style = document.createElement('style');
+  style.textContent = '@keyframes toastIn{from{opacity:0;transform:translateX(-50%) translateY(12px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}';
+  document.head.appendChild(style);
+  document.body.appendChild(t);
+  setTimeout(() => t.remove(), 4000);
+}
+
+/* ════════════════════════════════════════════════
+   KEYBOARD ESC to close overlays
+══════════════════════════════════════════ */
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') {
+    const ws = document.getElementById('page-workspace');
+    if (ws && ws.classList.contains('active')) return;
+    showPage(null);
+  }
+});
+</script>
+
+<!-- ════════════════════════════════════════════════
+     WORKSPACE CSS
+════════════════════════════════════════════════ -->
+<style>
+#page-workspace {
+  display: none; position: fixed; inset: 0; z-index: 1000;
+  background: #f4f5f9; font-family: var(--sans); flex-direction: column;
+}
+#page-workspace.active { display: flex; }
+.ws-topbar {
+  height: 52px; flex-shrink: 0; background: white;
+  border-bottom: 1px solid #e9edf5; display: flex; align-items: center;
+  padding: 0 16px; gap: 0; position: relative; z-index: 20;
+}
+.ws-logo-btn {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 15px; font-weight: 700; color: var(--ink-2);
+  cursor: pointer; padding: 0 14px 0 0; border-right: 1px solid #e9edf5;
+  margin-right: 12px; height: 100%; text-decoration: none; flex-shrink: 0;
+}
+.ws-logo-icon { width: 26px; height: 26px; border-radius: 6px; background: var(--grad); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.ws-logo-icon svg { width: 13px; height: 13px; }
+.ws-project-name { font-size: 13px; font-weight: 600; color: var(--ink-2); margin-right: 4px; max-width: 160px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ws-slash { color: #cbd5e1; margin: 0 8px; font-size: 16px; }
+.ws-nodes { display: flex; gap: 2px; margin-left: 4px; }
+.ws-node-btn {
+  display: flex; align-items: center; gap: 6px;
+  padding: 5px 12px; border-radius: 20px; font-size: 12px; font-weight: 600;
+  cursor: pointer; border: 1.5px solid transparent;
+  background: transparent; color: #94a3b8; font-family: var(--sans);
+  transition: all 0.15s; white-space: nowrap;
+}
+.ws-node-btn:hover { color: var(--ink-2); background: #f8f8fc; border-color: #e2e8f0; }
+.ws-node-btn.active { color: var(--ink-2); background: white; border-color: #e2e8f0; box-shadow: 0 1px 4px rgba(0,0,0,0.07); }
+.ws-node-btn.active .ws-node-label { background: var(--grad-text); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+.ws-node-btn.done { color: #16a34a; }
+/* "viewing" state: user clicked to preview this doc but it's not the active flow */
+.ws-node-btn.viewing:not(.active) {
+  background: #f8f8fc; border-color: #e2e8f0;
+  color: var(--ink-2);
+}
+.ws-node-btn.viewing:not(.active) .ws-node-label { color: var(--ink-2); }
+.ws-node-status-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+.dot-todo { background: #e2e8f0; }
+.dot-inprog { background: #f59e0b; box-shadow: 0 0 0 2px rgba(245,158,11,0.2); }
+.dot-done { background: #22c55e; }
+.ws-topbar-right { margin-left: auto; display: flex; align-items: center; gap: 8px; }
+.ws-focus-badge { font-size: 11px; font-weight: 700; padding: 4px 12px; border-radius: 20px; background: rgba(168,85,247,0.08); color: #8B5CF6; border: 1.5px solid rgba(168,85,247,0.2); }
+.ws-user-avatar { width: 28px; height: 28px; border-radius: 50%; background: var(--grad); display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; color: white; cursor: pointer; flex-shrink: 0; }
+.ws-body { flex: 1; display: flex; min-height: 0; overflow: hidden; }
+.ws-chat-pane-wrap { flex: 0 0 auto; display: flex; min-width: 0; min-height: 0; }
+.ws-preview-pane { flex: 1 1 0; min-width: 260px; }
+.ws-sidebar { flex: 0 0 220px; width: 220px; background: white; border-right: 1px solid #e9edf5; display: flex; flex-direction: column; overflow: hidden; }
+.ws-sidebar-section { padding: 14px 12px 8px; border-bottom: 1px solid #f1f5f9; }
+.ws-sidebar-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: #94a3b8; margin-bottom: 6px; padding: 0 4px; }
+.ws-asset-item { display: flex; align-items: center; gap: 9px; padding: 8px 10px; border-radius: 8px; cursor: pointer; font-size: 13px; color: #64748b; border: 1px solid transparent; transition: all 0.12s; }
+.ws-asset-item:hover { background: #f8f8fc; color: var(--ink-2); }
+.ws-asset-item.active { background: #f5f0ff; border-color: rgba(168,85,247,0.2); color: #6d28d9; font-weight: 600; }
+/* Item whose asset is the active FLOW context (chat is about this) */
+.ws-asset-item.flow-active:not(.active) {
+  border-left: 2px solid transparent;
+  border-image: linear-gradient(180deg,#EE53FF,#31E1F8) 1;
+}
+.ws-asset-name { flex: 1; }
+.ws-asset-badge { font-size: 9px; font-weight: 700; padding: 2px 7px; border-radius: 20px; text-transform: uppercase; letter-spacing: 0.05em; white-space: nowrap; }
+.ab-todo  { background: #f1f5f9; color: #94a3b8; }
+.ab-inprog { background: #fff7ed; color: #ea580c; border: 1px solid #fed7aa; }
+.ab-done  { background: #f0fdf4; color: #16a34a; border: 1px solid #bbf7d0; }
+.ab-sync  { background: #fefce8; color: #a16207; border: 1px solid #fde68a; }
+.ws-sidebar-chats { flex: 1; overflow-y: auto; padding: 10px 12px; }
+.ws-chat-item { display: flex; align-items: center; gap: 8px; padding: 7px 10px; border-radius: 7px; cursor: pointer; font-size: 12px; color: #64748b; transition: all 0.12s; border: 1px solid transparent; }
+.ws-chat-item:hover { background: #f8f8fc; color: var(--ink-2); }
+.ws-chat-item.active { background: #f5f0ff; color: #6d28d9; border-color: rgba(168,85,247,0.15); }
+.ws-chat-dot { width: 5px; height: 5px; border-radius: 50%; flex-shrink: 0; }
+.ws-chat-dot.purple { background: #8B5CF6; }
+.ws-chat-dot.gray { background: #cbd5e1; }
+.ws-new-chat-btn { width: 100%; padding: 7px 10px; font-family: var(--sans); font-size: 12px; font-weight: 600; color: #8B5CF6; background: rgba(168,85,247,0.06); border: 1.5px dashed rgba(168,85,247,0.3); border-radius: 8px; cursor: pointer; transition: all 0.15s; margin-top: 6px; display: flex; align-items: center; justify-content: center; gap: 5px; }
+.ws-new-chat-btn:hover { background: rgba(168,85,247,0.1); border-color: rgba(168,85,247,0.4); }
+.ws-chat-pane { flex: 0 0 auto; display: flex; flex-direction: column; background: #f9fafb; min-height: 0; overflow: hidden; }
+.ws-chat-header { padding: 11px 16px; background: white; border-bottom: 1px solid #e9edf5; display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+.ws-agent-pill { font-size: 11px; font-weight: 700; padding: 4px 12px; border-radius: 20px; background: var(--grad); color: white; }
+.ws-context-pill { font-size: 11px; padding: 4px 11px; border-radius: 6px; background: #f1f5f9; color: #64748b; border: 1px solid #e2e8f0; }
+.ws-agent-typing { font-size: 11px; color: #94a3b8; display: none; align-items: center; gap: 6px; margin-left: auto; }
+.ws-agent-typing.show { display: flex; }
+.typing-dots { display: flex; gap: 3px; }
+.typing-dots span { width: 5px; height: 5px; border-radius: 50%; background: #94a3b8; animation: typingBounce 1.2s ease-in-out infinite; }
+.typing-dots span:nth-child(2) { animation-delay: 0.2s; }
+.typing-dots span:nth-child(3) { animation-delay: 0.4s; }
+@keyframes typingBounce { 0%,60%,100%{transform:translateY(0)} 30%{transform:translateY(-5px)} }
+.ws-messages { flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 14px; }
+.ws-msg { max-width: 86%; animation: msgIn 0.2s ease; }
+@keyframes msgIn { from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:translateY(0)} }
+.ws-msg.ai { align-self: flex-start; }
+.ws-msg.usr { align-self: flex-end; }
+.ws-msg.sys { align-self: stretch; max-width: 100%; }
+.ws-msg-who { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: #94a3b8; margin-bottom: 5px; }
+.ws-msg.usr .ws-msg-who { text-align: right; color: #8B5CF6; }
+.ws-msg-bubble { font-size: 13px; line-height: 1.65; padding: 11px 15px; border-radius: 12px; }
+.ws-msg.ai  .ws-msg-bubble { background: white; color: var(--ink); border: 1px solid #e9edf5; border-bottom-left-radius: 4px; box-shadow: 0 1px 4px rgba(0,0,0,0.04); }
+.ws-msg.usr .ws-msg-bubble { background: var(--grad); color: white; border-bottom-right-radius: 4px; }
+.ws-msg.sys .ws-msg-bubble { background: rgba(245,158,11,0.06); border: 1.5px solid rgba(245,158,11,0.25); color: #92400e; border-radius: 10px; }
+.ws-msg.sys .ws-msg-who { color: #d97706; }
+.ws-confirm-row { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
+.ws-confirm-btn { font-family: var(--sans); font-size: 12px; font-weight: 700; padding: 7px 16px; border-radius: 20px; cursor: pointer; transition: all 0.15s; }
+.wcb-primary { background: var(--grad); color: white; border: none; box-shadow: 0 2px 10px rgba(168,85,247,0.2); }
+.wcb-primary:hover { opacity: 0.88; }
+.wcb-secondary { background: white; color: #64748b; border: 1.5px solid #e2e8f0; }
+.wcb-secondary:hover { border-color: #c4b5fd; color: #8B5CF6; }
+.ws-chat-footer { padding: 12px 14px; background: white; border-top: 1px solid #e9edf5; flex-shrink: 0; }
+.ws-input-extras { display: flex; gap: 6px; margin-bottom: 8px; flex-wrap: wrap; }
+.ws-extra-btn { font-family: var(--sans); font-size: 11px; font-weight: 600; padding: 5px 12px; border-radius: 20px; cursor: pointer; border: 1.5px solid #e2e8f0; background: white; color: #64748b; transition: all 0.12s; display: flex; align-items: center; gap: 5px; }
+.ws-extra-btn:hover { border-color: #c4b5fd; color: #8B5CF6; background: #f5f0ff; }
+.ws-input-row { display: flex; gap: 8px; align-items: flex-end; }
+.ws-chat-textarea { flex: 1; padding: 10px 14px; font-family: var(--sans); font-size: 13px; border: 1.5px solid #e2e8f0; border-radius: 12px; background: #f8f8fc; color: var(--ink); resize: none; outline: none; min-height: 40px; max-height: 120px; transition: border-color 0.15s; line-height: 1.5; }
+.ws-chat-textarea:focus { border-color: #c4b5fd; background: white; }
+.ws-chat-textarea::placeholder { color: #cbd5e1; }
+.ws-send-btn { width: 38px; height: 38px; border-radius: 10px; border: none; background: var(--grad); color: white; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.15s; flex-shrink: 0; box-shadow: 0 2px 10px rgba(168,85,247,0.25); }
+.ws-send-btn:hover { transform: scale(1.06); }
+.ws-send-btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+.ws-preview-pane { background: white; display: flex; flex-direction: column; min-height: 0; overflow: hidden; }
+.ws-preview-header { padding: 11px 16px; border-bottom: 1px solid #e9edf5; display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; }
+.ws-preview-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: #94a3b8; }
+.ws-preview-actions { display: flex; gap: 6px; align-items: center; }
+.ws-preview-btn { font-family: var(--sans); font-size: 11px; font-weight: 600; padding: 5px 12px; border-radius: 6px; cursor: pointer; border: 1.5px solid #e2e8f0; background: white; color: #64748b; transition: all 0.12s; }
+.ws-preview-btn:hover { border-color: #c4b5fd; color: #8B5CF6; }
+.ws-preview-content { flex: 1; overflow-y: auto; padding: 16px; }
+.ws-doc { font-size: 13px; line-height: 1.75; color: var(--ink); }
+.ws-doc h3 { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: #94a3b8; margin: 16px 0 6px; padding-bottom: 5px; border-bottom: 1px solid #f1f5f9; }
+.ws-doc h3:first-child { margin-top: 0; }
+.ws-doc p, .ws-doc li { color: #475569; font-size: 13px; margin-bottom: 4px; }
+.ws-doc ul { padding-left: 16px; margin-bottom: 8px; }
+.ws-doc-empty { color: #94a3b8 !important; font-style: italic; }
+.ws-selfcheck { margin-top: 14px; padding: 12px 14px; border-radius: 10px; background: rgba(168,85,247,0.05); border: 1.5px solid rgba(168,85,247,0.18); }
+.ws-selfcheck-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: #8B5CF6; margin-bottom: 5px; }
+.ws-selfcheck-body { font-size: 12px; color: #6d28d9; line-height: 1.6; }
+.ws-version-row { display: flex; align-items: center; gap: 8px; padding: 7px 12px; border-radius: 8px; background: #f8f8fc; border: 1px solid #e9edf5; margin-bottom: 12px; }
+.ws-version-tag { font-family: monospace; font-size: 11px; color: #64748b; font-weight: 700; }
+.ws-version-label { font-size: 11px; color: #94a3b8; flex: 1; }
+.ws-version-status { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 20px; }
+.ws-messages::-webkit-scrollbar, .ws-preview-content::-webkit-scrollbar, .ws-sidebar-chats::-webkit-scrollbar { width: 4px; }
+
+/* ─── Resizable pane divider ─── */
+.ws-resizer {
+  flex: 0 0 5px;
+  width: 5px;
+  background: #e9edf5;
+  cursor: col-resize;
+  position: relative;
+  transition: background 0.15s;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.ws-resizer:hover, .ws-resizer.dragging {
+  background: linear-gradient(180deg, #EE53FF, #31E1F8);
+}
+.ws-resizer::before {
+  content: '';
+  position: absolute;
+  left: -4px; right: -4px; top: 0; bottom: 0;
+  /* Wider hit target */
+}
+.ws-resizer-handle {
+  width: 3px; height: 32px; border-radius: 3px;
+  background: rgba(0,0,0,0.12);
+  transition: background 0.15s;
+  pointer-events: none;
+}
+.ws-resizer:hover .ws-resizer-handle,
+.ws-resizer.dragging .ws-resizer-handle { background: rgba(255,255,255,0.8); }
+
+/* Tooltip on hover */
+.ws-resizer::after {
+  content: 'Drag to resize · Double-click to reset';
+  position: absolute;
+  top: 50%;
+  left: 12px;
+  transform: translateY(-50%);
+  background: #192f3f;
+  color: white;
+  font-family: var(--sans);
+  font-size: 11px;
+  font-weight: 500;
+  padding: 5px 10px;
+  border-radius: 6px;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.15s;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  z-index: 100;
+}
+.ws-resizer:hover::after { opacity: 1; }
+.ws-resizer.dragging::after { opacity: 0; }
+
+/* Prevent text selection while dragging */
+body.ws-dragging { user-select: none; cursor: col-resize !important; }
+body.ws-dragging * { cursor: col-resize !important; }
+
+.ws-messages::-webkit-scrollbar-thumb, .ws-preview-content::-webkit-scrollbar-thumb, .ws-sidebar-chats::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 4px; }
+</style>
+
+<!-- ════════════ WORKSPACE HTML ════════════ -->
+<div class="bp-overlay" id="page-workspace">
+  <div class="ws-topbar">
+    <div class="ws-logo-btn" onclick="showPage(null)">
+      <div class="ws-logo-icon"><svg viewBox="0 0 16 16" fill="none"><rect x="1.5" y="1.5" width="5.5" height="5.5" rx="1" fill="white"/><rect x="9" y="1.5" width="5.5" height="5.5" rx="1" fill="white" opacity="0.5"/><rect x="1.5" y="9" width="5.5" height="5.5" rx="1" fill="white" opacity="0.5"/><rect x="9" y="9" width="5.5" height="5.5" rx="1" fill="white"/></svg></div>
+      Blueprint
+    </div>
+    <span class="ws-project-name" id="ws-project-name">My Project</span>
+    <span class="ws-slash">/</span>
+    <div style="display:flex;align-items:center;gap:6px;">
+      <span style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#94a3b8;white-space:nowrap;flex-shrink:0;" title="Delivery flow progress — shows which assets are confirmed">Progress</span>
+    </div>
+    <div class="ws-nodes" id="ws-nodes">
+      <button class="ws-node-btn active" data-asset="prd" onclick="wsNodeClick('prd')"><span class="ws-node-status-dot dot-inprog"></span><span class="ws-node-label">PRD</span></button>
+      <button class="ws-node-btn" data-asset="uispec" onclick="wsNodeClick('uispec')"><span class="ws-node-status-dot dot-todo"></span><span class="ws-node-label">UI Spec</span></button>
+      <button class="ws-node-btn" data-asset="design" onclick="wsNodeClick('design')"><span class="ws-node-status-dot dot-todo"></span><span class="ws-node-label">Design</span></button>
+      <button class="ws-node-btn" data-asset="mockup" onclick="wsNodeClick('mockup')"><span class="ws-node-status-dot dot-todo"></span><span class="ws-node-label">Mockup</span></button>
+      <button class="ws-node-btn" data-asset="techspec" onclick="wsNodeClick('techspec')"><span class="ws-node-status-dot dot-todo"></span><span class="ws-node-label">Tech Spec</span></button>
+      <button class="ws-node-btn" data-asset="delivery" onclick="wsNodeClick('delivery')"><span class="ws-node-status-dot dot-todo"></span><span class="ws-node-label">Delivery</span></button>
+    </div>
+    <div class="ws-topbar-right">
+      <span class="ws-focus-badge" id="ws-header-focus" title="Active chat context — which asset Blueprint AI is helping you build">Focus: PRD</span>
+      <span id="ws-viewing-badge" title="Currently previewing this document" style="font-size:11px;font-weight:600;padding:4px 12px;border-radius:20px;background:#f8f8fc;color:#64748b;border:1.5px solid #e2e8f0;display:none;">Viewing: PRD</span>
+      <span id="ws-header-title" style="font-size:12px;color:#94a3b8;font-weight:500;max-width:140px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;"></span>
+      <div class="ws-user-avatar">J</div>
+    </div>
+  </div>
+  <div class="ws-body">
+    <!-- Sidebar -->
+    <div class="ws-sidebar">
+      <div class="ws-sidebar-section">
+        <div class="ws-sidebar-label" title="Click to preview document content">Documents</div>
+        <div class="ws-asset-item active" data-asset="prd" onclick="wsSwitchDoc('prd')"><span class="ws-node-status-dot dot-inprog"></span><span class="ws-asset-name">PRD</span><span class="ws-asset-badge ab-inprog" id="sb-badge-prd">In progress</span></div>
+        <div class="ws-asset-item" data-asset="uispec" onclick="wsSwitchDoc('uispec')"><span class="ws-node-status-dot dot-todo"></span><span class="ws-asset-name">UI Spec</span><span class="ws-asset-badge ab-todo" id="sb-badge-uispec">Pending</span></div>
+        <div class="ws-asset-item" data-asset="design" onclick="wsSwitchDoc('design')"><span class="ws-node-status-dot dot-todo"></span><span class="ws-asset-name">Design</span><span class="ws-asset-badge ab-todo" id="sb-badge-design">Pending</span></div>
+        <div class="ws-asset-item" data-asset="mockup" onclick="wsSwitchDoc('mockup')"><span class="ws-node-status-dot dot-todo"></span><span class="ws-asset-name">Mockup</span><span class="ws-asset-badge ab-todo" id="sb-badge-mockup">Pending</span></div>
+        <div class="ws-asset-item" data-asset="techspec" onclick="wsSwitchDoc('techspec')"><span class="ws-node-status-dot dot-todo"></span><span class="ws-asset-name">Tech Spec</span><span class="ws-asset-badge ab-todo" id="sb-badge-techspec">Pending</span></div>
+        <div class="ws-asset-item" data-asset="delivery" onclick="wsSwitchDoc('delivery')"><span class="ws-node-status-dot dot-todo"></span><span class="ws-asset-name">Delivery Summary</span><span class="ws-asset-badge ab-todo" id="sb-badge-delivery">Pending</span></div>
+      </div>
+      <div class="ws-sidebar-section" style="border-bottom:none;flex:1;display:flex;flex-direction:column;">
+        <div class="ws-sidebar-label">Chat History</div>
+        <div class="ws-sidebar-chats" id="ws-chat-history">
+          <div class="ws-chat-item active"><span class="ws-chat-dot purple"></span>PRD kickoff · now</div>
+        </div>
+        <div style="padding:0 0 8px;"><button class="ws-new-chat-btn" onclick="wsNewChat()">+ New chat</button></div>
+      </div>
+    </div>
+    <!-- Chat pane -->
+    <div class="ws-chat-pane">
+      <div class="ws-chat-header">
+        <span class="ws-agent-pill">Blueprint AI</span>
+        <span class="ws-context-pill" id="ws-chat-context">Working on PRD</span>
+        <div class="ws-agent-typing" id="ws-typing"><div class="typing-dots"><span></span><span></span><span></span></div>Blueprint AI is thinking…</div>
+      </div>
+      <div class="ws-messages" id="ws-messages"></div>
+      <div class="ws-chat-footer">
+        <div class="ws-input-extras">
+          <button class="ws-extra-btn" onclick="wsQuickAction('save')">&#8595; Save version</button>
+          <button class="ws-extra-btn" onclick="wsQuickAction('export')">&#8595; Export .md</button>
+          <button class="ws-extra-btn" id="ws-confirm-btn" onclick="wsQuickAction('confirm')" style="display:none;color:#8B5CF6;border-color:rgba(168,85,247,0.3);background:rgba(168,85,247,0.06);">&#10003; Confirm baseline</button>
+        </div>
+        <div class="ws-input-row">
+          <textarea class="ws-chat-textarea" id="ws-input" placeholder="Continue working on PRD…" rows="1" onkeydown="wsHandleKey(event)" oninput="this.style.height='auto';this.style.height=Math.min(this.scrollHeight,120)+'px'"></textarea>
+          <button class="ws-send-btn" id="ws-send-btn" onclick="wsSend()"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M13 7L1 2l3 5-3 5 12-5z" fill="white"/></svg></button>
+        </div>
+      </div>
+    </div>
+    <!-- Resizer -->
+    <div class="ws-resizer" id="ws-resizer" ondblclick="wsResetPaneWidth()">
+      <div class="ws-resizer-handle"></div>
+    </div>
+    <!-- Preview pane -->
+    <div class="ws-preview-pane">
+      <div class="ws-preview-header">
+        <span class="ws-preview-label" id="ws-preview-label">PRD — Preview</span>
+        <div class="ws-preview-actions">
+          <span class="ws-asset-badge ab-inprog" id="ws-preview-status">In progress</span>
+          <button class="ws-preview-btn" onclick="wsQuickAction('export')">Export</button>
+          <button class="ws-preview-btn" onclick="wsQuickAction('save')">Save version</button>
+        </div>
+      </div>
+      <div class="ws-preview-content" id="ws-preview-content"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* WORKSPACE ENGINE */
+let wsProjectName = 'My Project';
+let wsCurrentAsset = 'prd';  // Active flow asset (top bar, chat context)
+let wsCurrentDoc = 'prd';     // Currently previewed doc (sidebar + right pane)
+let wsIsTyping = false;
+let wsUserMsgCount = 0;
+let wsAssetStatus = { prd:'inprog', uispec:'todo', design:'todo', mockup:'todo', techspec:'todo', delivery:'todo' };
+let wsAssetContent = { prd:null, uispec:null, design:null, mockup:null, techspec:null, delivery:null };
+let wsChatCount = 1;
+
+const WS_ASSETS = {
+  prd:      { label:'PRD',            focus:'Focus: PRD',       context:'Working on PRD',      previewLabel:'PRD — Preview',      placeholder:'Describe your product, ask Blueprint AI to refine sections, or request specific changes…' },
+  uispec:   { label:'UI Spec',        focus:'Focus: UI Spec',   context:'Working on UI Spec',  previewLabel:'UI Spec — Preview',  placeholder:'Describe your design preferences or ask Blueprint AI to update UI Spec…' },
+  design:   { label:'Design',         focus:'Focus: Design',    context:'Reviewing Design',    previewLabel:'Design — Preview',   placeholder:'Describe design changes or open in Paper to edit externally…' },
+  mockup:   { label:'Mockup',         focus:'Focus: Mockup',    context:'Reviewing Mockup',    previewLabel:'Mockup — Preview',   placeholder:'Submit feedback — Blueprint AI will attribute it to the right upstream asset…' },
+  techspec: { label:'Tech Spec',      focus:'Focus: Tech Spec', context:'Working on Tech Spec',previewLabel:'Tech Spec — Preview',placeholder:'Ask about architecture decisions or ask Blueprint AI to expand technical sections…' },
+  delivery: { label:'Delivery',       focus:'Focus: Delivery',  context:'Delivery Summary',    previewLabel:'Delivery Summary',   placeholder:'Export the full delivery package or ask Blueprint AI for a handoff summary…' }
+};
+
+const PREVIEW_PLACEHOLDER = {
+  uispec:   '<div class="ws-doc"><h3>Design System</h3><p class="ws-doc-empty">Complete PRD first — UI Spec will be generated from confirmed requirements.</p><h3>Core Screens</h3><p class="ws-doc-empty">Screen list will appear after PRD is confirmed.</p></div>',
+  design:   '<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:220px;gap:12px;color:#94a3b8;text-align:center;"><div style="font-size:36px;">🎨</div><div style="font-size:13px;">Hi-fi design will be generated<br>after UI Spec is confirmed</div><button class="ws-preview-btn" style="margin-top:8px;" onclick="wsQuickAction(\'paper\')">Open in Paper ↗</button></div>',
+  mockup:   '<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:220px;gap:12px;color:#94a3b8;text-align:center;"><div style="font-size:36px;">⚡</div><div style="font-size:13px;">Clickable prototype will appear<br>after Design is confirmed</div></div>',
+  techspec: '<div class="ws-doc"><h3>System Architecture</h3><p class="ws-doc-empty">Will be generated after Mockup is confirmed.</p><h3>Core Modules</h3><p class="ws-doc-empty">Module breakdown will appear here.</p><h3>API Design</h3><p class="ws-doc-empty">Key API endpoints will be listed here.</p></div>',
+  delivery: '<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:220px;gap:12px;color:#94a3b8;text-align:center;"><div style="font-size:36px;">📦</div><div style="font-size:13px;">Delivery summary will be auto-generated<br>when all assets are confirmed</div></div>'
+};
+
+function wsStartConversation() {
+  document.getElementById('ws-messages').innerHTML = '';
+  wsUserMsgCount = 0;
+  wsCurrentDoc = 'prd';
+  setTimeout(() => {
+    wsAddMsg('ai','Blueprint AI · PM Agent',
+      `👋 I've initialized your delivery package for <strong>"${wsProjectName}"</strong>.<br><br>
+      All 6 assets are ready — PRD, UI Spec, Design, Mockup, Tech Spec, and Delivery Summary.<br><br>
+      Let's start with the <strong>PRD</strong>. Tell me more: what core problem does your product solve, and who is it for?`
+    );
+    wsAssetContent.prd = `<div class="ws-version-row"><span class="ws-version-tag">v0.1</span><span class="ws-version-label">Auto-generated skeleton · not confirmed</span><span class="ws-version-status ab-inprog">Draft</span></div><div class="ws-doc"><h3>Product Overview</h3><p class="ws-doc-empty">Awaiting input…</p><h3>Target Users</h3><p class="ws-doc-empty">Who is this for?</p><h3>Core Features (V1)</h3><p class="ws-doc-empty">Must-have features for V1?</p><h3>Out of Scope</h3><p class="ws-doc-empty">What are you not building in V1?</p><h3>Success Metrics</h3><p class="ws-doc-empty">How will you measure success?</p></div><div class="ws-selfcheck"><div class="ws-selfcheck-label">Blueprint AI</div><div class="ws-selfcheck-body">PRD skeleton initialized. Describe your product to start filling out the requirements.</div></div>`;
+    wsRenderPreview();
+  }, 600);
+}
+
+/* ─────────────────────────────────────────────────
+   wsSetAsset(asset)  — called by AI flow logic
+   Sets the ACTIVE FLOW asset (chat context, focus badge,
+   topbar highlight, input placeholder, confirm button).
+   Does NOT change sidebar doc selection.
+─────────────────────────────────────────────────── */
+function wsSetAsset(asset) {
+  wsCurrentAsset = asset;
+  const meta = WS_ASSETS[asset];
+
+  // Update top delivery-progress nodes
+  document.querySelectorAll('.ws-node-btn').forEach(b => {
+    b.classList.toggle('active', b.dataset.asset === asset);
+  });
+
+  // Update chat context labels + input
+  document.getElementById('ws-header-focus').textContent  = meta.focus;
+  document.getElementById('ws-chat-context').textContent  = meta.context;
+  document.getElementById('ws-input').placeholder         = meta.placeholder;
+
+  // Confirm button
+  const canConfirm = wsAssetStatus[asset] === 'inprog';
+  document.getElementById('ws-confirm-btn').style.display = canConfirm ? 'flex' : 'none';
+
+  // Sync doc view to the new flow asset
+  wsSwitchDoc(asset);
+}
+
+/* ─────────────────────────────────────────────────
+   wsSwitchDoc(asset)  — called by left sidebar clicks
+   Only switches the RIGHT-SIDE PREVIEW and sidebar
+   highlight. Does NOT change topbar flow progress,
+   chat context, or focus badge.
+─────────────────────────────────────────────────── */
+function wsSwitchDoc(asset) {
+  wsCurrentDoc = asset;
+
+  // ── Sidebar: highlight the selected doc ──
+  document.querySelectorAll('.ws-asset-item').forEach(i => {
+    i.classList.toggle('active', i.dataset.asset === asset);
+    // Also show "flow-active" pill on the asset currently being worked on in chat
+    i.classList.toggle('flow-active', i.dataset.asset === wsCurrentAsset && i.dataset.asset !== asset);
+  });
+
+  // ── Top nodes: mark "viewing" (without changing flow-active node) ──
+  document.querySelectorAll('.ws-node-btn').forEach(b => {
+    const isFlow    = b.dataset.asset === wsCurrentAsset;
+    const isViewing = b.dataset.asset === asset;
+    b.classList.toggle('active',  isFlow);
+    b.classList.toggle('viewing', isViewing && !isFlow);
+  });
+
+  // ── Preview pane ──
+  const meta = WS_ASSETS[asset];
+  document.getElementById('ws-preview-label').textContent = meta.previewLabel;
+  wsUpdatePreviewStatus(asset);
+  wsRenderPreview();
+
+  // ── "Viewing" badge in topbar ──
+  const viewingBadge = document.getElementById('ws-viewing-badge');
+  if (viewingBadge) {
+    const isDifferentFromFlow = asset !== wsCurrentAsset;
+    viewingBadge.style.display = isDifferentFromFlow ? 'inline-flex' : 'none';
+    viewingBadge.textContent = 'Viewing: ' + WS_ASSETS[asset].label;
+  }
+}
+
+function wsUpdatePreviewStatus(asset) {
+  // asset = the doc being previewed (wsCurrentDoc), not flow asset
+  const st = wsAssetStatus[asset] || 'todo';
+  const badge = document.getElementById('ws-preview-status');
+  const map = {todo:'Pending',inprog:'In progress',done:'Confirmed',sync:'Needs sync'};
+  const cls  = {todo:'ab-todo',inprog:'ab-inprog',done:'ab-done',sync:'ab-sync'};
+  badge.textContent = map[st] || 'Pending';
+  badge.className = 'ws-asset-badge ' + (cls[st] || 'ab-todo');
+}
+
+function wsRenderPreview() {
+  const pane = document.getElementById('ws-preview-content');
+  // Preview uses wsCurrentDoc (what user is viewing), not wsCurrentAsset (flow context)
+  const docKey = wsCurrentDoc || wsCurrentAsset;
+  pane.innerHTML = wsAssetContent[docKey] || PREVIEW_PLACEHOLDER[docKey] || '<div class="ws-doc"><p class="ws-doc-empty">Nothing here yet.</p></div>';
+}
+
+/* ─────────────────────────────────────────────────
+   wsNodeClick(asset) — top bar delivery node click
+   Clicking the top bar shows the doc for that asset
+   in the preview pane, but does NOT change the active
+   flow / chat context (that only changes via AI flow).
+─────────────────────────────────────────────────── */
+function wsNodeClick(asset) {
+  // Only switch the doc preview — do not change chat context
+  wsSwitchDoc(asset);
+}
+
+function wsAddMsg(role, who, html, actions) {
+  const msgs = document.getElementById('ws-messages');
+  const div = document.createElement('div');
+  div.className = 'ws-msg ' + (role === 'system' ? 'sys' : role === 'user' ? 'usr' : 'ai');
+  let inner = `<div class="ws-msg-who">${who}</div><div class="ws-msg-bubble">${html}</div>`;
+  if (actions) {
+    inner += `<div class="ws-confirm-row">${actions.map(a=>`<button class="ws-confirm-btn ${a.cls}" onclick="${a.fn}">${a.label}</button>`).join('')}</div>`;
+  }
+  div.innerHTML = inner;
+  msgs.appendChild(div);
+  msgs.scrollTop = msgs.scrollHeight;
+}
+
+function wsShowTyping(show) {
+  document.getElementById('ws-typing').classList.toggle('show', show);
+  document.getElementById('ws-send-btn').disabled = show;
+}
+
+function wsSend() {
+  const input = document.getElementById('ws-input');
+  const text = input.value.trim();
+  if (!text || wsIsTyping) return;
+  wsAddMsg('user','You', text.replace(/</g,'&lt;'));
+  input.value = ''; input.style.height = 'auto';
+  wsIsTyping = true; wsShowTyping(true);
+  setTimeout(() => { wsShowTyping(false); wsIsTyping = false; wsAIRespond(text); }, 1200 + Math.random()*600);
+}
+
+function wsHandleKey(e) { if (e.key==='Enter' && !e.shiftKey) { e.preventDefault(); wsSend(); } }
+
+function wsAIRespond(text) {
+  wsUserMsgCount++;
+  const lo = text.toLowerCase();
+  if (wsCurrentAsset === 'prd') wsPRDRespond(text, lo);
+  else if (wsCurrentAsset === 'mockup' && (lo.includes('issue')||lo.includes('problem')||lo.includes('fix')||lo.includes('missing')||lo.includes('wrong'))) {
+    wsAddMsg('system','Blueprint AI · Orchestrator',
+      `Analyzing feedback…<br><br><strong>Attribution:</strong> This originates in <strong>UI Spec</strong> — the success state was not defined there.<br><br>Proposed: Update UI Spec → regenerate Mockup.`,
+      [{label:'✓ Update UI Spec + regenerate',cls:'wcb-primary',fn:'wsAttributeFix()'},{label:'Regenerate only',cls:'wcb-secondary',fn:'wsAddMsg(\'ai\',\'Mockup Agent\',\'Regenerating…\')'}]
+    );
+  } else {
+    wsAddMsg('ai','Blueprint AI','Noted — I\'ve updated the relevant sections. Anything else to refine?');
+  }
+}
+
+function wsPRDRespond(text, lo) {
+  if (wsUserMsgCount === 1) {
+    wsAddMsg('ai','Blueprint AI · PM Agent',
+      `Great. I've structured your PRD — check the preview on the right.<br><br>
+      A few follow-up questions:<br>
+      1. <strong>V1 scope boundary</strong> — what are you explicitly <em>not</em> building?<br>
+      2. <strong>Primary buyer/user</strong> — who makes the adoption decision?<br>
+      3. Any <strong>technical constraints</strong> I should know about?`
+    );
+    wsAssetContent.prd = `<div class="ws-version-row"><span class="ws-version-tag">v0.2</span><span class="ws-version-label">Draft · not confirmed</span><span class="ws-version-status ab-inprog">Draft</span></div><div class="ws-doc"><h3>Product Overview</h3><p>${text.charAt(0).toUpperCase()+text.slice(1)}.</p><h3>Target Users</h3><p>Primary: Product Managers and founders at early-stage teams. Secondary: Designers and engineers involved in product scoping.</p><h3>Core Features (V1)</h3><ul><li>AI-assisted PRD generation</li><li>UI Spec and design generation from confirmed PRD</li><li>Clickable Mockup from design</li><li>Tech Spec from all upstream assets</li><li>Version snapshots and baseline confirmation</li></ul><h3>Out of Scope (V1)</h3><p class="ws-doc-empty">Waiting — what are you NOT building in V1?</p><h3>Success Metrics</h3><p class="ws-doc-empty">Define 1–3 measurable outcomes.</p></div><div class="ws-selfcheck"><div class="ws-selfcheck-label">Self-check</div><div class="ws-selfcheck-body">Missing: V1 scope boundary and success metrics. Answer the follow-up questions to complete.</div></div>`;
+    wsRenderPreview();
+  } else if (wsUserMsgCount === 2) {
+    wsAddMsg('ai','Blueprint AI · PM Agent',
+      `PRD updated. Self-check summary:<br>
+      ✅ Product overview — clear<br>
+      ✅ Target users — defined<br>
+      ✅ Core features — scoped<br>
+      ✅ Out of scope — defined<br>
+      ✅ Success metrics — added<br><br>
+      Ready to confirm <strong>v1.0</strong> as your requirements baseline?`,
+      [{label:'✓ Confirm PRD v1.0',cls:'wcb-primary',fn:'wsConfirmAsset("prd")'},{label:'Keep refining',cls:'wcb-secondary',fn:''}]
+    );
+    document.getElementById('ws-confirm-btn').style.display = 'flex';
+  } else {
+    wsAddMsg('ai','Blueprint AI · PM Agent','Got it — PRD updated. Anything else before we confirm?');
+  }
+}
+
+function wsConfirmAsset(asset) {
+  wsAssetStatus[asset] = 'done';
+  wsUpdateSidebarBadge(asset,'done','Confirmed');
+  wsUpdateNodeStatus(asset,'done');
+  wsUpdatePreviewStatus(asset);
+  document.getElementById('ws-confirm-btn').style.display = 'none';
+  wsAddMsg('ai','Blueprint AI · PM Agent',
+    `✅ <strong>${WS_ASSETS[asset].label} v1.0 confirmed</strong> as baseline.<br><br>
+    Any future changes will create a new version and show impact on downstream assets first.<br><br>
+    Ready to move to <strong>UI Spec</strong>?`,
+    [{label:'→ Start UI Spec',cls:'wcb-primary',fn:'wsAdvanceToAsset("uispec")'},{label:'Stay here',cls:'wcb-secondary',fn:''}]
+  );
+  showToast('✓ ' + WS_ASSETS[asset].label + ' confirmed as baseline');
+}
+
+function wsAdvanceToAsset(asset) {
+  wsSetAsset(asset);
+  wsAssetStatus[asset] = 'inprog';
+  wsUpdateSidebarBadge(asset,'inprog','In progress');
+  wsUpdateNodeStatus(asset,'inprog');
+  setTimeout(() => {
+    wsAddMsg('ai','Blueprint AI · UI Designer Agent',
+      `Reading your confirmed PRD…<br><br>
+      I've drafted a <strong>UI Spec</strong> covering 8 core screens with component inventory.<br><br>
+      Any design references — style you like, brand colors, or example apps?`
+    );
+    wsAssetContent.uispec = `<div class="ws-version-row"><span class="ws-version-tag">v0.1</span><span class="ws-version-label">Generated from PRD v1.0 · not confirmed</span><span class="ws-version-status ab-inprog">Draft</span></div><div class="ws-doc"><h3>Design System</h3><p>Font: Plus Jakarta Sans · Colors: TBD · Spacing: 8px grid</p><h3>Core Screens (8)</h3><ul><li>Marketing / Landing page</li><li>Onboarding (4 steps)</li><li>Project list / Dashboard</li><li>Workspace (3-column layout)</li><li>PRD asset view</li><li>Mockup preview</li><li>Delivery summary</li><li>Account settings</li></ul><h3>Key Components</h3><ul><li>Delivery node tabs</li><li>Chat message bubbles (AI / User / System)</li><li>Asset status badges</li><li>Baseline confirmation flow</li></ul></div><div class="ws-selfcheck"><div class="ws-selfcheck-label">Blueprint AI</div><div class="ws-selfcheck-body">UI Spec skeleton ready. Share design preferences to refine before generating the hi-fi design.</div></div>`;
+    wsRenderPreview();
+    wsUpdatePreviewStatus('uispec');
+  }, 800);
+}
+
+function wsAttributeFix() {
+  wsAssetStatus['uispec'] = 'sync';
+  wsUpdateSidebarBadge('uispec','sync','Needs sync');
+  wsAddMsg('ai','Blueprint AI · UI Designer Agent','UI Spec updated — success state added. Queuing Mockup regeneration…');
+  setTimeout(() => {
+    wsAddMsg('ai','Blueprint AI · Mockup Agent','✅ Mockup regenerated (iteration 2). Review the updated flow in the preview.');
+    wsAssetStatus['uispec'] = 'done';
+    wsUpdateSidebarBadge('uispec','done','Confirmed');
+    wsUpdateNodeStatus('uispec','done');
+  }, 2800);
+}
+
+function wsUpdateSidebarBadge(asset, status, label) {
+  const badge = document.getElementById('sb-badge-'+asset);
+  if (!badge) return;
+  const map = {todo:'ab-todo',inprog:'ab-inprog',done:'ab-done',sync:'ab-sync'};
+  badge.className = 'ws-asset-badge ' + (map[status]||'ab-todo');
+  badge.textContent = label;
+  const dot = document.querySelector(`.ws-asset-item[data-asset="${asset}"] .ws-node-status-dot`);
+  if (dot) dot.className = 'ws-node-status-dot dot-' + (status==='todo'?'todo':status==='inprog'?'inprog':'done');
+}
+
+function wsUpdateNodeStatus(asset, status) {
+  const dot = document.querySelector(`.ws-node-btn[data-asset="${asset}"] .ws-node-status-dot`);
+  if (dot) dot.className = 'ws-node-status-dot dot-' + (status==='todo'?'todo':status==='inprog'?'inprog':'done');
+  if (status==='done') { const b = document.querySelector(`.ws-node-btn[data-asset="${asset}"]`); if(b) b.classList.add('done'); }
+}
+
+function wsQuickAction(a) {
+  if (a==='save')    showToast('📌 Version snapshot saved');
+  else if (a==='export') showToast('⬇️ Exporting ' + WS_ASSETS[wsCurrentAsset].label + ' as Markdown…');
+  else if (a==='confirm') wsConfirmAsset(wsCurrentAsset);
+  else if (a==='paper')   showToast('↗ Opening in Paper — changes will sync back automatically');
+}
+
+function wsNewChat() {
+  wsChatCount++;
+  const h = document.getElementById('ws-chat-history');
+  const item = document.createElement('div');
+  item.className = 'ws-chat-item';
+  item.innerHTML = `<span class="ws-chat-dot gray"></span>${WS_ASSETS[wsCurrentAsset].label} · follow-up`;
+  h.querySelectorAll('.ws-chat-item').forEach(i=>i.classList.remove('active'));
+  item.classList.add('active');
+  item.onclick = () => { h.querySelectorAll('.ws-chat-item').forEach(i=>i.classList.remove('active')); item.classList.add('active'); };
+  h.insertBefore(item, h.firstChild);
+  document.getElementById('ws-messages').innerHTML = '';
+  wsAddMsg('ai','Blueprint AI',`New chat started — context loaded from ${WS_ASSETS[wsCurrentAsset].label}. What would you like to work on?`);
+}
+
+
+/* ═══════════════════════════════════════
+   RESIZABLE PANE LOGIC
+═══════════════════════════════════════ */
+(function() {
+  // Default chat width as % of the ws-body (sidebar excluded)
+  const DEFAULT_CHAT_PERCENT = 55; // 55% chat, 45% preview
+  const MIN_CHAT_PX  = 320;
+  const MIN_PREV_PX  = 260;
+
+  let isDragging = false;
+  let startX     = 0;
+  let startChatW = 0;
+
+  const resizer = document.getElementById('ws-resizer');
+  if (!resizer) return;
+
+  resizer.addEventListener('mousedown', onResizerMouseDown);
+
+  function onResizerMouseDown(e) {
+    e.preventDefault();
+    isDragging = true;
+    startX = e.clientX;
+
+    const chatPane = document.querySelector('.ws-chat-pane');
+    startChatW = chatPane ? chatPane.getBoundingClientRect().width : 0;
+
+    resizer.classList.add('dragging');
+    document.body.classList.add('ws-dragging');
+
+    document.addEventListener('mousemove', onMouseMove);
+    document.addEventListener('mouseup',   onMouseUp);
+  }
+
+  function onMouseMove(e) {
+    if (!isDragging) return;
+    const delta    = e.clientX - startX;
+    const chatPane = document.querySelector('.ws-chat-pane');
+    const prevPane = document.querySelector('.ws-preview-pane');
+    if (!chatPane || !prevPane) return;
+
+    // Body minus sidebar (220px) minus resizer (5px)
+    const bodyW  = chatPane.parentElement.getBoundingClientRect().width - 220 - 5;
+    let newChatW = startChatW + delta;
+
+    // Clamp
+    newChatW = Math.max(MIN_CHAT_PX, Math.min(newChatW, bodyW - MIN_PREV_PX));
+
+    chatPane.style.width  = newChatW + 'px';
+    chatPane.style.flex   = '0 0 ' + newChatW + 'px';
+  }
+
+  function onMouseUp() {
+    isDragging = false;
+    resizer.classList.remove('dragging');
+    document.body.classList.remove('ws-dragging');
+    document.removeEventListener('mousemove', onMouseMove);
+    document.removeEventListener('mouseup',   onMouseUp);
+  }
+
+  // Also handle touch for tablet
+  resizer.addEventListener('touchstart', e => {
+    const touch = e.touches[0];
+    onResizerMouseDown({ clientX: touch.clientX, preventDefault: () => e.preventDefault() });
+  });
+  document.addEventListener('touchmove', e => {
+    if (!isDragging) return;
+    onMouseMove({ clientX: e.touches[0].clientX });
+  });
+  document.addEventListener('touchend', onMouseUp);
+
+  window.wsResetPaneWidth = function() {
+    const chatPane = document.querySelector('.ws-chat-pane');
+    if (!chatPane) return;
+    chatPane.style.width = '';
+    chatPane.style.flex  = '0 0 auto';
+    showToast('↔ Pane width reset to default');
+  };
+
+  // Set initial chat pane width once workspace is shown
+  const _showPageOrig = window.showPage;
+  window.showPage = function(id) {
+    _showPageOrig(id);
+    if (id === 'page-workspace') {
+      requestAnimationFrame(() => {
+        const chatPane = document.querySelector('.ws-chat-pane');
+        const body     = document.querySelector('.ws-body');
+        if (!chatPane || !body) return;
+        const bodyW    = body.getBoundingClientRect().width - 220 - 5;
+        const initW    = Math.round(bodyW * DEFAULT_CHAT_PERCENT / 100);
+        chatPane.style.width = initW + 'px';
+        chatPane.style.flex  = '0 0 ' + initW + 'px';
+      });
+    }
+  };
+})();
+
+// Register workspace in overlay routing
+overlays.push('page-workspace');
+
+/* ─────────────────────────────────────────────────────
+   EXTENDED ASSET FLOWS
+   Handles: uispec → design → mockup → techspec → delivery
+───────────────────────────────────────────────────── */
+
+/* Full per-asset AI conversation scripts */
+const WS_ASSET_SCRIPTS = {
+  uispec: [
+    { role:'ai', who:'Blueprint AI · UI Designer Agent',
+      text:`I've read your confirmed PRD. Here's the <strong>UI Spec draft</strong>:<br><br>
+• <strong>8 core screens</strong> identified<br>
+• Design system tokens proposed (typography, color, spacing)<br>
+• Component inventory drafted<br><br>
+Do you have design references — a style you admire, brand colors, or example apps? I\'ll refine the spec before generating the hi-fi design.` },
+    { role:'ai', who:'Blueprint AI · UI Designer Agent',
+      text:`Great references. I've updated the design system tokens:<br><br>
+✅ Typography: Plus Jakarta Sans (headings 700, body 400)<br>
+✅ Primary: Purple→Cyan gradient<br>
+✅ Surface: White + off-white (#f8f8fc)<br>
+✅ Spacing: 8px base grid<br><br>
+UI Spec self-check passed. Ready to confirm <strong>v1.0</strong> as baseline?`,
+      actions:[
+        {label:'✓ Confirm UI Spec v1.0', cls:'wcb-primary', fn:'wsConfirmAsset("uispec")'},
+        {label:'Keep refining', cls:'wcb-secondary', fn:''}
+      ]
+    }
+  ],
+  design: [
+    { role:'ai', who:'Blueprint AI · UI Designer Agent',
+      text:`Generating hi-fi design from UI Spec v1.0…<br><br>
+<strong>10 screens completed.</strong> Check the preview on the right. You can:<br>
+• Review inline and leave feedback in this chat<br>
+• Click <strong>Open in Paper</strong> to edit directly in the design tool<br><br>
+Any visual adjustments before we confirm?` },
+    { role:'ai', who:'Blueprint AI',
+      text:`Design sync complete. I've detected <strong>2 changes</strong> from your Paper edit:<br><br>
+• Topbar height: 68px → 52px<br>
+• Card border-radius: 12px → 16px<br><br>
+Sync these changes back to UI Spec?`,
+      actions:[
+        {label:'✓ Sync to UI Spec', cls:'wcb-primary', fn:'wsSyncDesignToSpec()'},
+        {label:'Skip sync', cls:'wcb-secondary', fn:'wsAddMsg(\'ai\',\'Blueprint AI\',\'OK — design and UI Spec will remain slightly out of sync. You can sync later anytime.\')'}
+      ]
+    }
+  ],
+  mockup: [
+    { role:'ai', who:'Blueprint AI · Mockup Agent',
+      text:`Building Mockup from <strong>PRD + UI Spec + Design</strong>…<br><br>
+Running Mockup Review Agent consistency check…<br><br>
+✅ All screens accounted for<br>
+✅ Core flows wired (onboarding → workspace → PRD confirm)<br>
+⚠️ 1 issue: missing success state after baseline confirmation<br><br>
+Should I fix the missing state before you preview?`,
+      actions:[
+        {label:'Fix & continue', cls:'wcb-primary', fn:'wsFixMockupIssue()'},
+        {label:'Preview as-is', cls:'wcb-secondary', fn:'wsShowMockupPreview()'}
+      ]
+    }
+  ],
+  techspec: [
+    { role:'ai', who:'Blueprint AI · Dev Agent',
+      text:`Reading all upstream assets — PRD, UI Spec, Design, Mockup…<br><br>
+<strong>Tech Spec draft ready:</strong><br>
+• System architecture: Next.js + Node.js + PostgreSQL<br>
+• AI layer: LangGraph orchestration with specialist agents<br>
+• 12 API endpoints defined<br>
+• 3 technical risks flagged<br><br>
+Any specific tech constraints or preferences I should account for?` },
+    { role:'ai', who:'Blueprint AI · Dev Agent',
+      text:`Updated. Final self-check:<br><br>
+✅ Architecture — defined<br>
+✅ Core modules — specified<br>
+✅ API design — 12 endpoints<br>
+✅ Risk & assumptions — documented<br>
+⚠️ Auth implementation detail — recommend OAuth 2.0, confirm?`,
+      actions:[
+        {label:'✓ Confirm Tech Spec v1.0', cls:'wcb-primary', fn:'wsConfirmAsset("techspec")'},
+        {label:'Adjust auth approach', cls:'wcb-secondary', fn:'wsAddMsg(\'ai\',\'Blueprint AI · Dev Agent\',\'What auth approach would you prefer? Options: OAuth 2.0, Magic link (email), or JWT + invite-only.\')'}
+      ]
+    }
+  ]
+};
+
+/* Asset-specific AI respond handlers */
+const WS_ASSET_MSG_COUNT = { uispec:0, design:0, mockup:0, techspec:0 };
+
+// Override/extend main respond function for remaining assets
+const _wsAIRespond_orig = wsAIRespond;
+wsAIRespond = function(text) {
+  const asset = wsCurrentAsset;
+  if (['uispec','design','mockup','techspec'].includes(asset)) {
+    wsAssetMsgRespond(asset, text);
+  } else {
+    _wsAIRespond_orig(text);
+  }
+};
+
+function wsAssetMsgRespond(asset, text) {
+  WS_ASSET_MSG_COUNT[asset] = (WS_ASSET_MSG_COUNT[asset]||0) + 1;
+  const scripts = WS_ASSET_SCRIPTS[asset];
+  if (!scripts) return;
+  const idx = Math.min(WS_ASSET_MSG_COUNT[asset] - 1, scripts.length - 1);
+  const s = scripts[idx];
+  wsAddMsg(s.role, s.who, s.text, s.actions || null);
+
+  // Auto-update preview when switching into each asset
+  if (WS_ASSET_MSG_COUNT[asset] === 1) {
+    wsInitAssetPreview(asset);
+  }
+}
+
+/* Auto-show first AI message when switching to an asset that has content */
+const _wsAdvanceToAsset_orig = wsAdvanceToAsset;
+wsAdvanceToAsset = function(asset) {
+  _wsAdvanceToAsset_orig(asset);
+  // Add first script message if not already done
+  setTimeout(() => {
+    if (!WS_ASSET_MSG_COUNT[asset]) {
+      WS_ASSET_MSG_COUNT[asset] = 1;
+      const s = WS_ASSET_SCRIPTS[asset]?.[0];
+      if (s) {
+        wsAddMsg(s.role, s.who, s.text, s.actions || null);
+        wsInitAssetPreview(asset);
+      }
+    }
+  }, 800);
+};
+
+/* Initialize rich preview for each asset */
+function wsInitAssetPreview(asset) {
+  if (asset === 'uispec' && !wsAssetContent.uispec) {
+    wsAssetContent.uispec = buildUISpecPreview('draft');
+    wsRenderPreview();
+  } else if (asset === 'design') {
+    wsAssetContent.design = buildDesignPreview();
+    wsRenderPreview();
+  } else if (asset === 'techspec' && !wsAssetContent.techspec) {
+    wsAssetContent.techspec = buildTechSpecPreview('draft');
+    wsRenderPreview();
+  }
+}
+
+/* ─── Rich preview builders ─── */
+function buildUISpecPreview(state) {
+  const confirmed = state === 'confirmed';
+  return `
+<div class="ws-version-row">
+  <span class="ws-version-tag">${confirmed ? 'v1.0' : 'v0.2'}</span>
+  <span class="ws-version-label">${confirmed ? 'Confirmed baseline' : 'Draft · pending confirmation'}</span>
+  <span class="ws-version-status ${confirmed ? 'ab-done' : 'ab-inprog'}">${confirmed ? 'Confirmed ✓' : 'Draft'}</span>
+</div>
+<div class="ws-doc">
+  <h3>Design System</h3>
+  <p><strong>Typography:</strong> Plus Jakarta Sans — headings 700, body 400, mono labels</p>
+  <p><strong>Colors:</strong> Primary gradient #EE53FF → #31E1F8 · Surface white/#f8f8fc · Ink #192f3f</p>
+  <p><strong>Spacing:</strong> 8px base grid · Corner radius 8/14/20px scale</p>
+  <h3>Core Screens (8)</h3>
+  <ul>
+    <li>Marketing / Landing — hero, capabilities, roadmap, CTA</li>
+    <li>Sign In + Request Access — 2-col auth layout</li>
+    <li>Onboarding — sidebar steps + main content</li>
+    <li>New Project — form with industry/user/platform fields</li>
+    <li>Workspace — 3-col: sidebar + chat + preview</li>
+    <li>PRD / UI Spec / Tech Spec views — doc preview pane</li>
+    <li>Design view — canvas preview + Paper link</li>
+    <li>Mockup view — embedded prototype + feedback panel</li>
+    <li>Delivery Summary — full package grid + export</li>
+  </ul>
+  <h3>Key Components</h3>
+  <ul>
+    <li>Delivery node tabs (6) with status dots</li>
+    <li>Chat message bubbles — AI / User / System variants</li>
+    <li>Asset status badges — Pending / In progress / Confirmed / Needs sync</li>
+    <li>Baseline confirmation card with action buttons</li>
+    <li>Impact analysis banner (amber)</li>
+    <li>Self-check card (purple)</li>
+  </ul>
+  <h3>Interaction Patterns</h3>
+  <ul>
+    <li>Confirm baseline via chat — no standalone button</li>
+    <li>Version snapshot on save — shown in preview header</li>
+    <li>Switching asset focus preserves chat thread</li>
+  </ul>
+</div>
+${confirmed ? '' : `<div class="ws-selfcheck"><div class="ws-selfcheck-label">Self-check</div><div class="ws-selfcheck-body">UI Spec is complete. Design system, screen list, components, and interaction patterns all defined. Ready to confirm.</div></div>`}`;
+}
+
+function buildDesignPreview() {
+  return `
+<div class="ws-version-row">
+  <span class="ws-version-tag">v1.0</span>
+  <span class="ws-version-label">Generated from UI Spec v1.0</span>
+  <span class="ws-version-status ab-inprog">Reviewing</span>
+</div>
+<div style="display:flex; flex-direction:column; gap:10px;">
+  <div style="background:#f8f8fc; border:1px solid #e9edf5; border-radius:12px; overflow:hidden;">
+    <!-- Mini design preview mockup -->
+    <div style="background:linear-gradient(135deg,#f0e8ff,#e8f0ff); padding:12px; display:flex; align-items:center; justify-content:center; height:160px; position:relative; overflow:hidden;">
+      <div style="position:absolute;width:300px;height:300px;border-radius:50%;background:radial-gradient(rgba(168,85,247,0.12),transparent 65%);top:-80px;right:-60px;"></div>
+      <div style="position:absolute;width:200px;height:200px;border-radius:50%;background:radial-gradient(rgba(34,211,238,0.1),transparent 65%);bottom:-50px;left:-40px;"></div>
+      <!-- Mini nav mockup -->
+      <div style="background:rgba(255,255,255,0.85);backdrop-filter:blur(8px);border-radius:10px;padding:10px 14px;width:260px;box-shadow:0 8px 32px rgba(0,0,0,0.1);position:relative;z-index:1;">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
+          <div style="width:18px;height:18px;border-radius:4px;background:linear-gradient(135deg,#EE53FF,#31E1F8);"></div>
+          <span style="font-size:11px;font-weight:700;color:#192f3f;">Blueprint</span>
+          <div style="margin-left:auto;background:linear-gradient(135deg,#EE53FF,#31E1F8);color:white;font-size:9px;font-weight:700;padding:3px 9px;border-radius:20px;">Request Access</div>
+        </div>
+        <div style="font-size:20px;font-weight:800;color:#192f3f;line-height:1.1;margin-bottom:6px;">From idea to<br><span style="background:linear-gradient(90deg,#a855f7,#22d3ee);-webkit-background-clip:text;-webkit-text-fill-color:transparent;">MVP delivery.</span></div>
+        <div style="font-size:9px;color:#6c757d;line-height:1.4;">Turn vague ideas into structured, deliverable assets your team can build from.</div>
+      </div>
+    </div>
+    <div style="padding:8px 12px;border-top:1px solid #e9edf5;display:flex;gap:6px;align-items:center;">
+      <span style="font-size:10px;color:#94a3b8;font-weight:600;">Screen 1 / 10 — Marketing Home</span>
+      <div style="margin-left:auto;display:flex;gap:4px;">
+        <button class="ws-preview-btn" style="font-size:10px;padding:3px 8px;" onclick="wsDesignNav(-1)">←</button>
+        <button class="ws-preview-btn" style="font-size:10px;padding:3px 8px;" onclick="wsDesignNav(1)">→</button>
+      </div>
+    </div>
+  </div>
+  <div style="display:flex;gap:8px;">
+    <button class="ws-extra-btn" style="flex:1;justify-content:center;" onclick="wsQuickAction('paper')">
+      Open in Paper ↗
+    </button>
+    <button class="ws-extra-btn" style="flex:1;justify-content:center;" onclick="wsSyncDesignToSpec()">
+      Sync to UI Spec
+    </button>
+  </div>
+  <div class="ws-selfcheck">
+    <div class="ws-selfcheck-label">Design review</div>
+    <div class="ws-selfcheck-body">10 screens generated and consistent with UI Spec. Minor Paper edits synced back. Ready to confirm as baseline.</div>
+  </div>
+</div>`;
+}
+
+function buildMockupPreview(state) {
+  const ready = state === 'ready';
+  return `
+<div class="ws-version-row">
+  <span class="ws-version-tag">${ready ? 'v1.1' : 'v1.0'}</span>
+  <span class="ws-version-label">${ready ? 'Rebuilt — all issues resolved' : 'Generated from Design v1.0'}</span>
+  <span class="ws-version-status ${ready ? 'ab-inprog' : 'ab-inprog'}">${ready ? 'Ready to review' : 'Building…'}</span>
+</div>
+<!-- Embedded mini prototype -->
+<div style="border:1px solid #e9edf5;border-radius:12px;overflow:hidden;background:#f9fafb;margin-bottom:12px;">
+  <div style="background:white;border-bottom:1px solid #e9edf5;padding:8px 12px;display:flex;align-items:center;gap:8px;">
+    <div style="display:flex;gap:4px;"><div style="width:8px;height:8px;border-radius:50%;background:#ef4444;"></div><div style="width:8px;height:8px;border-radius:50%;background:#f59e0b;"></div><div style="width:8px;height:8px;border-radius:50%;background:#22c55e;"></div></div>
+    <div style="flex:1;background:#f1f5f9;border-radius:4px;padding:3px 8px;font-size:10px;color:#94a3b8;">blueprint.app/workspace</div>
+    <button class="ws-preview-btn" style="font-size:10px;padding:3px 8px;" onclick="showToast('↗ Opening full prototype in new tab…')">Full screen ↗</button>
+  </div>
+  <!-- Fake workspace screenshot -->
+  <div style="display:grid;grid-template-columns:160px 1fr 220px;height:180px;font-size:10px;overflow:hidden;">
+    <div style="background:white;border-right:1px solid #e9edf5;padding:8px;">
+      <div style="font-size:8px;font-weight:700;text-transform:uppercase;color:#94a3b8;margin-bottom:6px;letter-spacing:0.08em;">Package</div>
+      <div style="padding:5px 7px;border-radius:5px;background:#f5f0ff;border:1px solid rgba(168,85,247,0.2);color:#6d28d9;font-weight:600;font-size:10px;margin-bottom:2px;">● PRD <span style="margin-left:auto;float:right;font-size:8px;background:#f0fdf4;color:#16a34a;padding:1px 5px;border-radius:10px;">Done</span></div>
+      <div style="padding:5px 7px;border-radius:5px;color:#64748b;font-size:10px;margin-bottom:2px;">● UI Spec <span style="margin-left:auto;float:right;font-size:8px;background:#fff7ed;color:#ea580c;padding:1px 5px;border-radius:10px;">WIP</span></div>
+      <div style="padding:5px 7px;border-radius:5px;color:#94a3b8;font-size:10px;margin-bottom:2px;">○ Design</div>
+      <div style="padding:5px 7px;border-radius:5px;color:#94a3b8;font-size:10px;">○ Mockup</div>
+    </div>
+    <div style="background:#f9fafb;padding:10px;display:flex;flex-direction:column;gap:7px;">
+      <div style="background:white;border-radius:6px;border:1px solid #e9edf5;padding:8px;font-size:10px;color:#475569;line-height:1.4;">
+        <span style="font-weight:700;color:#94a3b8;font-size:8px;text-transform:uppercase;">Blueprint AI</span><br>
+        PRD v1.0 confirmed. Ready to move to UI Spec?
+      </div>
+      <div style="background:linear-gradient(135deg,#EE53FF,#31E1F8);border-radius:6px;padding:6px 10px;font-size:10px;color:white;align-self:flex-end;">
+        Yes — start UI Spec
+      </div>
+      <div style="background:white;border-radius:6px;border:1px solid #e9edf5;padding:8px;font-size:10px;color:#475569;line-height:1.4;">
+        <span style="font-weight:700;color:#94a3b8;font-size:8px;text-transform:uppercase;">Blueprint AI · UI Designer</span><br>
+        Reading PRD v1.0… UI Spec draft ready. 8 screens.
+      </div>
+    </div>
+    <div style="background:white;border-left:1px solid #e9edf5;padding:8px;">
+      <div style="font-size:8px;font-weight:700;text-transform:uppercase;color:#94a3b8;margin-bottom:6px;">UI Spec v0.2</div>
+      <div style="height:3px;background:#e9edf5;border-radius:2px;margin-bottom:6px;"></div>
+      <div style="height:3px;background:#e9edf5;border-radius:2px;width:80%;margin-bottom:3px;"></div>
+      <div style="height:3px;background:#e9edf5;border-radius:2px;width:60%;margin-bottom:8px;"></div>
+      <div style="height:3px;background:#e9edf5;border-radius:2px;margin-bottom:3px;"></div>
+      <div style="height:3px;background:#e9edf5;border-radius:2px;width:90%;margin-bottom:3px;"></div>
+      <div style="height:3px;background:#e9edf5;border-radius:2px;width:70%;"></div>
+    </div>
+  </div>
+</div>
+<div style="display:flex;gap:8px;margin-bottom:10px;">
+  <div style="flex:1;padding:10px 12px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;font-size:11px;color:#16a34a;font-weight:600;">✓ Review passed · 0 issues</div>
+  <button class="ws-extra-btn" style="white-space:nowrap;" onclick="showToast('↗ Sharing Mockup link copied to clipboard')">Share link ↗</button>
+</div>
+<div class="ws-selfcheck">
+  <div class="ws-selfcheck-label">Mockup Review Agent</div>
+  <div class="ws-selfcheck-body">${ready ? 'All issues resolved. Core flows wired correctly including the baseline confirmation success state. Ready for your final review.' : 'Consistency check passed. All 8 screens rendered. Core flows: onboarding → workspace → PRD confirm → UI Spec all working.'}</div>
+</div>`;
+}
+
+function buildTechSpecPreview(state) {
+  const confirmed = state === 'confirmed';
+  return `
+<div class="ws-version-row">
+  <span class="ws-version-tag">${confirmed ? 'v1.0' : 'v0.2'}</span>
+  <span class="ws-version-label">${confirmed ? 'Confirmed baseline' : 'Draft · pending confirmation'}</span>
+  <span class="ws-version-status ${confirmed ? 'ab-done' : 'ab-inprog'}">${confirmed ? 'Confirmed ✓' : 'Draft'}</span>
+</div>
+<div class="ws-doc">
+  <h3>System Architecture</h3>
+  <p><strong>Frontend:</strong> Next.js 14 + TypeScript + Tailwind CSS</p>
+  <p><strong>Backend:</strong> Node.js + Express + PostgreSQL + Redis</p>
+  <p><strong>AI Layer:</strong> LangGraph (Python) · Agent orchestration + state management</p>
+  <p><strong>Infra:</strong> Vercel (FE) · Railway (BE) · Supabase (DB)</p>
+  <h3>Core Modules</h3>
+  <ul>
+    <li><strong>Orchestrator</strong> — LangGraph StateGraph, session persistence, handoff routing</li>
+    <li><strong>Agent Pool</strong> — PM, UI Designer, Dev, Mockup, Review agents</li>
+    <li><strong>Asset Service</strong> — versioned storage, baseline locking, diff tracking</li>
+    <li><strong>Auth Service</strong> — invite-only JWT + OAuth 2.0</li>
+    <li><strong>Paper MCP</strong> — design file sync adapter</li>
+  </ul>
+  <h3>API Design (12 endpoints)</h3>
+  <ul>
+    <li>POST /auth/invite/accept</li>
+    <li>POST /chat/message — main agent entry</li>
+    <li>GET/POST /projects/:id/assets/:type</li>
+    <li>POST /assets/:id/confirm-baseline</li>
+    <li>GET /assets/:id/versions</li>
+    <li>POST /mockup/generate · POST /mockup/review</li>
+    <li>POST /design/sync-from-paper</li>
+  </ul>
+  <h3>Risk & Assumptions</h3>
+  <ul>
+    <li>⚠️ LangGraph memory: Redis TTL must exceed session length</li>
+    <li>⚠️ Paper MCP: latency depends on third-party API SLA</li>
+    <li>ℹ️ V1 single-tenant — no org isolation needed yet</li>
+  </ul>
+</div>
+${confirmed ? '' : `<div class="ws-selfcheck"><div class="ws-selfcheck-label">Dev Agent self-check</div><div class="ws-selfcheck-body">Architecture, modules, and API design complete. Auth implementation set to OAuth 2.0 + invite-only JWT. Ready to confirm as baseline.</div></div>`}`;
+}
+
+function buildDeliveryPreview() {
+  return `
+<div style="padding:4px 0 16px;">
+  <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px;">
+    <span class="ws-asset-badge ab-done">PRD ✓</span>
+    <span class="ws-asset-badge ab-done">UI Spec ✓</span>
+    <span class="ws-asset-badge ab-done">Design ✓</span>
+    <span class="ws-asset-badge ab-done">Mockup ✓</span>
+    <span class="ws-asset-badge ab-done">Tech Spec ✓</span>
+  </div>
+  <div style="font-size:11px;color:#94a3b8;margin-bottom:20px;font-family:monospace;">Last updated ${new Date().toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})} · Confirmed v1.0 · ${wsProjectName || 'Blueprint MVP'}</div>
+</div>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px;">
+  ${[
+    ['PRD','v1.2 · 12 sections','ab-done'],
+    ['UI Spec','v1.0 · 8 screens','ab-done'],
+    ['Design','v1.1 · 10 frames · Paper linked','ab-done'],
+    ['Mockup','v1.1 · 2 iterations','ab-done'],
+    ['Tech Spec','v1.0 · LangGraph arch','ab-done'],
+  ].map(([name,desc,cls])=>`
+  <div style="padding:12px 14px;border-radius:10px;border:1px solid #e9edf5;background:white;cursor:pointer;transition:all 0.15s;" onmouseover="this.style.borderColor='#c4b5fd'" onmouseout="this.style.borderColor='#e9edf5'">
+    <div style="font-size:13px;font-weight:600;color:#192f3f;margin-bottom:3px;">${name}</div>
+    <div style="font-size:11px;color:#94a3b8;font-family:monospace;">${desc}</div>
+    <span class="ws-asset-badge ${cls}" style="margin-top:6px;display:inline-block;">Confirmed</span>
+  </div>`).join('')}
+  <div style="padding:12px 14px;border-radius:10px;border:1.5px solid rgba(168,85,247,0.3);background:rgba(168,85,247,0.04);cursor:pointer;" onclick="wsExportAll()">
+    <div style="font-size:13px;font-weight:600;color:#8B5CF6;margin-bottom:3px;">Export Package</div>
+    <div style="font-size:11px;color:#94a3b8;">All assets as .zip</div>
+    <span style="margin-top:6px;display:inline-block;font-size:10px;font-weight:700;color:#8B5CF6;">⬇ Download →</span>
+  </div>
+</div>
+<div class="ws-doc">
+  <h3>Project Background</h3>
+  <p>${wsProjectName || 'Blueprint MVP Platform'} — Phase 1 delivery package complete. All 5 core assets confirmed and ready for engineering handoff.</p>
+  <h3>Scope Delivered</h3>
+  <p>PRD, UI Spec, hi-fi design, clickable prototype, and tech architecture. Full delivery chain from idea to engineering-ready spec.</p>
+  <h3>Next Steps</h3>
+  <p>Proceed to Phase 2: code repository generation from this confirmed delivery package.</p>
+</div>`;
+}
+
+/* ─── Design screen nav state ─── */
+let wsDesignScreenIdx = 0;
+const wsDesignScreens = [
+  'Screen 1 / 10 — Marketing Home',
+  'Screen 2 / 10 — Sign In',
+  'Screen 3 / 10 — Request Access',
+  'Screen 4 / 10 — Onboarding',
+  'Screen 5 / 10 — New Project',
+  'Screen 6 / 10 — Workspace',
+  'Screen 7 / 10 — PRD View',
+  'Screen 8 / 10 — Mockup View',
+  'Screen 9 / 10 — Tech Spec View',
+  'Screen 10 / 10 — Delivery Summary',
+];
+function wsDesignNav(dir) {
+  wsDesignScreenIdx = (wsDesignScreenIdx + dir + wsDesignScreens.length) % wsDesignScreens.length;
+  const label = document.querySelector('#ws-preview-content [style*="Screen"]');
+  if (label) label.textContent = wsDesignScreens[wsDesignScreenIdx];
+}
+
+/* ─── Design sync to spec ─── */
+function wsSyncDesignToSpec() {
+  wsAddMsg('ai','Blueprint AI · UI Designer Agent',
+    `UI Spec updated — topbar height and card border-radius synced.<br><br>
+Design and UI Spec are now in sync. Ready to confirm design as baseline?`,
+    [{label:'✓ Confirm Design v1.1', cls:'wcb-primary', fn:'wsConfirmDesign()'},{label:'More changes', cls:'wcb-secondary', fn:''}]
+  );
+}
+
+function wsConfirmDesign() {
+  wsAssetStatus['design'] = 'done';
+  wsUpdateSidebarBadge('design','done','Confirmed');
+  wsUpdateNodeStatus('design','done');
+  wsUpdatePreviewStatus('design');
+  document.getElementById('ws-confirm-btn').style.display = 'none';
+  wsAddMsg('ai','Blueprint AI',
+    `✅ <strong>Design v1.1 confirmed</strong> as baseline.<br><br>
+Generating <strong>Mockup</strong> from PRD + UI Spec + Design now…`,
+    [{label:'→ Go to Mockup', cls:'wcb-primary', fn:'wsStartMockup()'},{label:'Stay here', cls:'wcb-secondary', fn:''}]
+  );
+  showToast('✓ Design confirmed as baseline');
+}
+
+/* ─── Mockup flow ─── */
+function wsFixMockupIssue() {
+  wsAddMsg('ai','Blueprint AI · Mockup Agent',
+    `Fixing missing success state… rebuilding Mockup v1.1…`
+  );
+  setTimeout(() => {
+    wsAddMsg('ai','Blueprint AI · Mockup Agent',
+      `✅ <strong>Mockup v1.1 ready</strong> — success state added and all flows re-tested.<br><br>
+Review the preview on the right. When you're happy, confirm the baseline.`,
+      [{label:'✓ Confirm Mockup v1.1', cls:'wcb-primary', fn:'wsConfirmAsset("mockup")'},{label:'Submit more feedback', cls:'wcb-secondary', fn:''}]
+    );
+    wsAssetContent.mockup = buildMockupPreview('ready');
+    if (wsCurrentAsset === 'mockup') wsRenderPreview();
+    wsUpdatePreviewStatus('mockup');
+    document.getElementById('ws-confirm-btn').style.display = 'flex';
+  }, 2600);
+}
+
+function wsShowMockupPreview() {
+  wsAssetContent.mockup = buildMockupPreview('ready');
+  if (wsCurrentAsset === 'mockup') wsRenderPreview();
+  wsAddMsg('ai','Blueprint AI','Mockup loaded. Use the preview to explore the prototype. Submit feedback here and I\'ll attribute it to the right upstream asset.');
+}
+
+function wsStartMockup() {
+  wsSetAsset('mockup');
+  wsAssetStatus['mockup'] = 'inprog';
+  wsUpdateSidebarBadge('mockup','inprog','Building…');
+  wsUpdateNodeStatus('mockup','inprog');
+  setTimeout(() => {
+    WS_ASSET_MSG_COUNT['mockup'] = 0;
+    const s = WS_ASSET_SCRIPTS.mockup[0];
+    wsAddMsg(s.role, s.who, s.text, s.actions || null);
+    wsAssetContent.mockup = buildMockupPreview('ready');
+    wsRenderPreview();
+    wsUpdatePreviewStatus('mockup');
+  }, 900);
+}
+
+/* ─── Override wsConfirmAsset to handle post-confirm flows ─── */
+const _wsConfirmAsset_orig = wsConfirmAsset;
+wsConfirmAsset = function(asset) {
+  _wsConfirmAsset_orig(asset);
+
+  if (asset === 'uispec') {
+    // After confirming UI Spec, update its preview and advance to design
+    wsAssetContent.uispec = buildUISpecPreview('confirmed');
+    if (wsCurrentAsset === 'uispec') wsRenderPreview();
+    setTimeout(() => {
+      wsAddMsg('ai','Blueprint AI · UI Designer Agent',
+        `UI Spec locked. Generating <strong>hi-fi Design</strong> from confirmed spec now…`,
+        [{label:'→ Go to Design', cls:'wcb-primary', fn:'wsStartDesign()'},{label:'Stay on UI Spec', cls:'wcb-secondary', fn:''}]
+      );
+    }, 400);
+  }
+
+  if (asset === 'mockup') {
+    setTimeout(() => {
+      wsAddMsg('ai','Blueprint AI',
+        `✅ <strong>Mockup v1.1 confirmed.</strong><br><br>
+Ready to generate <strong>Tech Spec</strong> from all confirmed assets?`,
+        [{label:'→ Start Tech Spec', cls:'wcb-primary', fn:'wsStartTechSpec()'},{label:'Stay on Mockup', cls:'wcb-secondary', fn:''}]
+      );
+    }, 400);
+  }
+
+  if (asset === 'techspec') {
+    wsAssetContent.techspec = buildTechSpecPreview('confirmed');
+    if (wsCurrentAsset === 'techspec') wsRenderPreview();
+    setTimeout(() => {
+      // Auto-generate delivery summary
+      wsAssetStatus['delivery'] = 'done';
+      wsUpdateSidebarBadge('delivery','done','Ready');
+      wsUpdateNodeStatus('delivery','done');
+      wsAddMsg('ai','Blueprint AI',
+        `🎉 <strong>All assets confirmed!</strong><br><br>
+Your <strong>Delivery Summary</strong> is now auto-generated. View the complete Phase 1 package — everything your engineering team needs to start building.`,
+        [{label:'→ View Delivery Summary', cls:'wcb-primary', fn:'wsOpenDelivery()'},{label:'Stay here', cls:'wcb-secondary', fn:''}]
+      );
+    }, 600);
+  }
+};
+
+function wsStartDesign() {
+  wsAdvanceToAsset('design');
+}
+
+function wsStartTechSpec() {
+  wsAdvanceToAsset('techspec');
+  setTimeout(() => {
+    WS_ASSET_MSG_COUNT['techspec'] = 0;
+    const s = WS_ASSET_SCRIPTS.techspec[0];
+    wsAddMsg(s.role, s.who, s.text, s.actions || null);
+    wsAssetContent.techspec = buildTechSpecPreview('draft');
+    wsRenderPreview();
+    wsUpdatePreviewStatus('techspec');
+  }, 900);
+}
+
+function wsOpenDelivery() {
+  wsSetAsset('delivery');
+  wsAssetContent.delivery = buildDeliveryPreview();
+  wsRenderPreview();
+  wsUpdatePreviewStatus('delivery');
+  wsAddMsg('ai','Blueprint AI',
+    `Here is your complete <strong>Phase 1 Delivery Package</strong>.<br><br>
+All 5 assets confirmed and versioned. You can:<br>
+• Export the full package as a .zip<br>
+• Share individual asset links with your team<br>
+• Continue to Phase 2 — code repository generation<br><br>
+Congratulations on completing your first Blueprint delivery package! 🎉`
+  );
+}
+
+/* ─── Override wsSetAsset to inject rich previews for confirmed assets ─── */
+const _wsSetAsset_orig = wsSetAsset;
+wsSetAsset = function(asset) {
+  _wsSetAsset_orig(asset);
+  // Auto-build previews for assets that have been reached
+  if (asset === 'design' && !wsAssetContent.design && wsAssetStatus['uispec'] === 'done') {
+    wsAssetContent.design = buildDesignPreview();
+    wsRenderPreview();
+  }
+  if (asset === 'delivery' && wsAssetStatus['techspec'] === 'done') {
+    wsAssetContent.delivery = buildDeliveryPreview();
+    wsRenderPreview();
+    wsUpdatePreviewStatus('delivery');
+  }
+};
+
+/* ─── Export all ─── */
+function wsExportAll() {
+  showToast('⬇️ Preparing full delivery package export…');
+  setTimeout(() => showToast('✓ blueprint-delivery-package.zip ready to download'), 1800);
+}
+
+/* ─── Override wsAdvanceToAsset for design specifically ─── */
+const _wsAdvanceToAsset2_orig = wsAdvanceToAsset;
+wsAdvanceToAsset = function(asset) {
+  if (asset === 'design') {
+    wsSetAsset('design');
+    wsAssetStatus['design'] = 'inprog';
+    wsUpdateSidebarBadge('design','inprog','In progress');
+    wsUpdateNodeStatus('design','inprog');
+    wsAssetContent.design = buildDesignPreview();
+    setTimeout(() => {
+      WS_ASSET_MSG_COUNT['design'] = 0;
+      wsAssetMsgRespond('design','init');
+      wsRenderPreview();
+      wsUpdatePreviewStatus('design');
+    }, 800);
+  } else {
+    _wsAdvanceToAsset2_orig(asset);
+  }
+};
+
+
+/* ═══════════════════════════════════════
+   RESIZABLE PANE LOGIC
+═══════════════════════════════════════ */
+(function() {
+  // Default chat width as % of the ws-body (sidebar excluded)
+  const DEFAULT_CHAT_PERCENT = 55; // 55% chat, 45% preview
+  const MIN_CHAT_PX  = 320;
+  const MIN_PREV_PX  = 260;
+
+  let isDragging = false;
+  let startX     = 0;
+  let startChatW = 0;
+
+  const resizer = document.getElementById('ws-resizer');
+  if (!resizer) return;
+
+  resizer.addEventListener('mousedown', onResizerMouseDown);
+
+  function onResizerMouseDown(e) {
+    e.preventDefault();
+    isDragging = true;
+    startX = e.clientX;
+
+    const chatPane = document.querySelector('.ws-chat-pane');
+    startChatW = chatPane ? chatPane.getBoundingClientRect().width : 0;
+
+    resizer.classList.add('dragging');
+    document.body.classList.add('ws-dragging');
+
+    document.addEventListener('mousemove', onMouseMove);
+    document.addEventListener('mouseup',   onMouseUp);
+  }
+
+  function onMouseMove(e) {
+    if (!isDragging) return;
+    const delta    = e.clientX - startX;
+    const chatPane = document.querySelector('.ws-chat-pane');
+    const prevPane = document.querySelector('.ws-preview-pane');
+    if (!chatPane || !prevPane) return;
+
+    // Body minus sidebar (220px) minus resizer (5px)
+    const bodyW  = chatPane.parentElement.getBoundingClientRect().width - 220 - 5;
+    let newChatW = startChatW + delta;
+
+    // Clamp
+    newChatW = Math.max(MIN_CHAT_PX, Math.min(newChatW, bodyW - MIN_PREV_PX));
+
+    chatPane.style.width  = newChatW + 'px';
+    chatPane.style.flex   = '0 0 ' + newChatW + 'px';
+  }
+
+  function onMouseUp() {
+    isDragging = false;
+    resizer.classList.remove('dragging');
+    document.body.classList.remove('ws-dragging');
+    document.removeEventListener('mousemove', onMouseMove);
+    document.removeEventListener('mouseup',   onMouseUp);
+  }
+
+  // Also handle touch for tablet
+  resizer.addEventListener('touchstart', e => {
+    const touch = e.touches[0];
+    onResizerMouseDown({ clientX: touch.clientX, preventDefault: () => e.preventDefault() });
+  });
+  document.addEventListener('touchmove', e => {
+    if (!isDragging) return;
+    onMouseMove({ clientX: e.touches[0].clientX });
+  });
+  document.addEventListener('touchend', onMouseUp);
+
+  window.wsResetPaneWidth = function() {
+    const chatPane = document.querySelector('.ws-chat-pane');
+    if (!chatPane) return;
+    chatPane.style.width = '';
+    chatPane.style.flex  = '0 0 auto';
+    showToast('↔ Pane width reset to default');
+  };
+
+  // Set initial chat pane width once workspace is shown
+  const _showPageOrig = window.showPage;
+  window.showPage = function(id) {
+    _showPageOrig(id);
+    if (id === 'page-workspace') {
+      requestAnimationFrame(() => {
+        const chatPane = document.querySelector('.ws-chat-pane');
+        const body     = document.querySelector('.ws-body');
+        if (!chatPane || !body) return;
+        const bodyW    = body.getBoundingClientRect().width - 220 - 5;
+        const initW    = Math.round(bodyW * DEFAULT_CHAT_PERCENT / 100);
+        chatPane.style.width = initW + 'px';
+        chatPane.style.flex  = '0 0 ' + initW + 'px';
+      });
+    }
+  };
+})();
+
+// Register workspace in overlay routing
+overlays.push('page-workspace');
+</script>
+</body>
+</html>

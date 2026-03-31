@@ -2,7 +2,7 @@
 
 ## 📊 概述
 **大版本**: V1（覆盖迭代 1.0 -> 当前）  
-**当前迭代**: 1.19  
+**当前迭代**: 1.20  
 **状态**: Active  
 **创建日期**: 2026-03-24  
 **负责人**: TBD
@@ -43,6 +43,9 @@
 - 左侧不再是阶段导航，而是 `项目包目录 + 聊天历史`
 - 中间永远是统一 AI 对话区；系统自动理解当前资产焦点和用户意图
 - 右侧永远是当前资产预览区；随当前聚焦资产切换为文档、设计稿、原型或交付摘要视图
+- `PRD / UI Spec / Tech Spec` 三类文档资产的标准输出格式统一为 `Markdown`；右侧文档区必须支持 `Preview` 渲染模式与 `Markdown` 原文模式
+- 当用户切换到 `Markdown` 原文模式时，可直接在原始 Markdown 上进行手动修改；系统需将该原文视为当前最新文档源，并允许再切回 `Preview` 查看渲染结果
+- 工作台中间聊天区与右侧内容区之间必须支持拖拽调宽；对文档类资产，默认应让右侧内容区占据更宽比例，以保证阅读与浏览体验
 - 历史会话为项目级能力，但每条会话都绑定创建时的资产焦点与上下文来源
 - 新建会话默认继承当前项目上下文，并以当前聚焦资产作为起点
 - 每条会话除创建时的资产焦点与上下文来源外，还必须持久记录 `active agent`、最近一次 `handoff` 原因、待确认事项、受影响资产和待执行任务
@@ -74,7 +77,7 @@ V1 必须支持以下主链路：
 2. 用户登录后进入 Onboarding，理解平台工作流、所需输入和预期输出
 3. 用户创建项目并填写项目基础信息
 4. 项目创建成功后，系统自动初始化 `PRD / UI Spec / 设计稿 / Mockup / Tech Spec / 交付摘要` 六类资产的默认骨架
-5. 统一 AI 助手默认引导用户从 `PRD` 初稿开始共创，可实时预览 Markdown，并支持编辑、导出、手动保存版本、填写更新说明
+5. 统一 AI 助手默认引导用户从 `PRD` 初稿开始共创；`PRD / UI Spec / Tech Spec` 在工作台右侧统一以 Markdown 为标准源格式，并支持 `Preview / Markdown` 双模式查看、导出、手动保存版本、填写更新说明
 6. `PRD` 在达到可用质量后执行轻确认，作为当前需求基线
 7. 用户继续与统一 AI 共创 `UI Spec`，可上传参考截图、输入参考网站链接、选择偏好品牌/字体/风格选项
 8. 系统基于当前 `UI Spec` 生成高保真设计稿，平台内提供预览，并支持跳转到 `Paper` 进行外部编辑
@@ -327,6 +330,11 @@ flowchart LR
 - 用户重新进入既有会话时，系统必须优先恢复最近一次有效的 `resume_snapshot`，包括 `active agent`、未完成确认和待执行任务
 - `handoff` 必须记录为显式系统事件，至少包含 `from_agent`、`to_agent`、`trigger_reason`、`confidence`、`user_confirmed`、`affected_assets`，用于调试、审计和策略优化
 
+#### 工作台视图状态模型
+- 文档类资产的界面偏好必须独立于会话状态维护，至少包括：`document_view_mode`（`Preview / Markdown`）、`pane_split_ratio`、`has_unsaved_manual_edits`
+- `document_view_mode` 与 `pane_split_ratio` 属于工作台视图状态或用户偏好状态，不应与 `active agent`、`handoff`、确认门等会话路由状态混用
+- 用户在同一项目中切换文档资产时，系统应尽量保留最近一次文档查看模式与布局宽度偏好；如存在未保存改动，则需先提示用户确认后再切换
+
 #### 触发与路由规则
 - 用户在统一工作台中点击某个资产时，系统切换当前资产焦点，但前台仍保持统一对话入口与统一展示名
 - 项目创建成功后，系统默认打开 `PRD`；若当前会话尚无 `active agent`，则由 `Orchestrator` 首次命中 `PM Agent`，并由其直接引导用户从 PRD 初稿共创开始
@@ -410,6 +418,17 @@ flowchart LR
 ---
 
 ## 📋 迭代历史（AI 理解上下文时读这里）
+
+### v1.20 — 文档资产双模式查看与工作台可调宽规则（2026-03-30）
+**变更内容**：补充 `PRD / UI Spec / Tech Spec` 统一采用 Markdown 作为标准源格式，右侧文档区统一支持 `Preview / Markdown` 双模式，以及工作台中区/右区可拖拽调宽与偏好持久化规则  
+**变更原因**：此前 PRD 仅模糊定义“右侧预览区”，没有明确区分渲染预览与 Markdown 原文，也未把 UI Spec 和 Tech Spec 一并纳入统一的文档交互模型。补上后，产品在阅读、手动修订与后续实现上会更一致  
+
+**本次新增要点**
+- 明确 `PRD / UI Spec / Tech Spec` 的标准输出格式统一为 `Markdown`
+- 明确右侧文档区统一支持 `Preview / Markdown` 双模式，并允许用户直接手动修改原始 Markdown
+- 明确工作台中间聊天区与右侧内容区支持拖拽调宽，文档类资产默认右侧更宽
+- 明确 `document_view_mode / pane_split_ratio / has_unsaved_manual_edits` 属于工作台视图状态，不混入会话路由状态
+- 补充相关验收标准、页面原型、异常处理、埋点与监控指标
 
 ### v1.19 — 引入 active agent 持续接管与 handoff 协作机制（2026-03-27）
 **变更内容**：补充 `active agent` 会话级持续接管机制，明确 `Orchestrator` 采用“旁路观察 + 条件触发切换”而非逐轮重路由；同时新增实现分层原则、会话状态模型、结构化 `handoff` 协议、恢复规则与相关埋点指标  
@@ -670,6 +689,8 @@ flowchart LR
 | F016 | 交付摘要与导出 | 汇总完整文档包、资产成熟度与最终输出 |
 | F017 | 需求变更与影响同步 | 在任意资产中提出需求变化后，先澄清，再由系统给出影响分析，并在用户确认后同步更新受影响资产 |
 | F018 | 设计返工与重生成 | 在不改变产品需求的前提下提出设计修改，系统分析影响范围，并在用户确认后更新 UI Spec / 设计稿 / Mockup |
+| F019 | 文档双模式查看与手动编辑 | `PRD / UI Spec / Tech Spec` 统一支持 `Preview` 渲染模式与 `Markdown` 原文模式，并允许用户直接手动修改 Markdown |
+| F020 | 工作台文档阅读布局调宽 | 中间聊天区与右侧内容区支持拖拽调宽；文档类资产默认右侧更宽，并持久记录用户最近一次布局偏好 |
 
 ### P1（后续考虑）
 | 功能ID | 功能名称 | 功能描述 |
@@ -787,6 +808,14 @@ flowchart LR
 - When 用户与统一 AI 对话
 - Then 系统应生成可实时预览的 Markdown PRD，并默认将 `PRD` 作为当前聚焦资产
 
+- Given 用户位于 `PRD` 资产视图
+- When 用户在右侧文档区切换 `Preview` 与 `Markdown`
+- Then 系统应分别展示渲染后的文档结果与原始 Markdown，并保持两种模式内容一致
+
+- Given 用户位于 `PRD` 资产视图的 `Markdown` 模式
+- When 用户手动修改原始 Markdown
+- Then 系统应保留用户改动，并允许用户切回 `Preview` 查看最新渲染结果
+
 - Given 用户修改了 PRD
 - When 用户手动保存版本
 - Then 系统应记录版本快照和更新说明
@@ -799,6 +828,10 @@ flowchart LR
 - Given PRD 已达到可用质量
 - When 用户开始完善 UI Spec
 - Then 系统应允许用户补充设计偏好输入并生成 UI Spec
+
+- Given 用户位于 `UI Spec` 资产视图
+- When 用户在右侧文档区切换 `Preview` 与 `Markdown`
+- Then 系统应展示 UI Spec 的渲染结果或原始 Markdown，并允许用户在 `Markdown` 模式下直接手动修改
 
 - Given UI Spec 已生成
 - When 系统生成设计稿
@@ -822,9 +855,22 @@ flowchart LR
 - When 用户开始完善 Tech Spec
 - Then 系统应生成结构化 Tech Spec
 
+- Given 用户位于 `Tech Spec` 资产视图
+- When 用户在右侧文档区切换 `Preview` 与 `Markdown`
+- Then 系统应展示 Tech Spec 的渲染结果或原始 Markdown，并允许用户在 `Markdown` 模式下直接手动修改
+
 - Given 全部必需资产已确认
 - When 系统生成交付摘要
 - Then 用户应看到完整文档包入口、交付节点状态和最终交付摘要
+
+### F019-F020: 文档查看模式与工作台布局
+- Given 用户位于 `PRD / UI Spec / Tech Spec` 任一文档资产视图
+- When 用户切换右侧文档区的 `Preview` 或 `Markdown` 模式
+- Then 系统应立即切换展示方式，且不丢失当前文档内容与未保存改动状态
+
+- Given 用户正在阅读文档类资产
+- When 用户拖拽中间聊天区与右侧内容区之间的分隔条
+- Then 工作台应实时调整两栏宽度，并在后续返回该项目时恢复最近一次布局偏好
 
 ### F017: 需求变更与影响同步
 - Given 用户已处于任意资产视图
@@ -1397,17 +1443,17 @@ Page: Project Create
 
 #### 线框图
 ```text
-Screen: Project Workspace - PRD Focus | Route: /projects/:id/prd | Layout: unified-workspace
+Screen: Project Workspace - PRD Focus | Route: /projects/:id/prd | Layout: unified-workspace, center-right resizable
 
 ┌─────────────────────────────────────────────────────────────────────────────┐
 │ Blueprint / 项目名 [PRD*][UI][设计稿][Mockup][Tech][交付摘要] [当前聚焦: PRD] │
 ├───────────────┬───────────────────────────────┬─────────────────────────────┤
-│ 项目包目录    │ 统一 AI 对话区                 │ PRD Markdown 预览           │
+│ 项目包目录    │ 统一 AI 对话区                 │ PRD 文档区                  │
 │ - PRD*        │ - 当前目标提示                 │ - 标题                      │
 │ - UI Spec     │ - 消息流                       │ - 章节目录                  │
 │ - 设计稿      │ - 动作状态                     │ - 正文                      │
-│ - Mockup      │ - 简要步骤日志                 │ - 编辑/导出/保存版本        │
-│ - Tech Spec   │ - 输入框                       │ - 确认当前基线              │
+│ - Mockup      │ - 简要步骤日志                 │ - Preview / Markdown        │
+│ - Tech Spec   │ - 输入框                       │ - 渲染预览 / 原文编辑       │
 │ - 交付摘要    │                               │                             │
 │ [聊天历史]    │                               │                             │
 │ - 当前对话    │                               │                             │
@@ -1422,7 +1468,7 @@ Screen: Project Workspace - PRD Focus | Route: /projects/:id/prd | Layout: unifi
 ```text
 Page: PRD Asset View
   Route: /projects/:id/prd
-  Layout: unified-workspace, 3-column
+  Layout: unified-workspace, 3-column, center-right resizable, document-first
 
   - TopBar
     - Breadcrumb
@@ -1444,10 +1490,15 @@ Page: PRD Asset View
     - StepLog
     - MessageList
     - PromptInput
-  - PreviewPane
-    - Tab: "预览"
-    - Tab: "编辑"
-    - MarkdownDocument
+  - PaneDivider
+    - DragHandle: adjusts ConversationPane / DocumentPane width
+  - DocumentPane
+    - Tab: "Preview"
+    - Tab: "Markdown"
+    - RenderedDocumentView
+    - MarkdownEditor
+    - UnsavedChangesIndicator
+    - RenderErrorBanner: hidden by default
     - Button: "导出 Markdown"
     - Button: "保存版本"
     - Input: "更新说明"
@@ -1459,6 +1510,9 @@ Page: PRD Asset View
 | 触发 | 行为 | 结果状态 |
 |------|------|---------|
 | 发送消息 | 触发后台 `PM Agent` 生成或修改 PRD | 对话区显示动作状态与步骤日志，右侧文档实时更新 |
+| 点击 `Preview` / `Markdown` | 切换右侧文档展示模式 | 分别展示 PRD 渲染结果或原始 Markdown，当前内容保持一致 |
+| 在 `Markdown` 模式手动修改 | 更新原始 Markdown | 标记存在未保存改动，并允许切回 `Preview` 查看最新渲染结果 |
+| 拖拽中间/右侧分隔条 | 调整聊天区与文档区宽度 | 右侧文档区实时变宽或变窄，文档类资产默认右侧更宽 |
 | 点击项目包目录中的其他资产 | 切换当前资产焦点 | 中间对话保持连续，右侧预览切换为对应资产 |
 | 点击历史聊天 | 切换对应会话线程 | 中间对话区切换到对应历史会话，右侧继续展示当前资产最新版本 |
 | 点击新建聊天 | 基于当前项目上下文创建新线程 | 新聊天建立，默认继承当前聚焦资产 |
@@ -1471,16 +1525,16 @@ Page: PRD Asset View
 
 #### 线框图
 ```text
-Screen: Project Workspace - UI Spec Focus | Route: /projects/:id/ui-spec | Layout: unified-workspace
+Screen: Project Workspace - UI Spec Focus | Route: /projects/:id/ui-spec | Layout: unified-workspace, center-right resizable
 
 ┌─────────────────────────────────────────────────────────────────────────────┐
 │ 项目名 [PRD][UI*][设计稿][Mockup][Tech][交付摘要] [当前聚焦: UI Spec]       │
 ├───────────────┬───────────────────────────────┬─────────────────────────────┤
-│ 项目包目录    │ 统一 AI 对话区                 │ UI Spec 文档预览            │
+│ 项目包目录    │ 统一 AI 对话区                 │ UI Spec 文档区              │
 │ [聊天历史]    │ - 当前目标提示                 │ - 页面结构                  │
 │ - 当前对话    │ - 风格偏好输入                 │ - 组件建议                  │
 │ - 风格迭代2   │ - 参考链接/截图                │ - 状态说明                  │
-│ [新建聊天]    │ - 推荐选项说明                 │ - 自检结果摘要              │
+│ [新建聊天]    │ - 推荐选项说明                 │ - Preview / Markdown        │
 │               │ - 输入框                        │                             │
 └───────────────┴───────────────────────────────┴─────────────────────────────┘
 ```
@@ -1489,7 +1543,7 @@ Screen: Project Workspace - UI Spec Focus | Route: /projects/:id/ui-spec | Layou
 ```text
 Page: UI Spec Asset View
   Route: /projects/:id/ui-spec
-  Layout: unified-workspace, 3-column
+  Layout: unified-workspace, 3-column, center-right resizable, document-first
 
   - TopBar
     - DeliveryProgress[6]
@@ -1511,9 +1565,17 @@ Page: UI Spec Asset View
     - Upload: "参考截图"
     - Input: "参考网站链接"
     - SelectGroup: "品牌色/字体/风格偏好"
-  - PreviewPane
-    - StructuredSpecPreview
+  - PaneDivider
+    - DragHandle: adjusts ConversationPane / DocumentPane width
+  - DocumentPane
+    - Tab: "Preview"
+    - Tab: "Markdown"
+    - RenderedDocumentView
+    - MarkdownEditor
+    - UnsavedChangesIndicator
+    - RenderErrorBanner: hidden by default
     - Button: "保存版本"
+    - Button: "导出 Markdown"
     - SelfCheckSummaryCard
 ```
 
@@ -1523,6 +1585,9 @@ Page: UI Spec Asset View
 |------|------|---------|
 | 上传截图或输入参考链接 | 提供设计上下文 | Agent 在生成时引用这些输入 |
 | 选择推荐风格 | 更新偏好参数 | 下一轮 UI Spec 与设计稿生成使用该偏好 |
+| 点击 `Preview` / `Markdown` | 切换 UI Spec 展示模式 | 右侧展示渲染后的 UI Spec 或原始 Markdown |
+| 在 `Markdown` 模式手动修改 | 更新原始 UI Spec Markdown | 标记未保存改动，并允许切回 `Preview` 查看最新渲染结果 |
+| 拖拽中间/右侧分隔条 | 调整聊天区与文档区宽度 | UI Spec 阅读区域实时改变宽度，并保留最近一次布局偏好 |
 | 点击项目包目录中的其他资产 | 切换当前资产焦点 | 右侧切换为对应资产预览 |
 | 点击历史聊天 | 切换当前对话线程 | 对话区切换到对应会话，右侧继续显示当前资产最新版本 |
 | 点击新建聊天 | 基于当前 UI Spec 最新版本开启新线程 | 顶部显示上下文来源版本 |
@@ -1660,16 +1725,16 @@ Page: Mockup Asset View
 
 #### 线框图
 ```text
-Screen: Project Workspace - Tech Spec Focus | Route: /projects/:id/tech-spec | Layout: unified-workspace
+Screen: Project Workspace - Tech Spec Focus | Route: /projects/:id/tech-spec | Layout: unified-workspace, center-right resizable
 
 ┌─────────────────────────────────────────────────────────────────────────────┐
 │ 项目名 [PRD][UI][设计稿][Mockup][Tech*][交付摘要] [当前聚焦: Tech Spec]      │
 ├───────────────┬───────────────────────────────┬─────────────────────────────┤
-│ 项目包目录    │ 统一 AI 对话区                 │ Tech Spec 文档预览          │
+│ 项目包目录    │ 统一 AI 对话区                 │ Tech Spec 文档区            │
 │ [聊天历史]    │ - 当前目标提示                 │ - 系统边界                  │
 │ - 首版 Tech   │ - 生成状态                     │ - 模块/接口建议             │
 │ - 结构调整    │ - 修改建议                     │ - 风险与假设                │
-│ [新建聊天]    │ - 工作流说明入口               │ - 自检结果摘要              │
+│ [新建聊天]    │ - 工作流说明入口               │ - Preview / Markdown        │
 │               │ - 消息流                        │                             │
 │               │ - 输入框                        │                             │
 └───────────────┴───────────────────────────────┴─────────────────────────────┘
@@ -1679,7 +1744,7 @@ Screen: Project Workspace - Tech Spec Focus | Route: /projects/:id/tech-spec | L
 ```text
 Page: Tech Spec Asset View
   Route: /projects/:id/tech-spec
-  Layout: unified-workspace, 3-column
+  Layout: unified-workspace, 3-column, center-right resizable, document-first
 
   - TopBar
     - DeliveryProgress[6]
@@ -1698,10 +1763,17 @@ Page: Tech Spec Asset View
     - AgentStatus
     - MessageList
     - PromptInput
-  - PreviewPane
-    - StructuredDocPreview
+  - PaneDivider
+    - DragHandle: adjusts ConversationPane / DocumentPane width
+  - DocumentPane
+    - Tab: "Preview"
+    - Tab: "Markdown"
+    - RenderedDocumentView
+    - MarkdownEditor
+    - UnsavedChangesIndicator
+    - RenderErrorBanner: hidden by default
     - Button: "保存版本"
-    - Button: "导出"
+    - Button: "导出 Markdown"
     - SelfCheckSummaryCard
 ```
 
@@ -1710,6 +1782,9 @@ Page: Tech Spec Asset View
 | 触发 | 行为 | 结果状态 |
 |------|------|---------|
 | 发送修改意见 | 触发 Dev Agent 更新 Tech Spec | 右侧文档同步更新 |
+| 点击 `Preview` / `Markdown` | 切换 Tech Spec 展示模式 | 右侧展示渲染后的 Tech Spec 或原始 Markdown |
+| 在 `Markdown` 模式手动修改 | 更新原始 Tech Spec Markdown | 标记未保存改动，并允许切回 `Preview` 查看最新渲染结果 |
+| 拖拽中间/右侧分隔条 | 调整聊天区与文档区宽度 | Tech Spec 阅读区域实时改变宽度，并保留最近一次布局偏好 |
 | 点击项目包目录中的其他资产 | 切换当前资产焦点 | 会话保持连续，右侧切换对应资产预览 |
 | 点击历史聊天 | 切换资产相关历史讨论 | 中间对话区切换，右侧保留当前最新确认版本 |
 | 点击新建聊天 | 基于当前 Tech Spec 最新版本继续讨论 | 新线程创建成功并展示上下文来源 |
@@ -1788,6 +1863,8 @@ Page: Delivery Summary
 |---------|---------|---------|---------|
 | Agent 生成失败 | 模型服务失败或返回异常 | "PRD 生成失败，请重试" | 保留当前上下文，允许重新生成 |
 | Agent 超时 | 生成超过设定时间 | "PRD 生成超时，系统正在重试或请稍后再试" | 自动重试一次，仍失败则提示人工重试 |
+| Markdown 渲染失败 | 原始 Markdown 语法错误或渲染器异常 | "当前 PRD 无法正确预览，请检查 Markdown 格式" | 保留原始内容，提示用户切回 `Markdown` 修复 |
+| 切换资产前存在未保存手改 | 用户在 `Markdown` 模式修改后直接离开 | "你有未保存的 PRD 修改，是否先保存或放弃？" | 阻止直接切换，等待用户确认 |
 | 版本保存失败 | 保存快照时写入异常 | "版本保存失败，请稍后重试" | 保留编辑区内容，阻止误丢失 |
 | 未通过自检强行确认基线 | 用户尝试跳过必填校验 | "请先完成 PRD 自检中的必需项" | 阻止确认当前基线 |
 
@@ -1796,6 +1873,7 @@ Page: Delivery Summary
 | 异常场景 | 触发条件 | 用户提示 | 系统行为 |
 |---------|---------|---------|---------|
 | UI Spec 生成失败 | Agent 无法生成结构化结果 | "UI Spec 生成失败，请调整输入后重试" | 保留已有 PRD 和偏好输入 |
+| UI Spec Markdown 渲染失败 | 原始 Markdown 语法错误或渲染器异常 | "当前 UI Spec 无法正确预览，请检查 Markdown 格式" | 保留原始内容，提示用户切回 `Markdown` 修复 |
 | 设计稿生成失败 | 渲染服务异常 | "设计稿生成失败，请稍后重试" | 记录任务失败并支持重新触发 |
 | Paper 集成失败 | 无法打开或连接外部设计工具 | "暂时无法连接设计工具，请稍后再试" | 允许用户继续使用平台内生成流程 |
 | 设计稿读回失败 | MCP 无法读取 Paper 修改结果 | "设计稿修改暂未同步，请稍后重试" | 保留上一次成功版本并标记同步失败 |
@@ -1835,6 +1913,7 @@ Page: Delivery Summary
 |---------|---------|---------|---------|
 | 上游资产基线未稳定 | 用户直接生成 Tech Spec | "请先确认前序关键资产基线" | 阻止确认当前 Tech Spec 基线，并高亮受影响资产 |
 | Tech Spec 生成失败 | Dev Agent 生成异常 | "Tech Spec 生成失败，请重试" | 保留上游资产与当前上下文 |
+| Tech Spec Markdown 渲染失败 | 原始 Markdown 语法错误或渲染器异常 | "当前 Tech Spec 无法正确预览，请检查 Markdown 格式" | 保留原始内容，提示用户切回 `Markdown` 修复 |
 | 交付摘要汇总失败 | 资产索引或展示异常 | "交付摘要暂时不可用，请稍后重试" | 允许单独访问各资产成果 |
 
 ### 全局异常处理
@@ -1843,6 +1922,8 @@ Page: Delivery Summary
 |---------|---------|---------|---------|
 | 邀请链接失效 | 链接过期或已失效 | "邀请已失效，请联系邀请方" | 阻止注册，记录日志 |
 | Agent 生成失败或超时 | 任一 Agent 在规定时间内未成功返回 | "当前任务处理中断，请稍后重试" | 自动重试一次，失败后保留上下文并提示 |
+| 文档预览渲染失败 | 文档模式从 `Markdown` 切换到 `Preview` 时渲染异常 | "当前文档暂时无法预览，请检查 Markdown 内容" | 保留原始 Markdown，允许用户继续手动修复 |
+| 工作台分栏布局恢复失败 | 无法读取或写入布局偏好 | "无法恢复你上次的阅读布局，已先使用默认布局" | 回退到默认分栏比例，并允许用户重新拖拽 |
 | Paper 集成失败 / 设计稿无法读回 | 外部设计工具调用失败 | "设计稿同步失败，请稍后重试" | 保留最近一次成功版本，允许后续继续同步 |
 | Mockup 生成失败 | Mockup 服务或任务异常 | "Mockup 生成失败，请稍后重试" | 保留输入资产并支持重新生成 |
 | 未确认直接继续关键动作 | 用户跳过关键资产确认 | "请先确认当前资产基线，或明确本次修改是否继续暂存" | 阻止关键动作并定位到待处理资产 |
@@ -1863,6 +1944,10 @@ Page: Delivery Summary
 | delivery_package_initialized | 项目创建后初始化默认交付包骨架 | project_id | 衡量项目包初始化成功率 |
 | prd_generation_started | 用户开始完善 PRD | project_id | 统计 PRD 资产启动量 |
 | prd_generation_completed | 首版 PRD 生成完成 | project_id, duration_ms | 监控生成时长与成功率 |
+| doc_view_mode_switched | 用户切换文档查看模式 | project_id, asset, from_mode, to_mode | 分析用户更偏好阅读渲染结果还是原始 Markdown |
+| doc_markdown_edited | 用户在文档资产的 `Markdown` 模式手动修改内容 | project_id, asset, edited_chars, has_unsaved_changes | 衡量手动修订频率与 AI 输出后人工调整强度 |
+| doc_preview_render_failed | 文档从 `Markdown` 切到 `Preview` 时渲染失败 | project_id, asset, error_type | 监控 Markdown 预览链路稳定性 |
+| workspace_split_resized | 用户拖拽工作台分栏宽度 | project_id, asset, left_width_ratio, right_width_ratio | 分析文档阅读偏好的布局比例 |
 | prd_self_check_failed | PRD 自检发现缺项 | project_id, missing_count | 分析 PRD 常见缺失项 |
 | prd_baseline_confirmed | 用户确认 PRD 当前基线 | project_id, version | 衡量 PRD 资产成熟度 |
 | ui_spec_generated | UI Spec 生成完成 | project_id, duration_ms | 衡量 UI Spec 输出效率 |
@@ -1910,6 +1995,8 @@ Page: Delivery Summary
 | Mockup 平均迭代轮次 | Mockup 确认前总迭代次数 / 确认项目数 | > 3 |
 | UI Spec 无大改占比 | 首次生成后未标记大改项目数 / UI Spec 生成项目数 | < 95% |
 | Agent 任务失败率 | 失败任务数 / 总任务数 | > 10% |
+| 文档预览失败率 | `doc_preview_render_failed` / `doc_view_mode_switched(to=Preview)` | > 2% |
+| 文档阅读右侧占比中位数 | `workspace_split_resized.right_width_ratio` 中位数 | < 55% |
 | 低置信度切换占比 | `handoff_confirmation_requested` / `handoff_requested` | > 35% |
 | 错误切换回退率 | 切换后 3 轮内再次切回原 Agent 的次数 / `handoff_completed` | > 15% |
 | 邀请注册链接成功率 | 完成注册用户数 / 打开邀请链接用户数 | < 80% |
@@ -1978,6 +2065,11 @@ Page: Delivery Summary
 - `待同步`：该资产因上游变化需要更新，暂不应继续作为最新基线
 - `重生成中`：系统正在基于上游更新重新生成该资产或其关联产物
 
+### 工作台视图状态定义
+- `document_view_mode`：文档类资产当前展示模式，仅适用于 `PRD / UI Spec / Tech Spec`，取值为 `Preview` 或 `Markdown`
+- `pane_split_ratio`：中间聊天区与右侧内容区当前分栏比例；对文档类资产默认右侧更宽，且应持久记录用户最近一次布局偏好
+- `has_unsaved_manual_edits`：用户是否在 `Markdown` 模式下存在尚未保存的手动改动；该状态用于切换资产、切换历史会话和关闭页面前的保护提示
+
 ### Agent 设计相关文档
 - `PRD_V1.md`：定义产品层面的 Agent 架构、职责边界、路由规则、确认机制与流程位置
 - `.blueprint/AGENT_MEMORY_SOLUTION_V1.md`：定义 Agent Memory 分层、共享/私有边界、对象模型与上下文装配原则
@@ -1997,6 +2089,7 @@ Page: Delivery Summary
 - `.blueprint/agent-capabilities/DEV_AGENT_CAPABILITIES_V1.md`：定义 `Dev Agent` 的多资产收敛、技术选型、系统架构、Mockup 对齐、风险与未决项管理、自检与确认前准备能力
 
 ### 版本历史
+- v1.20 (2026-03-30): 明确 `PRD / UI Spec / Tech Spec` 统一采用 Markdown 作为标准源格式，并补充右侧 `Preview / Markdown` 双模式与工作台中右分栏可调宽规则
 - v1.19 (2026-03-27): 引入 `active agent` 持续接管与 `handoff` 协作机制，明确会话状态、恢复规则、结构化切换协议与实现分层
 - v1.18 (2026-03-26): 更新 Agent 架构与 Mockup 路由图表述，使其与“各专业 Agent 各自控制生成/更新，Orchestrator 统一控制底线”的最新原则对齐
 - v1.17 (2026-03-26): 在附录中新增 Agent 设计相关文档索引，显式关联 Prompt、Capability 与 Memory 文档

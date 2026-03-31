@@ -8,13 +8,12 @@
 让 Mockup Agent 能够准确生成静态页面，让人类设计师能够验证设计合理性。
 
 ## 前置条件
-- 需要先有 PRD：优先读取 `./.blueprin./.blueprint/PRD.md`（由 `/create-prd` 默认产出）
-- 兼容读取：`./.blueprint/PRD.md`
-- 若 `docs/` 不存在，需先创建（或在生成时由 AI 自动创建）
+- 需要先有 PRD：读取 `./.blueprint/PRD.md`（由 `/create-prd` 默认产出）
 
 ## 产出
 - 输出并保存到：`./.blueprint/UI_Spec.md`
 - 文档结构：元信息 + 设计系统 + **页面视觉设计细节** + 组件视觉规范 + 交互模式 + 响应式 + 可访问性（WCAG 2.1 AA）
+- `UI Spec` 的标准源格式必须为 `Markdown`，以便工作台右侧支持 `Preview / Markdown` 双模式与用户手动修改原文
 
 ---
 
@@ -38,6 +37,7 @@
 - ✅ **结构化**: 使用统一的格式，便于 Agent 解析
 - ✅ **可视化意图**: 说明设计的目的和视觉层次
 - ✅ **无歧义**: 避免任何可能产生不同理解的描述
+- ✅ **Markdown-first**: `UI Spec` 必须以 Markdown 作为标准源格式输出，
 
 ---
 
