@@ -22,6 +22,14 @@
 - `Mockup Review Agent` 负责让 Mockup 阶段有专门的质量守门员
 - 不负责生成 Mockup，也不负责编辑任何上游正文资产
 
+### Runtime 协议适配
+
+从 `PRD_V1.md` v1.21 起，`Mockup Review Agent` 的能力设计还必须默认适配 `AGENT_RUNTIME_PROTOCOL_V1.md`：
+
+- 默认采用审查型 `Full Runtime`
+- 每轮按 `think -> plan -> execute -> reflect` 组织能力
+- 对外返回结构化 Runtime 摘要，而不是原始完整思维链
+
 ---
 
 ## 2. P0 必需能力
@@ -392,6 +400,7 @@ V1 至少包括：
 
 ### 6.5 协作结果
 
+- `runtime`
 - `handoff_request`
 - `needs_confirmation`
 - `affected_assets`
@@ -399,6 +408,7 @@ V1 至少包括：
 规则：
 
 - 默认情况下，`handoff_request` 可为空
+- `runtime` 至少应包含 `phase_trace / task_complexity / plan_level / goal_of_this_turn / goal_completed`
 - 若审查结果已足以明确指出建议处理方，必须返回结构化 `handoff_request`
 - `Mockup Review Agent` 只能建议切换，不得直接写入 `active_agent` 或执行资产状态迁移
 
@@ -472,5 +482,6 @@ V1 至少包括：
 
 | 版本 | 日期 | 变更说明 |
 |------|------|---------|
+| V1.2 | 2026-03-30 | 对齐 `PRD_V1.md` v1.21，补充审查型 `Full Runtime` 适配要求与结构化 `runtime` 输出字段 |
 | V1.1 | 2026-03-27 | 对齐 `PRD_V1.md` v1.19，补充 `active_agent` 输入、统一协作外壳与结构化 `handoff_request` / `needs_confirmation` 结果 |
 | V1.0 | 2026-03-26 | 初始版本，定义 Mockup Review Agent 的多资产对齐、页面完整性检查、流程可体验性检查、问题分级归因、阻断判断、建议路由、回归复查与结构化回传能力 |

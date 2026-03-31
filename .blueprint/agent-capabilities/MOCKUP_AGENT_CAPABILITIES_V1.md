@@ -21,6 +21,14 @@
 - `Mockup Agent` 负责把“文档资产”变成“可体验的前端原型”
 - 不负责定义需求，也不负责裁决设计方向
 
+### Runtime 协议适配
+
+从 `PRD_V1.md` v1.21 起，`Mockup Agent` 的能力设计还必须默认适配 `AGENT_RUNTIME_PROTOCOL_V1.md`：
+
+- 默认采用执行型 `Full Runtime`
+- 每轮按 `think -> plan -> execute -> reflect` 组织能力
+- 对外返回结构化 Runtime 摘要，而不是原始完整思维链
+
 ---
 
 ## 2. P0 必需能力
@@ -464,6 +472,7 @@ V1 至少涉及：
 
 ### 6.5 协作结果
 
+- `runtime`
 - `handoff_request`
 - `needs_confirmation`
 - `affected_assets`
@@ -471,6 +480,7 @@ V1 至少涉及：
 规则：
 
 - 默认情况下，`handoff_request` 为空
+- `runtime` 至少应包含 `phase_trace / task_complexity / plan_level / goal_of_this_turn / goal_completed`
 - 若执行中发现问题本质上属于需求缺口、设计冲突或需先由系统确认范围，必须返回结构化 `handoff_request`
 - `Mockup Agent` 只能建议切换，不得直接写入 `active_agent` 或触发上游资产更新
 
@@ -567,5 +577,6 @@ V1 至少涉及：
 
 | 版本 | 日期 | 变更说明 |
 |------|------|---------|
+| V1.2 | 2026-03-30 | 对齐 `PRD_V1.md` v1.21，补充执行型 `Full Runtime` 适配要求与结构化 `runtime` 输出字段 |
 | V1.1 | 2026-03-27 | 对齐 `PRD_V1.md` v1.19，补充 `active_agent` 输入、统一协作外壳与结构化 `handoff_request` / `needs_confirmation` 结果 |
 | V1.0 | 2026-03-26 | 初始版本，定义 Mockup Agent 的上游资产读取、范围提取、构建运行、预览交付、Review 问题吸收、局部重生成、结构化回传与失败降级能力 |

@@ -22,6 +22,14 @@
 - `UI Designer Agent` 负责让“需求”沉淀为“设计规则与设计资产”
 - 不负责直接产出最终可运行的 `Mockup`
 
+### Runtime 协议适配
+
+从 `PRD_V1.md` v1.21 起，`UI Designer Agent` 的能力设计还必须默认适配 `AGENT_RUNTIME_PROTOCOL_V1.md`：
+
+- 默认采用 `Full Runtime`
+- 每轮按 `think -> plan -> execute -> reflect` 组织能力
+- 对外返回结构化 Runtime 摘要，而不是原始完整思维链
+
 ---
 
 ## 2. P0 必需能力
@@ -430,6 +438,7 @@ MCP 相关能力落地方式包括：
 ### 6.6 协作结果
 
 - `user_visible_reply`
+- `runtime`
 - `handoff_request`
 - `needs_confirmation`
 - `affected_assets`
@@ -437,6 +446,7 @@ MCP 相关能力落地方式包括：
 规则：
 
 - 若当前轮仍属于 UI 设计范围，`handoff_request` 默认为空
+- `runtime` 至少应包含 `phase_trace / task_complexity / plan_level / goal_of_this_turn / goal_completed`
 - 若判断当前问题已进入需求层、技术层或执行链路，必须返回结构化 `handoff_request`
 - `UI Designer Agent` 只能建议切换，不得直接写入 `active_agent`
 
@@ -529,5 +539,6 @@ MCP 相关能力落地方式包括：
 
 | 版本 | 日期 | 变更说明 |
 |------|------|---------|
+| V1.2 | 2026-03-30 | 对齐 `PRD_V1.md` v1.21，补充 `Full Runtime` 适配要求与结构化 `runtime` 输出字段 |
 | V1.1 | 2026-03-27 | 对齐 `PRD_V1.md` v1.19，补充 `active_agent` 输入、结构化 `handoff_request` 协作结果与 Orchestrator 协作契约 |
 | V1.0 | 2026-03-26 | 初始版本，定义 UI Designer Agent 的 UI Spec 生成、设计系统定义、Paper/Figma 设计稿生成与读回、同步判断、设计返工、自检与降级处理能力 |

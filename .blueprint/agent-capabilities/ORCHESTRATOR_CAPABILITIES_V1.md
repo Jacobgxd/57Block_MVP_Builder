@@ -25,6 +25,14 @@
 - `Orchestrator` 负责让系统“按正确流程运行”
 - 不负责让系统“替专业 Agent 产出业务内容”
 
+### Runtime 协议适配
+
+从 `PRD_V1.md` v1.21 起，`Orchestrator` 的能力设计还必须默认适配 `AGENT_RUNTIME_PROTOCOL_V1.md`：
+
+- 默认采用 `Lite Runtime`
+- 每轮按 `analyze -> decide -> act -> verify` 组织能力
+- 对外返回结构化 Runtime 摘要，而不是模拟专业 Agent 的重型思考闭环
+
 ---
 
 ## 2. P0 必需能力
@@ -413,6 +421,7 @@ V1 主要场景：
 
 ### 6.1 路由结果
 
+- `runtime`
 - `event_type`
 - `asset_focus`
 - `target_agent_or_task`
@@ -457,6 +466,11 @@ V1 主要场景：
 - `trigger_reason`
 - `handoff_confidence`
 - `user_confirmed`
+
+规则：
+
+- `runtime` 至少应包含 `phase_trace / task_complexity / plan_level / goal_of_this_turn / goal_completed`
+- `Orchestrator` 的 `phase_trace` 应反映 `analyze / decide / act / verify`
 
 ---
 
@@ -543,5 +557,6 @@ V1 主要场景：
 
 | 版本 | 日期 | 变更说明 |
 |------|------|---------|
+| V1.2 | 2026-03-30 | 对齐 `PRD_V1.md` v1.21，补充 `Lite Runtime` 适配要求与结构化 `runtime` 输出字段 |
 | V1.1 | 2026-03-27 | 对齐 `PRD_V1.md` v1.19，新增 `active agent` 持续接管、`handoff` 裁决、会话恢复字段与审计输出 |
 | V1.0 | 2026-03-26 | 初始版本，定义 Orchestrator 在 Blueprint V1 中的可实现能力项、落地方式、最小输入依赖、标准输出结果、失败降级处理与禁止项 |
