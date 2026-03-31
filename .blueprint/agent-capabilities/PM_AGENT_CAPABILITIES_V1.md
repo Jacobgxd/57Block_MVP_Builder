@@ -22,6 +22,14 @@
 - `PM Agent` 负责把“想法和反馈”变成“稳定需求资产”
 - 不负责直接修改设计、Mockup 或技术方案资产
 
+### Runtime 协议适配
+
+从 `PRD_V1.md` v1.21 起，`PM Agent` 的能力设计还必须默认适配 `AGENT_RUNTIME_PROTOCOL_V1.md`：
+
+- 默认采用 `Full Runtime`
+- 每轮按 `think -> plan -> execute -> reflect` 组织能力
+- 对外返回结构化 Runtime 摘要，而不是原始完整思维链
+
 ---
 
 ## 2. P0 必需能力
@@ -401,6 +409,7 @@ V1 至少检查：
 ### 6.6 协作结果
 
 - `user_visible_reply`
+- `runtime`
 - `handoff_request`
 - `needs_confirmation`
 - `affected_assets`
@@ -408,6 +417,7 @@ V1 至少检查：
 规则：
 
 - 若当前轮仍属于需求澄清或 PRD 更新范围，`handoff_request` 默认为空
+- `runtime` 至少应包含 `phase_trace / task_complexity / plan_level / goal_of_this_turn / goal_completed`
 - 若判断当前问题已进入设计层、技术层或需要执行型任务，必须返回结构化 `handoff_request`
 - `PM Agent` 只能建议切换，不得直接写入 `active_agent`
 
@@ -490,5 +500,6 @@ V1 至少检查：
 
 | 版本 | 日期 | 变更说明 |
 |------|------|---------|
+| V1.2 | 2026-03-30 | 对齐 `PRD_V1.md` v1.21，补充 `Full Runtime` 适配要求与结构化 `runtime` 输出字段 |
 | V1.1 | 2026-03-27 | 对齐 `PRD_V1.md` v1.19，补充 `active_agent` 输入、结构化 `handoff_request` 协作结果与 Orchestrator 协作契约 |
 | V1.0 | 2026-03-26 | 初始版本，定义 PM Agent 的需求澄清、结构化 PRD 生成、需求变更吸收、影响分析输入准备、自检与确认前准备能力 |

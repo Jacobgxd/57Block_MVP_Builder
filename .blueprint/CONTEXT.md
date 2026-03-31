@@ -17,15 +17,16 @@
 
 | 文档 | 文件路径 | 当前版本 | 状态 | 最后更新 | 负责人 |
 |-----|---------|---------|------|---------|------|
-| PRD | `.blueprint/PRD_V1.md` | 1.19 | 🟡 进行中 / ✅ 已确认 / 📦 Archived | 2026-03-27 | 引入 `active agent` 持续接管与 `handoff` 协作机制 |
+| PRD | `.blueprint/PRD_V1.md` | 1.21 | 🟡 进行中 / ✅ 已确认 / 📦 Archived | 2026-03-30 | 已纳入统一 `Agent Runtime Protocol`，补充 `Full Runtime / Lite Runtime`、会话 Runtime 状态字段与结构化 `runtime` 外壳 |
 | UI Spec | `.blueprint/UI_Spec.md` | 1.2 | 🟡 进行中 | 2026-03-27 | 已补充高保真原型产出规格、Paper 落图约束、画板范围与工作台示例内容，达到可直接驱动原型绘制的粒度 |
 | Mockup | `.blueprint/mockup/` | - | ⚪ 待生成 | - | - |
 | Mockup Review | `reports/mockup-reviews/LATEST.md` | - | ⚪ 待生成 | - | - |
 | Tech Spec | `.blueprint/Tech_Spec.md` | 1.0 | ⚪ 待生成 | - | - |
 | Test Spec | `.blueprint/Test_Spec.md` | 1.0 | ⚪ 待生成 | - | - |
-| Agent Memory | `.blueprint/AGENT_MEMORY_SOLUTION_V1.md` | V1.2 | ✅ 已起草 | 2026-03-27 | 纯 Memory 设计文档，已补充 `active agent` 会话状态、`handoff_log`、会话快照与 Orchestrator 真相源边界 |
-| Agent Capabilities | `.blueprint/AGENT_CAPABILITIES_V1.md` | V1.1 | ✅ 已起草 | 2026-03-27 | Agent 能力总索引文档，已补充 `active agent` 持续接管与统一协作外壳机制 |
-| Agent Mutation Guardrails | `.blueprint/AGENT_MUTATION_GUARDRAILS_V1.md` | V1.1 | ✅ 已起草 | 2026-03-27 | 已补充 `active agent` 真相源、统一协作外壳与结构化 `handoff_request` 底线 |
+| Agent Runtime Protocol | `.blueprint/AGENT_RUNTIME_PROTOCOL_V1.md` | V1.0 | ✅ 已起草 | 2026-03-30 | 定义统一 `Full Runtime / Lite Runtime`、可见摘要原则、`handoff` 协议与结构化 `runtime` 契约 |
+| Agent Memory | `.blueprint/AGENT_MEMORY_SOLUTION_V1.md` | V1.3 | ✅ 已起草 | 2026-03-30 | 已补充 Runtime 恢复设计、`conversation_stage / execution_phase / plan_level / pending_confirmation_type` 会话字段与存储边界 |
+| Agent Capabilities | `.blueprint/AGENT_CAPABILITIES_V1.md` | V1.2 | ✅ 已起草 | 2026-03-30 | Agent 能力总索引文档，已补充 `Full Runtime / Lite Runtime`、共通 `runtime` 外壳与 Runtime 相位表达能力 |
+| Agent Mutation Guardrails | `.blueprint/AGENT_MUTATION_GUARDRAILS_V1.md` | V1.2 | ✅ 已起草 | 2026-03-30 | 已补充统一 Runtime 底线、最小 `Think / Analyze` 前置要求与结构化 `runtime` 字段 |
 | Global Verify | `reports/verify/LATEST.md` | - | ⚪ 待运行 | - | - |
 | Plan | `plans/[feature].md` | - | ⚪ 待生成 | - | - |
 
@@ -37,12 +38,12 @@
 
 | Agent | 文件路径 | 当前版本 | 状态 | 最后更新 | 说明 |
 |------|---------|---------|------|---------|------|
-| PM Agent | `.blueprint/agent-prompts/PM_AGENT_V1.md` | V1.1 | ✅ 已起草 | 2026-03-27 | 前台 PRD 阶段 Agent，已补充 `active agent` / `handoff_request` 协作语义 |
-| UI Designer Agent | `.blueprint/agent-prompts/UI_DESIGNER_AGENT_V1.md` | V1.1 | ✅ 已起草 | 2026-03-27 | 前台 UI 设计阶段 Agent，已补充 `active agent` / `handoff_request` 协作语义 |
-| Orchestrator | `.blueprint/agent-prompts/ORCHESTRATOR_AGENT_V1.md` | V1.1 | ✅ 已起草 | 2026-03-27 | 系统状态与路由中枢，已补充会话持续接管与 `handoff` 裁决语义 |
-| Mockup Agent | `.blueprint/agent-prompts/MOCKUP_AGENT_V1.md` | V1.1 | ✅ 已起草 | 2026-03-27 | 后台 Mockup 构建执行 Agent，已补充统一协作外壳与可选 `handoff_request` |
-| Mockup Review Agent | `.blueprint/agent-prompts/MOCKUP_REVIEW_AGENT_V1.md` | V1.1 | ✅ 已起草 | 2026-03-27 | 后台 Mockup 专项审查 Agent，已补充统一协作外壳与结构化 `handoff_request` |
-| Dev Agent | `.blueprint/agent-prompts/DEV_AGENT_V1.md` | V1.1 | ✅ 已起草 | 2026-03-27 | 前台 Tech Spec 阶段 Agent，已补充 `active agent` / `handoff_request` 协作语义 |
+| PM Agent | `.blueprint/agent-prompts/PM_AGENT_V1.md` | V1.3 | ✅ 已起草 | 2026-03-30 | 前台 PRD 阶段 Agent，已接入 `Full Runtime`、可见 Runtime 摘要、结构化 `runtime` 外壳与两层 Reflect |
+| UI Designer Agent | `.blueprint/agent-prompts/UI_DESIGNER_AGENT_V1.md` | V1.3 | ✅ 已起草 | 2026-03-30 | 前台 UI 设计阶段 Agent，已接入 `Full Runtime`、可见 Runtime 摘要、结构化 `runtime` 外壳与两层 Reflect |
+| Orchestrator | `.blueprint/agent-prompts/ORCHESTRATOR_AGENT_V1.md` | V1.3 | ✅ 已起草 | 2026-03-30 | 系统状态与路由中枢，已接入 `Lite Runtime`、`agent_phase / plan_level / pending_confirmation_type` 会话状态与对专业 Agent `runtime` 的读取要求 |
+| Mockup Agent | `.blueprint/agent-prompts/MOCKUP_AGENT_V1.md` | V1.2 | ✅ 已起草 | 2026-03-30 | 后台 Mockup 构建执行 Agent，已接入执行型 `Full Runtime` 与结构化 `runtime` 执行回执 |
+| Mockup Review Agent | `.blueprint/agent-prompts/MOCKUP_REVIEW_AGENT_V1.md` | V1.2 | ✅ 已起草 | 2026-03-30 | 后台 Mockup 专项审查 Agent，已接入审查型 `Full Runtime` 与结构化 `runtime` 审查回执 |
+| Dev Agent | `.blueprint/agent-prompts/DEV_AGENT_V1.md` | V1.3 | ✅ 已起草 | 2026-03-30 | 前台 Tech Spec 阶段 Agent，已接入 `Full Runtime`、可见 Runtime 摘要、结构化 `runtime` 外壳与两层 Reflect |
 
 **说明**：
 - 前台可继续使用 `Blueprint AI` 作为统一展示名，但它不再作为独立 Agent Prompt 存在。
@@ -55,22 +56,23 @@
 
 | Agent | 文件路径 | 当前版本 | 状态 | 最后更新 | 说明 |
 |------|---------|---------|------|---------|------|
-| Orchestrator | `.blueprint/agent-capabilities/ORCHESTRATOR_CAPABILITIES_V1.md` | V1.1 | ✅ 已起草 | 2026-03-27 | 定义系统执行中枢的事件识别、路由、装配、状态迁移、轻确认、任务触发、`active agent` 持续接管与 `handoff` 裁决能力 |
-| PM Agent | `.blueprint/agent-capabilities/PM_AGENT_CAPABILITIES_V1.md` | V1.1 | ✅ 已起草 | 2026-03-27 | 定义需求澄清、结构化 PRD 生成、需求变更吸收、自检与面向 Orchestrator 的结构化协作结果 |
-| UI Designer Agent | `.blueprint/agent-capabilities/UI_DESIGNER_AGENT_CAPABILITIES_V1.md` | V1.1 | ✅ 已起草 | 2026-03-27 | 定义 UI Spec 生成、设计系统定义、Paper/Figma 设计稿生成与读回、自检与面向 Orchestrator 的结构化协作结果 |
-| Mockup Agent | `.blueprint/agent-capabilities/MOCKUP_AGENT_CAPABILITIES_V1.md` | V1.1 | ✅ 已起草 | 2026-03-27 | 定义 Mockup 的上游资产读取、范围提取、构建运行、预览交付、Review 问题吸收，以及统一协作外壳与结构化回传能力 |
-| Mockup Review Agent | `.blueprint/agent-capabilities/MOCKUP_REVIEW_AGENT_CAPABILITIES_V1.md` | V1.1 | ✅ 已起草 | 2026-03-27 | 定义 Mockup 的多资产对齐审查、问题分级归因、阻断判断、回归复查，以及统一协作外壳与结构化切换建议 |
-| Dev Agent | `.blueprint/agent-capabilities/DEV_AGENT_CAPABILITIES_V1.md` | V1.1 | ✅ 已起草 | 2026-03-27 | 定义多资产收敛、技术选型、系统架构、Mockup 对齐、Tech Spec 生成、自检与面向 Orchestrator 的结构化协作结果 |
+| Orchestrator | `.blueprint/agent-capabilities/ORCHESTRATOR_CAPABILITIES_V1.md` | V1.2 | ✅ 已起草 | 2026-03-30 | 定义系统执行中枢的事件识别、路由、装配、状态迁移、轻确认、任务触发，以及 `Lite Runtime` 与结构化 `runtime` 输出能力 |
+| PM Agent | `.blueprint/agent-capabilities/PM_AGENT_CAPABILITIES_V1.md` | V1.2 | ✅ 已起草 | 2026-03-30 | 定义需求澄清、结构化 PRD 生成、需求变更吸收、自检，以及 `Full Runtime` 与结构化 `runtime` 协作结果 |
+| UI Designer Agent | `.blueprint/agent-capabilities/UI_DESIGNER_AGENT_CAPABILITIES_V1.md` | V1.2 | ✅ 已起草 | 2026-03-30 | 定义 UI Spec 生成、设计系统定义、Paper/Figma 设计稿生成与读回、自检，以及 `Full Runtime` 与结构化 `runtime` 协作结果 |
+| Mockup Agent | `.blueprint/agent-capabilities/MOCKUP_AGENT_CAPABILITIES_V1.md` | V1.2 | ✅ 已起草 | 2026-03-30 | 定义 Mockup 的上游资产读取、范围提取、构建运行、预览交付、Review 问题吸收，以及执行型 `Full Runtime` 与结构化 `runtime` 回传能力 |
+| Mockup Review Agent | `.blueprint/agent-capabilities/MOCKUP_REVIEW_AGENT_CAPABILITIES_V1.md` | V1.2 | ✅ 已起草 | 2026-03-30 | 定义 Mockup 的多资产对齐审查、问题分级归因、阻断判断、回归复查，以及审查型 `Full Runtime` 与结构化 `runtime` 切换建议 |
+| Dev Agent | `.blueprint/agent-capabilities/DEV_AGENT_CAPABILITIES_V1.md` | V1.2 | ✅ 已起草 | 2026-03-30 | 定义多资产收敛、技术选型、系统架构、Mockup 对齐、Tech Spec 生成、自检，以及 `Full Runtime` 与结构化 `runtime` 协作结果 |
 
 ---
 
 ## AI 实现代码时，必读文件（按顺序）
 
 1. **`.blueprint/PRD_V1.md`** — 读"📌 当前需求全貌"部分
-2. **`.blueprint/Tech_Spec.md`** — 架构、数据模型、API 设计、src 结构
-3. **`.blueprint/UI_Spec.md`** — UI 规范
-4. **`.blueprint/mockup/`** — 视觉基准（读 src/ 下的代码，忽略 node_modules/）
-5. **`.blueprint/Test_Spec.md`** — 验收标准（编码时的完成边界）
+2. **`.blueprint/AGENT_RUNTIME_PROTOCOL_V1.md`** — 统一 Runtime 协议、相位语义与结构化 `runtime` 契约
+3. **`.blueprint/Tech_Spec.md`** — 架构、数据模型、API 设计、src 结构
+4. **`.blueprint/UI_Spec.md`** — UI 规范
+5. **`.blueprint/mockup/`** — 视觉基准（读 src/ 下的代码，忽略 node_modules/）
+6. **`.blueprint/Test_Spec.md`** — 验收标准（编码时的完成边界）
 
 ---
 
@@ -116,6 +118,10 @@ YYYY-MM-DD  [步骤] [命令] — [做了什么，为什么]
 2026-03-27  [UI Spec] [/create-ui-spec] — 生成 `.blueprint/UI_Spec.md` 首版，确定浅色主题、57Blocks 风格继承策略、首页品牌叙事与统一工作台框架
 2026-03-27  [UI Spec] [/create-ui-spec] — 将 `UI_Spec.md` 细化到 v1.1，补充首页区块、工作台列布局、交付节点、对话输入区与自检摘要卡的精确规则
 2026-03-27  [UI Spec] [/create-ui-spec] — 将 `UI_Spec.md` 细化到 v1.2，新增高保真原型产出规格、Paper 命名与组件复用规范、画板尺寸与真实示例内容
+2026-03-30  [Architecture Spec] [manual] — 新增 `AGENT_RUNTIME_PROTOCOL_V1.md`，定义统一 `Full Runtime / Lite Runtime`、可见摘要原则、确认门与结构化 `runtime` 协议
+2026-03-30  [Architecture Spec] [manual] — 将 `PRD_V1.md` 更新到 v1.21，把 Runtime 设计正式上升为产品层规范，并补充会话 Runtime 状态字段与结构化 `runtime` 外壳
+2026-03-30  [Architecture Spec] [manual] — 同步更新 Agent Prompt、Capabilities、Memory、Mutation Guardrails 与 Framework Analysis 文档，对齐 Runtime 相位、`runtime` 输出字段与恢复语义
+2026-03-30  [Context] [manual] — 更新 `CONTEXT.md` 索引、版本号、必读顺序与最近日志，使入口上下文与 Runtime 设计保持一致
 ```
 
 ---

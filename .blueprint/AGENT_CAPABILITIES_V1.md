@@ -61,6 +61,7 @@ Capability 不是：
 | 维度 | 回答的问题 | 对应文档 |
 |------|------------|----------|
 | `Prompt` | 这个 Agent 应该如何思考、如何说话、遵守什么规则 | `agent-prompts/*.md` |
+| `Runtime` | 这个 Agent 每一轮按什么闭环工作、哪些过程对用户可见 | `AGENT_RUNTIME_PROTOCOL_V1.md` |
 | `Memory` | 系统长期存什么、谁能读写什么 | `AGENT_MEMORY_SOLUTION_V1.md` |
 | `Capability` | 这个 Agent 必须会什么、如何完成任务 | 本文档与后续分 Agent Capability 文档 |
 | `Tool / MCP / 命令` | 这些能力通过什么手段落地 | 在 Capability 文档中写明 |
@@ -117,6 +118,15 @@ Blueprint V1 是“统一前台 + 后台多 Agent”的模型，所以各 Agent 
 
 同时，从 `PRD_V1.md` v1.19 起，各专业 Agent 的能力设计还必须默认适配“会话级单一 `active agent` 持续接管 + 条件触发 `handoff`”的协作机制，而不是假设每轮都由 `Orchestrator` 重新完整路由。
 
+### 4.6 默认服务于统一 Runtime 协议
+
+从 `PRD_V1.md` v1.21 起，各 Agent 的 Capability 设计还必须默认适配统一 Runtime：
+
+- 专业 Agent 默认采用 `Full Runtime`
+- `Orchestrator` 默认采用 `Lite Runtime`
+- Capability 不只描述“会什么”，还应描述在 `think / plan / execute / reflect` 或 `analyze / decide / act / verify` 中分别承担什么
+- 凡是会返回给系统继续消费的能力，都应考虑 `runtime` 字段与相位信息
+
 ---
 
 ## 5. 建议的单 Agent 能力文档结构
@@ -160,6 +170,7 @@ Blueprint V1 是“统一前台 + 后台多 Agent”的模型，所以各 Agent 
 #### P0 能力方向
 
 - 识别当前输入属于继续共创、需求变更、设计返工、反馈归因、基线确认还是重生成请求
+- 按 `Lite Runtime` 完成 `analyze -> decide -> act -> verify`
 - 维护单一 `active agent` 的会话状态，并在需要时恢复最近一次有效处理模式
 - 按会话与资产范围装配最小必要上下文，而不是每轮全量重装
 - 维护 `asset_registry` 中的状态迁移
@@ -187,6 +198,7 @@ Blueprint V1 是“统一前台 + 后台多 Agent”的模型，所以各 Agent 
 
 #### P0 能力方向
 
+- 按 `Full Runtime` 完成 `think -> plan -> execute -> reflect`
 - 把模糊输入追问成可执行需求
 - 结构化生成与更新 `PRD`
 - 识别需求缺项、冲突、边界遗漏
@@ -212,6 +224,7 @@ Blueprint V1 是“统一前台 + 后台多 Agent”的模型，所以各 Agent 
 
 #### P0 能力方向
 
+- 按 `Full Runtime` 完成 `think -> plan -> execute -> reflect`
 - 读取 `PRD` 并生成结构化 `UI Spec`
 - 提炼设计偏好、品牌约束、参考输入
 - 基于 `UI Spec` 生成原型稿或设计稿
@@ -246,6 +259,7 @@ Blueprint V1 是“统一前台 + 后台多 Agent”的模型，所以各 Agent 
 
 #### P0 能力方向
 
+- 按执行型 `Full Runtime` 完成 `think -> plan -> execute -> reflect`
 - 读取 `PRD / UI Spec / 设计稿摘要` 并识别当前基线
 - 把上游资产翻译为可点击浏览的前端原型
 - 为核心页面和流程组织 mock 数据、空状态、异常状态
@@ -279,6 +293,7 @@ Blueprint V1 是“统一前台 + 后台多 Agent”的模型，所以各 Agent 
 
 #### P0 能力方向
 
+- 按审查型 `Full Runtime` 完成 `think -> plan -> execute -> reflect`
 - 同时读取多个上游资产和当前 `Mockup`
 - 识别功能缺失、页面缺漏、流程断点、状态缺失、视觉/交互漂移
 - 输出结构化问题列表与严重级别
@@ -304,6 +319,7 @@ Blueprint V1 是“统一前台 + 后台多 Agent”的模型，所以各 Agent 
 
 #### P0 能力方向
 
+- 按 `Full Runtime` 完成 `think -> plan -> execute -> reflect`
 - 读取 `PRD / UI Spec / 设计稿 / Mockup`
 - 抽象系统模块、接口、数据模型、关键实现路径
 - 识别实现风险、边界、假设与后续依赖缺口
@@ -330,6 +346,7 @@ Blueprint V1 是“统一前台 + 后台多 Agent”的模型，所以各 Agent 
 - **版本识别能力**：识别当前资产基线和当前轮依赖版本
 - **结构化输出能力**：输出可被系统继续消费的结构化结果
 - **统一协作外壳能力**：默认支持 `user_visible_reply / confidence / handoff_request / needs_confirmation / affected_assets`
+- **Runtime 相位表达能力**：输出 `runtime.phase_trace / task_complexity / plan_level / goal_of_this_turn / goal_completed`
 - **自检能力**：在请求确认前先输出自检摘要
 - **低置信度显式化能力**：在不确定时显式标出风险或待确认点
 - **边界遵守能力**：发现跨资产问题时只给建议，不越权改正文
@@ -348,6 +365,7 @@ V1 中允许的主要落地方式包括：
 - 读取和更新正式资产
 - 生成结构化摘要
 - 写入审查结果
+- 记录 Runtime 可视摘要所需的中间产物
 
 ### 8.2 MCP 调用
 
@@ -373,6 +391,7 @@ V1 中允许的主要落地方式包括：
 - 沉淀确认结果
 - 沉淀影响分析
 - 维持会话连续性
+- 维持 Runtime 相关会话状态（如 `execution_phase / plan_level / pending_confirmation_type`）
 
 ---
 
@@ -400,6 +419,7 @@ V1 中允许的主要落地方式包括：
 
 - `UI Designer Agent` 需要尽快补上 `Paper / Figma MCP` 生成与读回链路
 - `Mockup Agent` 需要最细粒度拆解，因为它最接近执行与运行链路
+- 后续每份单 Agent Capability 文档都应继续补齐与 `AGENT_RUNTIME_PROTOCOL_V1.md` 的逐项映射
 
 ---
 
@@ -419,5 +439,6 @@ Blueprint V1 的 Agent Capability 设计应遵守以下结论：
 
 | 版本 | 日期 | 变更说明 |
 |------|------|---------|
+| V1.2 | 2026-03-30 | 对齐 `PRD_V1.md` v1.21，补充 `AGENT_RUNTIME_PROTOCOL_V1` 与 Capability 的关系，明确 `Full Runtime / Lite Runtime`、共通 `runtime` 外壳与 Runtime 相位表达能力 |
 | V1.1 | 2026-03-27 | 对齐 `PRD_V1.md` v1.19，补充“`active agent` 持续接管 + 条件触发 `handoff`”协作机制，并将统一协作外壳纳入各专业 Agent 能力总览 |
 | V1.0 | 2026-03-26 | 初始版本，建立 6 个核心 Agent 的 Capability 总框架，定义 Capability 与 Prompt / Memory / Tool 的关系，并给出分 Agent 文档拆分规划 |

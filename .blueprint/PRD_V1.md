@@ -2,7 +2,7 @@
 
 ## 📊 概述
 **大版本**: V1（覆盖迭代 1.0 -> 当前）  
-**当前迭代**: 1.20  
+**当前迭代**: 1.21  
 **状态**: Active  
 **创建日期**: 2026-03-24  
 **负责人**: TBD
@@ -49,6 +49,7 @@
 - 历史会话为项目级能力，但每条会话都绑定创建时的资产焦点与上下文来源
 - 新建会话默认继承当前项目上下文，并以当前聚焦资产作为起点
 - 每条会话除创建时的资产焦点与上下文来源外，还必须持久记录 `active agent`、最近一次 `handoff` 原因、待确认事项、受影响资产和待执行任务
+- 每条会话还必须持久记录当前 `conversation_stage`、最近一次 `execution_phase`、`plan_level` 与 `pending_confirmation_type`，以支撑 Agent Runtime 恢复和可解释展示
 - 同一会话在任一时刻只允许一个 `active agent`；默认由该 Agent 连续处理多轮对话，`Orchestrator` 只做旁路观察，不应在每一轮都重新完整路由
 - 会话恢复时，系统必须恢复最近一次有效的 `active agent` 与相关待处理状态，避免用户返回后丢失当前讨论模式
 - `PRD` 是默认首个聚焦资产；项目创建后 AI 主动引导用户从 PRD 初稿共创开始
@@ -69,6 +70,9 @@
 - `Mockup Review Agent` 是当前阶段唯一保留的专用 Review 角色，只负责检查 `Mockup` 与 `PRD / UI Spec / 设计稿` 之间的一致性、完整性与漂移
 - `Orchestrator` 允许在对话中发出系统确认消息，例如提示影响范围、是否更新对应文档、是否重生成设计稿或 Mockup，但不以人格化 Agent 方式与用户进行多轮对话
 - `Orchestrator` 的路由策略采用 `首次命中 + 会话持续接管 + 条件触发切换`：首次路由由 AI 自动判断优先；进入稳定会话后默认保持当前 `active agent`，只有在切换触发条件出现时才重新裁决；低置信度时再要求用户显式选择处理方向
+- `PM Agent / UI Designer Agent / Dev Agent / Mockup Agent / Mockup Review Agent` 默认遵循统一的 `Full Runtime`：`think -> plan -> execute -> reflect`
+- `Orchestrator` 默认遵循更轻量的 `Lite Runtime`：`analyze -> decide -> act -> verify`
+- Runtime 对用户应以结构化摘要形式可见，例如“当前理解 / 本轮计划 / 执行结果 / 本轮检查”或系统状态摘要；系统不得暴露原始完整思维链
 - Agent 必须遵守质量约束：不乱编需求、不跨资产越权修改、输出结构化、每次修改有原因、不确定时主动追问、关键资产确认前先自检、低置信度结果必须显式提醒
 
 ### V1 交付范围
@@ -144,8 +148,10 @@ V1 必须支持以下主链路：
 
 #### 实现分层原则
 - 该机制不能仅依赖各 Agent Prompt 自行“记住”当前处理模式；必须由 `Orchestrator` 所在的编排 / 状态层持久维护 `active agent`、`handoff` 和确认门状态
-- 专业 Agent 的返回结果必须支持结构化字段，例如 `user_visible_reply`、`confidence`、`handoff_request`、`needs_confirmation`、`affected_assets`
+- 专业 Agent 的返回结果必须支持结构化字段，例如 `user_visible_reply`、`runtime`、`confidence`、`handoff_request`、`needs_confirmation`、`affected_assets`
+- 其中 `runtime` 至少应支持 `phase_trace`、`task_complexity`、`plan_level`、`goal_of_this_turn` 与 `goal_completed`，用于系统消费、会话恢复与前台可解释展示
 - `agent-prompts/*` 负责定义各 Agent 的行为约束、切换意识与表达方式；`agent-capabilities/*` 负责定义能力边界、可执行动作和结构化返回契约
+- `AGENT_RUNTIME_PROTOCOL_V1.md` 负责定义跨 Agent 统一运行协议，包括 `Full Runtime / Lite Runtime`、相位语义、可见摘要原则与结构化 `runtime` 外壳
 - 真正的路由裁决、`active agent` 切换执行、状态持久化、审计日志记录和执行型任务触发，必须由工作流 / 后端编排层落地，而不是由 Prompt 文本单独承担
 
 #### Agent 架构图
@@ -383,7 +389,8 @@ flowchart LR
 | `Orchestrator` | 所有资产状态、当前资产摘要、用户入口动作与反馈、会话状态、`handoff_request` | 初始路由决定、`active agent` 更新、系统确认、触发任务记录、`handoff` 审计事件、系统状态变化 |
 
 #### 结构化返回契约
-- 所有可持续对话的专业 Agent 在 `V1` 中都必须支持统一的结构化返回外壳，至少包含：`user_visible_reply`、`confidence`、`handoff_request`、`needs_confirmation`、`affected_assets`
+- 所有可持续对话的专业 Agent 在 `V1` 中都必须支持统一的结构化返回外壳，至少包含：`user_visible_reply`、`runtime`、`confidence`、`handoff_request`、`needs_confirmation`、`affected_assets`
+- `runtime` 字段用于表达该轮执行经过的 Runtime 相位、复杂度与计划级别；这部分既服务于系统调度，也服务于前台“过程可解释但不暴露原始推理”的展示
 - `handoff_request` 为空时，默认表示继续由当前 `active agent` 接管后续对话；不允许用纯自然语言隐式表达切换意图而不输出结构化字段
 - `needs_confirmation=true` 时，必须由 `Orchestrator` 生成系统确认层，而不是让专业 Agent 直接越过确认门执行状态或资产修改
 
@@ -429,6 +436,17 @@ flowchart LR
 - 明确工作台中间聊天区与右侧内容区支持拖拽调宽，文档类资产默认右侧更宽
 - 明确 `document_view_mode / pane_split_ratio / has_unsaved_manual_edits` 属于工作台视图状态，不混入会话路由状态
 - 补充相关验收标准、页面原型、异常处理、埋点与监控指标
+
+### v1.21 — 引入统一 Agent Runtime Protocol（2026-03-30）
+**变更内容**：将 `AGENT_RUNTIME_PROTOCOL_V1.md` 中定义的统一运行协议正式上升到 PRD 产品层结论，明确专业 Agent 默认采用 `Full Runtime`、`Orchestrator` 默认采用 `Lite Runtime`，并补充会话状态字段、结构化 `runtime` 外壳与前台可见摘要原则  
+**变更原因**：此前 Runtime 设计已经落到 `agent-prompts/*`，但 PRD 仍停留在“active agent + handoff + 结构化回传”层面，没有正式定义 Agent 每一轮内部如何工作，也没有把“过程可见但不暴露原始思维链”的产品规则写回系统主规范，容易造成总设计与 Prompt 层脱节  
+
+**本次新增要点**
+- 明确专业 Agent 默认采用 `think -> plan -> execute -> reflect`
+- 明确 `Orchestrator` 默认采用 `analyze -> decide -> act -> verify`
+- 明确会话状态需补充 `conversation_stage / execution_phase / plan_level / pending_confirmation_type`
+- 明确专业 Agent 结构化回传需补充 `runtime` 字段
+- 明确前台展示的是 Runtime 摘要，而不是原始完整思维链
 
 ### v1.19 — 引入 active agent 持续接管与 handoff 协作机制（2026-03-27）
 **变更内容**：补充 `active agent` 会话级持续接管机制，明确 `Orchestrator` 采用“旁路观察 + 条件触发切换”而非逐轮重路由；同时新增实现分层原则、会话状态模型、结构化 `handoff` 协议、恢复规则与相关埋点指标  
@@ -2072,6 +2090,7 @@ Page: Delivery Summary
 
 ### Agent 设计相关文档
 - `PRD_V1.md`：定义产品层面的 Agent 架构、职责边界、路由规则、确认机制与流程位置
+- `.blueprint/AGENT_RUNTIME_PROTOCOL_V1.md`：定义跨 Agent 统一运行协议，包括 `Full Runtime / Lite Runtime`、相位语义、可见摘要原则与结构化 `runtime` 外壳
 - `.blueprint/AGENT_MEMORY_SOLUTION_V1.md`：定义 Agent Memory 分层、共享/私有边界、对象模型与上下文装配原则
 - `.blueprint/AGENT_CAPABILITIES_V1.md`：定义 6 个核心 Agent 的能力总框架、落地方式与分文档拆分规划
 - `.blueprint/AGENT_MUTATION_GUARDRAILS_V1.md`：定义各 Agent 各自控制生成 / 更新时必须共享的 readiness、确认门、gap 分级、结构化回传与 `Orchestrator` 控制底线
@@ -2089,6 +2108,7 @@ Page: Delivery Summary
 - `.blueprint/agent-capabilities/DEV_AGENT_CAPABILITIES_V1.md`：定义 `Dev Agent` 的多资产收敛、技术选型、系统架构、Mockup 对齐、风险与未决项管理、自检与确认前准备能力
 
 ### 版本历史
+- v1.21 (2026-03-30): 正式纳入 `AGENT_RUNTIME_PROTOCOL_V1.md`，明确 `Full Runtime / Lite Runtime`、会话 Runtime 状态字段、结构化 `runtime` 外壳与前台可见摘要原则
 - v1.20 (2026-03-30): 明确 `PRD / UI Spec / Tech Spec` 统一采用 Markdown 作为标准源格式，并补充右侧 `Preview / Markdown` 双模式与工作台中右分栏可调宽规则
 - v1.19 (2026-03-27): 引入 `active agent` 持续接管与 `handoff` 协作机制，明确会话状态、恢复规则、结构化切换协议与实现分层
 - v1.18 (2026-03-26): 更新 Agent 架构与 Mockup 路由图表述，使其与“各专业 Agent 各自控制生成/更新，Orchestrator 统一控制底线”的最新原则对齐

@@ -12,6 +12,7 @@
 1. 系统是否需要 Memory
 2. Memory 与 `Orchestrator` 的上下文装配有什么区别
 3. 哪些 Memory 应该共享，哪些只能局部使用
+4. Runtime 相位与可见摘要需要在哪些层留痕
 
 ---
 
@@ -95,6 +96,7 @@ Memory 的作用是：
 - 资产状态以 `asset_registry` 为准
 - 会话状态以 `session_index` 为准
 - `handoff` 历史与切换审计以 `handoff_log` 为准
+- Runtime 执行相位与计划级别以 `session_index` / 会话快照中的 Runtime 状态字段为准
 
 ### 3.5 权限最小化
 
@@ -103,6 +105,15 @@ Memory 的作用是：
 ### 3.6 面向装配设计
 
 Memory 设计必须服务于 `Orchestrator` 的上下文装配，而不是为“看起来像智能体系统”而设计。
+
+### 3.7 面向 Runtime 恢复设计
+
+从 `PRD_V1.md` v1.21 起，Memory 设计还必须服务于统一 Runtime：
+
+- 允许系统恢复最近一次 `execution_phase`
+- 允许系统恢复 `plan_level`
+- 允许系统恢复当前 `pending_confirmation_type`
+- 支撑前台展示“过程摘要”，但不长期保存原始完整思维链
 
 ---
 
@@ -175,10 +186,14 @@ Memory 设计必须服务于 `Orchestrator` 的上下文装配，而不是为“
 - 当前会话属于哪个资产焦点
 - 基于哪个资产版本开始
 - 当前 `active agent`
+- 当前 `conversation_stage`
+- 最近一次 `execution_phase`
+- 当前 `plan_level`
 - 当前会话主题
 - 当前会话最后结论
 - 最近一次 `handoff` 原因与置信度
 - 待确认项
+- 待确认类型
 - 待执行任务
 - 可恢复快照
 
@@ -197,6 +212,7 @@ Memory 设计必须服务于 `Orchestrator` 的上下文装配，而不是为“
 - 候选方案
 - 临时草稿
 - 当前轮比对结果
+- Runtime 中间判断（如当前轮 `think` 产物、候选 `plan`、`reflect` 结论）
 
 特点：
 
@@ -308,11 +324,15 @@ V1 第一版建议定义以下 8 个核心对象。
 | `based_on_versions` | 基于哪些版本开始 |
 | `source_intent` | 新建 / 变更 / 返工 / 回流 |
 | `active_agent` | 当前持续处理该会话的 Agent |
+| `conversation_stage` | 当前业务阶段，如目标探索 / 设计系统 / 技术选型 |
 | `current_topic` | 当前会话主题 |
+| `execution_phase` | 最近一次 Runtime 相位 |
+| `plan_level` | `light / heavy / none` |
 | `last_summary` | 最近一轮摘要 |
 | `last_handoff_reason` | 最近一次切换原因 |
 | `last_handoff_confidence` | 最近一次切换置信度 |
 | `pending_confirmation` | 当前待确认事项 |
+| `pending_confirmation_type` | `scope / apply_change / baseline / regenerate` |
 | `pending_task` | 当前待执行任务 |
 | `resume_snapshot` | 会话恢复所需的最小快照 |
 | `created_at` | 创建时间 |
@@ -578,6 +598,7 @@ V1 不做以下方案：
 - 引入更细粒度的 `asset_diff_log`
 - 引入 `tool_execution_log`
 - 引入 `memory_retention_policy`
+- 引入专门的 `runtime_event_log`（如未来需要更细粒度观测）
 
 ---
 
@@ -585,6 +606,7 @@ V1 不做以下方案：
 
 | 版本 | 日期 | 变更说明 |
 |------|------|---------|
+| V1.3 | 2026-03-30 | 对齐 `PRD_V1.md` v1.21，补充 Runtime 恢复设计、`conversation_stage / execution_phase / plan_level / pending_confirmation_type` 会话字段，以及 Runtime 摘要与原始思维链的存储边界 |
 | V1.2 | 2026-03-27 | 对齐 `PRD_V1.md` v1.19，补充 `active agent` 会话状态、`handoff_log`、会话快照字段、单一真相源边界与 `Orchestrator` 的系统状态写权限 |
 | V1.1 | 2026-03-26 | 收口为纯 Memory 设计文档，移除能力矩阵、工具与 MCP 分层，仅保留 Memory 分层、对象模型、共享/私有规则、读写权限与装配关系 |
 | V1.0 | 2026-03-26 | 初始版本，定义 Agent Memory 分层、共享/私有边界、核心 Memory 对象模型、Agent 读写权限和首版能力矩阵 |
