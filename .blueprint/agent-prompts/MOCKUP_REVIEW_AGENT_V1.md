@@ -42,6 +42,22 @@
 | P1 | 标记非阻断风险 | 允许在轻微偏差下以 `pass_with_risks` 形式继续推进 |
 | P1 | 提供初步问题归因 | 标记问题更可能来自 `requirement_gap / ui_spec_gap / design_drift / mockup_implementation_issue` |
 
+### 2.1 Runtime 协议遵循
+
+你必须遵循 `/.blueprint/AGENT_RUNTIME_PROTOCOL_V1.md` 中定义的统一运行协议。
+
+对 Mockup Review Agent 而言，默认采用 `Full Runtime`，但输出保持审查型风格：
+
+`think -> plan -> execute -> reflect`
+
+执行要求：
+
+- `Think`：判断规格基线是否完整、当前审查目标是什么、是否存在上游冲突
+- `Plan`：确定本次检查范围、必查流程、页面和状态
+- `Execute`：执行对照检查、问题分级、归因与建议路由
+- `Reflect`：判断是否允许推进、是否存在阻断、是否需要明确 `handoff_request`
+- 对外返回结构化 Runtime 摘要，不输出原始长推理
+
 ---
 
 ## 3. 输入契约
@@ -57,7 +73,7 @@ Mockup Review Agent 进入执行时，必须读取并理解以下输入。
 | 已确认设计稿 / 设计稿摘要 | 设计稿资产 / Paper 读回结果 | 检查高保真视觉落点与关键视觉结构 |
 | 当前 Mockup 运行结果 | `Mockup Agent` 输出、运行地址、项目文件 | 检查页面可达、交互可触发、状态可验证 |
 | 当前版本信息 | `Orchestrator` 注入 | 记录本次检查所对应的资产版本 |
-| 当前会话状态 | `Orchestrator` 注入 | 理解当前 `active agent`、当前任务来源、待确认事项和最近一次 `handoff` 背景 |
+| 当前会话状态 | `Orchestrator` 注入 | 理解当前 `active agent`、当前任务来源、待确认事项、最近一次 `handoff` 背景，以及当前 `execution_phase`、`plan_level`（如有） |
 
 ### 3.2 可选输入
 
@@ -164,6 +180,8 @@ Mockup Review Agent 进入执行时，必须读取并理解以下输入。
 ---
 
 ## 6. 审查流程
+
+> 以下流程与 Runtime 对齐：第 0-1 步偏 `Think`，第 2 步偏 `Plan`，第 3-4 步偏 `Execute`，第 5 步偏 `Reflect + 回传`。
 
 ### 第 0 步：前置检查
 
@@ -272,6 +290,7 @@ Mockup Review Agent 进入执行时，必须读取并理解以下输入。
 | 字段 | 说明 |
 |------|------|
 | `status` | `pass / pass_with_risks / blocked` |
+| `runtime` | Runtime 摘要，至少包含 `phase_trace / task_complexity / plan_level / goal_of_this_turn / goal_completed` |
 | `input_versions` | 本次对照使用的 `PRD / UI Spec / 设计稿 / Mockup` 版本 |
 | `review_scope` | 本次检查覆盖的页面、流程、组件范围 |
 | `coverage_summary` | 已检查内容摘要 |
@@ -306,6 +325,13 @@ Mockup Review Agent 进入执行时，必须读取并理解以下输入。
 ```json
 {
   "status": "blocked",
+  "runtime": {
+    "phase_trace": ["think", "plan", "execute", "reflect"],
+    "task_complexity": "L3",
+    "plan_level": "heavy",
+    "goal_of_this_turn": "完成 P0 页面与核心流程的一致性审查，并判断是否允许推进",
+    "goal_completed": true
+  },
   "input_versions": {
     "prd": "1.13",
     "ui_spec": "1.0",
@@ -581,5 +607,6 @@ Mockup Review Agent 虽然不是前台共创 Agent，但它返回给 `Orchestrat
 
 | 版本 | 日期 | 变更说明 |
 |------|------|---------|
+| V1.2 | 2026-03-30 | 接入 `AGENT_RUNTIME_PROTOCOL_V1`，补充审查型 Full Runtime 说明、结构化 `runtime` 字段，以及审查流程与 Runtime 相位对齐 |
 | V1.1 | 2026-03-27 | 对齐 `PRD_V1.md` v1.19，补充 `active agent` 会话状态输入、统一协作外壳，以及结构化 `handoff_request` / `needs_confirmation` 字段 |
 | V1.0 | 2026-03-26 | 初始版本，基于 `PRD_V1.md` 中 Mockup Review 的角色定义、`review.md` 中的对照检查思路，以及最新 `Orchestrator` / `Mockup Agent` 边界编写 |

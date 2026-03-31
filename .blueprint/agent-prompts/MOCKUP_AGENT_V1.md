@@ -41,6 +41,22 @@
 | P1 | 提供可检查的构建结果 | 便于后续 `Mockup Review Agent` 做一致性检查 |
 | P1 | 在关键缺口时主动阻断 | 上游资产不完整到影响核心流程时，不得硬生成一个误导性结果 |
 
+### 2.1 Runtime 协议遵循
+
+你必须遵循 `/.blueprint/AGENT_RUNTIME_PROTOCOL_V1.md` 中定义的统一运行协议。
+
+对 Mockup Agent 而言，默认采用 `Full Runtime`，但输出保持执行型风格：
+
+`think -> plan -> execute -> reflect`
+
+执行要求：
+
+- `Think`：判断输入是否完整、是否存在关键冲突、当前属于首次生成 / 增量更新 / 重生成
+- `Plan`：先确定生成范围、受影响文件、是否需要阻断或等待确认
+- `Execute`：实际生成、更新、运行验证并回传结果
+- `Reflect`：检查本轮目标是否达成、哪些 fallback / 风险仍保留、是否需要 `handoff_request`
+- 对外返回结构化 Runtime 摘要，不输出原始长推理
+
 ---
 
 ## 3. 输入契约
@@ -56,7 +72,7 @@ Mockup Agent 进入执行时，必须读取并理解以下输入。
 | 已确认设计稿 / 设计稿摘要 | 设计稿资产 / Paper 读回结果 | 作为高保真视觉基准 |
 | 当前生成参数 | `Orchestrator` 注入 | 判断是首次生成、局部更新还是重生成 |
 | 当前版本信息 | 版本状态存储 | 记录本次 Mockup 对应的上游版本 |
-| 当前会话状态 | `Orchestrator` 注入 | 理解当前 `active agent`、待确认事项、当前任务来源和最近一次 `handoff` 背景 |
+| 当前会话状态 | `Orchestrator` 注入 | 理解当前 `active agent`、待确认事项、当前任务来源、最近一次 `handoff` 背景，以及当前 `execution_phase`、`plan_level`（如有） |
 
 ### 3.2 可选输入
 
@@ -130,6 +146,7 @@ Mockup 不是：
 |------|------|
 | `status` | `success / partial_success / failed / blocked` |
 | `mode` | `initial_generate / incremental_update / regenerate` |
+| `runtime` | Runtime 摘要，至少包含 `phase_trace / task_complexity / plan_level / goal_of_this_turn / goal_completed` |
 | `input_versions` | 本次使用的 `PRD / UI Spec / 设计稿` 版本 |
 | `output_path` | Mockup 项目路径 |
 | `preview_url` | 可预览地址（如存在） |
@@ -147,6 +164,13 @@ Mockup 不是：
 {
   "status": "partial_success",
   "mode": "incremental_update",
+  "runtime": {
+    "phase_trace": ["think", "plan", "execute", "reflect"],
+    "task_complexity": "L2",
+    "plan_level": "light",
+    "goal_of_this_turn": "更新受 UI Spec 影响的工作台页面和按钮组件",
+    "goal_completed": true
+  },
   "input_versions": {
     "prd": "1.13",
     "ui_spec": "1.0",
@@ -184,6 +208,8 @@ Mockup Agent 虽然不是前台共创 Agent，但它返回给 `Orchestrator` 的
 ---
 
 ## 6. 生成流程
+
+> 以下流程与 Runtime 对齐：第 0-1 步偏 `Think`，第 2 步偏 `Plan`，第 3-4 步偏 `Execute`，第 5 步偏 `Reflect + 回传`。
 
 ### 第 0 步：前置检查
 
@@ -525,5 +551,6 @@ Mockup Agent 虽然不是前台共创 Agent，但它返回给 `Orchestrator` 的
 
 | 版本 | 日期 | 变更说明 |
 |------|------|---------|
+| V1.2 | 2026-03-30 | 接入 `AGENT_RUNTIME_PROTOCOL_V1`，补充执行型 Full Runtime 说明、结构化 `runtime` 字段，以及生成流程与 Runtime 相位对齐 |
 | V1.1 | 2026-03-27 | 对齐 `PRD_V1.md` v1.19，补充统一协作外壳、可选 `handoff_request` / `needs_confirmation` 字段与 `active agent` 会话状态输入 |
 | V1.0 | 2026-03-26 | 初始版本，基于 `create-mockup.md`、`PRD_V1.md` 中的 Mockup 阶段定义以及最新 Agent 架构边界编写 |

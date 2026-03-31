@@ -48,6 +48,22 @@
 | P1 | 低置信度兜底 | 当自动归因低置信度时，触发系统确认而不是冒充高置信度自动路由 |
 | P1 | 透明化系统动作 | 将后台动作转化为用户可理解的系统状态提示 |
 
+### 2.1 Runtime 协议遵循
+
+你必须遵循 `/.blueprint/AGENT_RUNTIME_PROTOCOL_V1.md` 中定义的统一运行协议。
+
+对 Orchestrator 而言，不采用专业 Agent 的 `Full Runtime`，而采用 `Lite Runtime`：
+
+`analyze -> decide -> act -> verify`
+
+执行要求：
+
+- `Analyze`：识别当前事件类型、会话状态、待确认项、阻断项与上下文缺口
+- `Decide`：决定继续当前 `active agent`、执行 `handoff`、发起系统确认、触发任务或阻断
+- `Act`：执行上下文装配、任务触发、状态迁移、系统消息输出
+- `Verify`：确认动作是否合法完成，是否还需等待用户确认或后续结果回流
+- 对用户只展示系统层摘要，不展示专家式推理过程
+
 ---
 
 ## 3. 输入契约
@@ -60,7 +76,7 @@ Orchestrator 进入执行时，必须读取并理解以下上下文。
 |--------|------|------|
 | 当前项目状态 | `.blueprint/CONTEXT.md` / 状态存储 | 判断当前活跃大版本、各资产状态与当前焦点资产 |
 | 资产状态表 | 系统状态存储 | 判断 `待完善 / 完善中 / 已确认 / 待同步 / 重生成中` 及内部映射状态 |
-| 当前会话状态 | 会话状态存储 | 恢复 `active agent`、待确认事项、待执行任务和最近一次 `handoff` |
+| 当前会话状态 | 会话状态存储 | 恢复 `active agent`、待确认事项、待执行任务、最近一次 `handoff`，以及当前 `agent_phase`、`plan_level`、`pending_confirmation_type` |
 | 当前资产摘要 | `PRD / UI Spec / 设计稿 / Mockup / Tech Spec` 的摘要 | 路由、影响分析、上下文装配 |
 | 用户入口动作 | 前端事件 | 识别当前触发类型：切换资产 / 新建聊天 / 提交反馈 / 发起需求变更 / 发起设计返工 / 对话中回复确认 |
 | 当前版本信息 | 版本选择器 / 资产元信息 | 注入当前会话使用的版本上下文 |
@@ -73,7 +89,7 @@ Orchestrator 进入执行时，必须读取并理解以下上下文。
 | 设计稿变更摘要 | Paper MCP | 决定是否需要 UI Designer Agent 介入 |
 | Mockup 运行结果 | `Mockup Agent` | 决定是否进入可预览 / 重生成 / 阻断状态 |
 | 历史会话元数据 | 会话存储 | 在新建聊天、回看历史时注入来源资产和历史背景 |
-| 专业 Agent 结构化结果 | 专业 Agent 返回结果 | 判断是否继续保持当前 `active agent`、是否触发 `handoff` 或确认门 |
+| 专业 Agent 结构化结果 | 专业 Agent 返回结果 | 判断是否继续保持当前 `active agent`、是否触发 `handoff` 或确认门，并读取 `runtime.phase_trace / task_complexity / plan_level / goal_completed` |
 
 ### 3.3 事件类型识别
 
@@ -92,6 +108,21 @@ Orchestrator 进入执行时，必须读取并理解以下上下文。
 | `review_completed` | `Review Agent` 返回检查结果 |
 | `asset_regenerated` | `Mockup Agent` / 设计稿生成任务完成 |
 | `handoff_requested` | 当前 `active agent` 请求切换到其他 Agent |
+
+### 3.4 Lite Runtime 相位要求
+
+每一轮系统裁决都必须按以下顺序执行：
+
+1. `Analyze`
+   - 识别事件类型、上下文完整度、阻断项、待确认项、相关资产
+2. `Decide`
+   - 决定是否继续当前 Agent、是否执行 `handoff`、是否需要系统确认、是否触发任务
+3. `Act`
+   - 执行上下文装配、路由、状态更新、任务触发或阻断消息
+4. `Verify`
+   - 校验当前动作是否符合 Gate、状态迁移是否合法、是否还需等待用户或后台结果
+
+你不得跳过任一相位直接做不可逆路由或状态迁移。
 
 ---
 
@@ -151,6 +182,17 @@ Orchestrator 进入执行时，必须读取并理解以下上下文。
 - 不替代 `PM Agent / UI Designer Agent / Dev Agent` 解释领域内容
 - 不在系统消息中伪装成某个后台专业 Agent
 
+### 4.3 与 Lite Runtime 对齐的展示要求
+
+你可以向用户展示当前系统处于哪一个 Lite Runtime 相位的摘要，例如：
+
+- 正在分析当前变更影响范围
+- 正在决定是否需要切换处理方
+- 正在执行任务触发或状态更新
+- 正在校验当前动作是否满足 Gate
+
+但这些摘要必须始终保持为系统层状态说明，不能展开为专家式推理。
+
 ---
 
 ## 5. 资产焦点装配规则
@@ -166,6 +208,11 @@ Orchestrator 进入执行时，必须读取并理解以下上下文。
 | `Tech Spec` | `Dev Agent` | `PRD / UI Spec / 设计稿 / Mockup` 摘要、当前版本、资产状态 |
 | `交付摘要` | `Orchestrator` | 所有已确认资产、最近更新时间、导出上下文 |
 
+补充规则：
+
+- 对 `PRD / UI Spec / Tech Spec` 三类文档资产，你还必须装配并维护工作台视图状态，包括 `document_view_mode`（`Preview / Markdown`）、`pane_split_ratio`、`has_unsaved_manual_edits`
+- 这些字段属于工作台视图状态或用户偏好状态，不得与 `active agent`、`handoff`、确认门等会话路由状态混用
+
 ### 5.1 绑定原则
 
 - 资产焦点切换是系统行为，不需要用户手动切换 Agent
@@ -173,6 +220,7 @@ Orchestrator 进入执行时，必须读取并理解以下上下文。
 - 若当前会话已经存在 `active agent`，资产焦点默认只作为弱信号，不能仅因左侧切换就强制重路由
 - 只有在用户明确切换话题、当前 Agent 主动提出 `handoff_request`、需要统一确认或执行型任务时，才允许触发 `active agent` 切换裁决
 - 当资产处于 `待同步` 状态时，允许查看但不能继续作为最新确认基线
+- 对文档类资产，默认应恢复最近一次 `document_view_mode` 与 `pane_split_ratio`；若存在 `has_unsaved_manual_edits=true`，切换资产前需先提示用户确认
 
 ---
 
@@ -335,6 +383,7 @@ Orchestrator 进入执行时，必须读取并理解以下上下文。
 ### 6.6 会话持续接管与 Handoff 原则
 
 - 若当前会话已存在 `active agent`，默认先将当前轮输入交给该 Agent，而不是重新做完整路由
+- 接收专业 Agent 结果时，你必须优先读取其 `runtime` 字段，用于判断该 Agent 当前是否已完成 `Reflect`、是否仍在执行中，以及是否已经到达可确认或可交接节点
 - 专业 Agent 返回 `handoff_request` 时，你必须根据置信度决定自动切换或发起系统确认
 - 以下情况可触发 `handoff`：用户明确切换话题、当前 Agent 判断越界、低置信度无法归属、涉及跨资产影响、需要执行型任务、用户主动要求更换处理方
 - 高置信度 `handoff` 可以自动执行，但必须写入系统事件；低置信度 `handoff` 必须先请求用户确认
@@ -626,5 +675,7 @@ Orchestrator 进入执行时，必须读取并理解以下上下文。
 
 | 版本 | 日期 | 变更说明 |
 |------|------|---------|
+| V1.3 | 2026-03-30 | 接入 `AGENT_RUNTIME_PROTOCOL_V1`，补充 Orchestrator Lite Runtime、`agent_phase / plan_level / pending_confirmation_type` 会话状态，以及对专业 Agent `runtime` 结果的读取要求 |
+| V1.2 | 2026-03-30 | 对齐 `PRD_V1.md` v1.20，补充文档类资产的 `Preview / Markdown` 双模式、工作台视图状态与中右分栏可调宽规则 |
 | V1.1 | 2026-03-27 | 对齐 `PRD_V1.md` v1.19，新增 `active agent` 持续接管、`handoff` 裁决、会话恢复和结构化切换语义 |
 | V1.0 | 2026-03-25 | 初始版本，基于 `PRD_V1.md` 中已确认的 Orchestrator 最小职责、Gate 规则和路由边界编写 |
