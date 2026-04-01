@@ -426,17 +426,6 @@ flowchart LR
 
 ## 📋 迭代历史（AI 理解上下文时读这里）
 
-### v1.20 — 文档资产双模式查看与工作台可调宽规则（2026-03-30）
-**变更内容**：补充 `PRD / UI Spec / Tech Spec` 统一采用 Markdown 作为标准源格式，右侧文档区统一支持 `Preview / Markdown` 双模式，以及工作台中区/右区可拖拽调宽与偏好持久化规则  
-**变更原因**：此前 PRD 仅模糊定义“右侧预览区”，没有明确区分渲染预览与 Markdown 原文，也未把 UI Spec 和 Tech Spec 一并纳入统一的文档交互模型。补上后，产品在阅读、手动修订与后续实现上会更一致  
-
-**本次新增要点**
-- 明确 `PRD / UI Spec / Tech Spec` 的标准输出格式统一为 `Markdown`
-- 明确右侧文档区统一支持 `Preview / Markdown` 双模式，并允许用户直接手动修改原始 Markdown
-- 明确工作台中间聊天区与右侧内容区支持拖拽调宽，文档类资产默认右侧更宽
-- 明确 `document_view_mode / pane_split_ratio / has_unsaved_manual_edits` 属于工作台视图状态，不混入会话路由状态
-- 补充相关验收标准、页面原型、异常处理、埋点与监控指标
-
 ### v1.21 — 引入统一 Agent Runtime Protocol（2026-03-30）
 **变更内容**：将 `AGENT_RUNTIME_PROTOCOL_V1.md` 中定义的统一运行协议正式上升到 PRD 产品层结论，明确专业 Agent 默认采用 `Full Runtime`、`Orchestrator` 默认采用 `Lite Runtime`，并补充会话状态字段、结构化 `runtime` 外壳与前台可见摘要原则  
 **变更原因**：此前 Runtime 设计已经落到 `agent-prompts/*`，但 PRD 仍停留在“active agent + handoff + 结构化回传”层面，没有正式定义 Agent 每一轮内部如何工作，也没有把“过程可见但不暴露原始思维链”的产品规则写回系统主规范，容易造成总设计与 Prompt 层脱节  
@@ -447,6 +436,17 @@ flowchart LR
 - 明确会话状态需补充 `conversation_stage / execution_phase / plan_level / pending_confirmation_type`
 - 明确专业 Agent 结构化回传需补充 `runtime` 字段
 - 明确前台展示的是 Runtime 摘要，而不是原始完整思维链
+
+### v1.20 — 文档资产双模式查看与工作台可调宽规则（2026-03-30）
+**变更内容**：补充 `PRD / UI Spec / Tech Spec` 统一采用 Markdown 作为标准源格式，右侧文档区统一支持 `Preview / Markdown` 双模式，以及工作台中区/右区可拖拽调宽与偏好持久化规则  
+**变更原因**：此前 PRD 仅模糊定义“右侧预览区”，没有明确区分渲染预览与 Markdown 原文，也未把 UI Spec 和 Tech Spec 一并纳入统一的文档交互模型。补上后，产品在阅读、手动修订与后续实现上会更一致  
+
+**本次新增要点**
+- 明确 `PRD / UI Spec / Tech Spec` 的标准输出格式统一为 `Markdown`
+- 明确右侧文档区统一支持 `Preview / Markdown` 双模式，并允许用户直接手动修改原始 Markdown
+- 明确工作台中间聊天区与右侧内容区支持拖拽调宽，文档类资产默认右侧更宽
+- 明确 `document_view_mode / pane_split_ratio / has_unsaved_manual_edits` 属于工作台视图状态，不混入会话路由状态
+- 补充相关验收标准、页面原型、异常处理、埋点与监控指标
 
 ### v1.19 — 引入 active agent 持续接管与 handoff 协作机制（2026-03-27）
 **变更内容**：补充 `active agent` 会话级持续接管机制，明确 `Orchestrator` 采用“旁路观察 + 条件触发切换”而非逐轮重路由；同时新增实现分层原则、会话状态模型、结构化 `handoff` 协议、恢复规则与相关埋点指标  

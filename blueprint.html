@@ -2107,7 +2107,8 @@ function doCreateProject() {
     // Store project info for workspace
     wsProjectName = document.getElementById('pj-name').value.trim() || 'My Project';
     document.getElementById('ws-project-name').textContent = wsProjectName;
-    document.getElementById('ws-header-title').textContent = wsProjectName;
+    const ftName = document.getElementById('ws-ft-project-name');
+    if (ftName) ftName.textContent = wsProjectName;
     showPage('page-workspace');
     wsSetAsset('prd');
     wsStartConversation();
@@ -2195,20 +2196,56 @@ document.addEventListener('keydown', e => {
 .ws-sidebar { flex: 0 0 220px; width: 220px; background: white; border-right: 1px solid #e9edf5; display: flex; flex-direction: column; overflow: hidden; }
 .ws-sidebar-section { padding: 14px 12px 8px; border-bottom: 1px solid #f1f5f9; }
 .ws-sidebar-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: #94a3b8; margin-bottom: 6px; padding: 0 4px; }
-.ws-asset-item { display: flex; align-items: center; gap: 9px; padding: 8px 10px; border-radius: 8px; cursor: pointer; font-size: 13px; color: #64748b; border: 1px solid transparent; transition: all 0.12s; }
-.ws-asset-item:hover { background: #f8f8fc; color: var(--ink-2); }
-.ws-asset-item.active { background: #f5f0ff; border-color: rgba(168,85,247,0.2); color: #6d28d9; font-weight: 600; }
-/* Item whose asset is the active FLOW context (chat is about this) */
-.ws-asset-item.flow-active:not(.active) {
-  border-left: 2px solid transparent;
-  border-image: linear-gradient(180deg,#EE53FF,#31E1F8) 1;
-}
-.ws-asset-name { flex: 1; }
-.ws-asset-badge { font-size: 9px; font-weight: 700; padding: 2px 7px; border-radius: 20px; text-transform: uppercase; letter-spacing: 0.05em; white-space: nowrap; }
+
+/* ─── File Tree ─── */
+.ws-filetree-section { padding: 10px 8px 6px; }
+.ws-ft-folder { display: flex; align-items: center; gap: 4px; padding: 5px 6px; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: 600; color: var(--ink-2); user-select: none; }
+.ws-ft-folder:hover { background: #f8f8fc; }
+.ws-ft-chevron { color: #94a3b8; transition: transform 0.15s; flex-shrink: 0; }
+.ws-ft-folder.open > .ws-ft-chevron { transform: rotate(90deg); }
+.ws-ft-children { padding-left: 12px; overflow: hidden; }
+.ws-ft-folder:not(.open) + .ws-ft-children { display: none; }
+.ws-ft-icon.folder { flex-shrink: 0; }
+.ws-ft-icon.file { flex-shrink: 0; color: #94a3b8; }
+.ws-ft-file { display: flex; align-items: center; gap: 6px; padding: 4px 8px; border-radius: 6px; cursor: pointer; font-size: 12px; color: #64748b; transition: all 0.1s; border: 1px solid transparent; }
+.ws-ft-file:hover { background: #f8f8fc; color: var(--ink-2); }
+.ws-ft-file.active { background: #f5f0ff; color: #6d28d9; font-weight: 600; border-color: rgba(168,85,247,0.15); }
+.ws-ft-file.active .ws-ft-icon.file { color: #8B5CF6; }
+.ws-ft-name { flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ws-ft-status-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+.dot-todo  { background: #e2e8f0; }
+.dot-inprog { background: #f59e0b; box-shadow: 0 0 0 2px rgba(245,158,11,0.2); }
+.dot-done  { background: #22c55e; }
+
+/* ─── Legacy badge classes (kept for JS compat) ─── */
+.ws-asset-badge { font-size: 9px; font-weight: 700; padding: 2px 7px; border-radius: 20px; text-transform: uppercase; letter-spacing: 0.05em; white-space: nowrap; display: none; }
 .ab-todo  { background: #f1f5f9; color: #94a3b8; }
 .ab-inprog { background: #fff7ed; color: #ea580c; border: 1px solid #fed7aa; }
 .ab-done  { background: #f0fdf4; color: #16a34a; border: 1px solid #bbf7d0; }
 .ab-sync  { background: #fefce8; color: #a16207; border: 1px solid #fde68a; }
+
+/* ─── Preview mode tabs ─── */
+.ws-mode-tabs { display: flex; gap: 2px; background: #f1f5f9; border-radius: 8px; padding: 2px; }
+.ws-mode-tab { font-family: var(--sans); font-size: 11px; font-weight: 600; padding: 4px 14px; border-radius: 6px; cursor: pointer; border: none; background: transparent; color: #94a3b8; transition: all 0.12s; }
+.ws-mode-tab:hover { color: var(--ink-2); }
+.ws-mode-tab.active { background: white; color: var(--ink-2); box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
+
+/* ─── Markdown editor textarea ─── */
+.ws-editor-textarea {
+  flex: 1; width: 100%; padding: 16px; font-family: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
+  font-size: 13px; line-height: 1.7; color: var(--ink); background: #fafbfc; border: none; outline: none;
+  resize: none; overflow-y: auto;
+}
+.ws-editor-textarea:focus { background: white; }
+
+/* ─── Autosave indicator ─── */
+.ws-autosave-indicator {
+  position: absolute; bottom: 10px; right: 16px;
+  font-size: 11px; font-weight: 500; color: #22c55e;
+  padding: 3px 10px; border-radius: 6px; background: rgba(34,197,94,0.08);
+  opacity: 0; transition: opacity 0.3s; pointer-events: none;
+}
+.ws-autosave-indicator.show { opacity: 1; }
 .ws-sidebar-chats { flex: 1; overflow-y: auto; padding: 10px 12px; }
 .ws-chat-item { display: flex; align-items: center; gap: 8px; padding: 7px 10px; border-radius: 7px; cursor: pointer; font-size: 12px; color: #64748b; transition: all 0.12s; border: 1px solid transparent; }
 .ws-chat-item:hover { background: #f8f8fc; color: var(--ink-2); }
@@ -2259,9 +2296,9 @@ document.addEventListener('keydown', e => {
 .ws-send-btn { width: 38px; height: 38px; border-radius: 10px; border: none; background: var(--grad); color: white; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.15s; flex-shrink: 0; box-shadow: 0 2px 10px rgba(168,85,247,0.25); }
 .ws-send-btn:hover { transform: scale(1.06); }
 .ws-send-btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
-.ws-preview-pane { background: white; display: flex; flex-direction: column; min-height: 0; overflow: hidden; }
+.ws-preview-pane { background: white; display: flex; flex-direction: column; min-height: 0; overflow: hidden; position: relative; }
 .ws-preview-header { padding: 11px 16px; border-bottom: 1px solid #e9edf5; display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; }
-.ws-preview-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: #94a3b8; }
+.ws-preview-label { font-size: 12px; font-weight: 600; color: var(--ink-2); }
 .ws-preview-actions { display: flex; gap: 6px; align-items: center; }
 .ws-preview-btn { font-family: var(--sans); font-size: 11px; font-weight: 600; padding: 5px 12px; border-radius: 6px; cursor: pointer; border: 1.5px solid #e2e8f0; background: white; color: #64748b; transition: all 0.12s; }
 .ws-preview-btn:hover { border-color: #c4b5fd; color: #8B5CF6; }
@@ -2351,36 +2388,53 @@ body.ws-dragging * { cursor: col-resize !important; }
       Blueprint
     </div>
     <span class="ws-project-name" id="ws-project-name">My Project</span>
-    <span class="ws-slash">/</span>
-    <div style="display:flex;align-items:center;gap:6px;">
-      <span style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#94a3b8;white-space:nowrap;flex-shrink:0;" title="Delivery flow progress — shows which assets are confirmed">Progress</span>
-    </div>
-    <div class="ws-nodes" id="ws-nodes">
-      <button class="ws-node-btn active" data-asset="prd" onclick="wsNodeClick('prd')"><span class="ws-node-status-dot dot-inprog"></span><span class="ws-node-label">PRD</span></button>
-      <button class="ws-node-btn" data-asset="uispec" onclick="wsNodeClick('uispec')"><span class="ws-node-status-dot dot-todo"></span><span class="ws-node-label">UI Spec</span></button>
-      <button class="ws-node-btn" data-asset="design" onclick="wsNodeClick('design')"><span class="ws-node-status-dot dot-todo"></span><span class="ws-node-label">Design</span></button>
-      <button class="ws-node-btn" data-asset="mockup" onclick="wsNodeClick('mockup')"><span class="ws-node-status-dot dot-todo"></span><span class="ws-node-label">Mockup</span></button>
-      <button class="ws-node-btn" data-asset="techspec" onclick="wsNodeClick('techspec')"><span class="ws-node-status-dot dot-todo"></span><span class="ws-node-label">Tech Spec</span></button>
-      <button class="ws-node-btn" data-asset="delivery" onclick="wsNodeClick('delivery')"><span class="ws-node-status-dot dot-todo"></span><span class="ws-node-label">Delivery</span></button>
-    </div>
     <div class="ws-topbar-right">
-      <span class="ws-focus-badge" id="ws-header-focus" title="Active chat context — which asset Blueprint AI is helping you build">Focus: PRD</span>
-      <span id="ws-viewing-badge" title="Currently previewing this document" style="font-size:11px;font-weight:600;padding:4px 12px;border-radius:20px;background:#f8f8fc;color:#64748b;border:1.5px solid #e2e8f0;display:none;">Viewing: PRD</span>
-      <span id="ws-header-title" style="font-size:12px;color:#94a3b8;font-weight:500;max-width:140px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;"></span>
       <div class="ws-user-avatar">J</div>
     </div>
   </div>
   <div class="ws-body">
     <!-- Sidebar -->
     <div class="ws-sidebar">
-      <div class="ws-sidebar-section">
-        <div class="ws-sidebar-label" title="Click to preview document content">Documents</div>
-        <div class="ws-asset-item active" data-asset="prd" onclick="wsSwitchDoc('prd')"><span class="ws-node-status-dot dot-inprog"></span><span class="ws-asset-name">PRD</span><span class="ws-asset-badge ab-inprog" id="sb-badge-prd">In progress</span></div>
-        <div class="ws-asset-item" data-asset="uispec" onclick="wsSwitchDoc('uispec')"><span class="ws-node-status-dot dot-todo"></span><span class="ws-asset-name">UI Spec</span><span class="ws-asset-badge ab-todo" id="sb-badge-uispec">Pending</span></div>
-        <div class="ws-asset-item" data-asset="design" onclick="wsSwitchDoc('design')"><span class="ws-node-status-dot dot-todo"></span><span class="ws-asset-name">Design</span><span class="ws-asset-badge ab-todo" id="sb-badge-design">Pending</span></div>
-        <div class="ws-asset-item" data-asset="mockup" onclick="wsSwitchDoc('mockup')"><span class="ws-node-status-dot dot-todo"></span><span class="ws-asset-name">Mockup</span><span class="ws-asset-badge ab-todo" id="sb-badge-mockup">Pending</span></div>
-        <div class="ws-asset-item" data-asset="techspec" onclick="wsSwitchDoc('techspec')"><span class="ws-node-status-dot dot-todo"></span><span class="ws-asset-name">Tech Spec</span><span class="ws-asset-badge ab-todo" id="sb-badge-techspec">Pending</span></div>
-        <div class="ws-asset-item" data-asset="delivery" onclick="wsSwitchDoc('delivery')"><span class="ws-node-status-dot dot-todo"></span><span class="ws-asset-name">Delivery Summary</span><span class="ws-asset-badge ab-todo" id="sb-badge-delivery">Pending</span></div>
+      <div class="ws-sidebar-section ws-filetree-section">
+        <div class="ws-filetree-root" id="ws-filetree-root">
+          <div class="ws-ft-folder open" onclick="this.classList.toggle('open')">
+            <svg class="ws-ft-chevron" width="10" height="10" viewBox="0 0 10 10"><path d="M3 2l4 3-4 3" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            <svg class="ws-ft-icon folder" width="14" height="14" viewBox="0 0 16 16"><path d="M1.5 3.5A1 1 0 012.5 2.5h3.172a1 1 0 01.707.293L7.5 3.914a1 1 0 00.707.293H13.5a1 1 0 011 1v7.293a1 1 0 01-1 1h-12a1 1 0 01-1-1V3.5z" fill="#f59e0b" opacity="0.85"/></svg>
+            <span class="ws-ft-name" id="ws-ft-project-name">Earth</span>
+          </div>
+          <div class="ws-ft-children">
+            <div class="ws-ft-file active" data-asset="prd" onclick="wsSwitchDoc('prd')">
+              <span class="ws-ft-status-dot dot-inprog" id="ft-dot-prd"></span>
+              <svg class="ws-ft-icon file" width="13" height="13" viewBox="0 0 16 16"><path d="M4 1.5h5.586a1 1 0 01.707.293l2.914 2.914a1 1 0 01.293.707V13.5a1 1 0 01-1 1H4a1 1 0 01-1-1v-11a1 1 0 011-1z" fill="none" stroke="currentColor" stroke-width="1.2"/></svg>
+              <span class="ws-ft-name">PRD.md</span>
+            </div>
+            <div class="ws-ft-file" data-asset="uispec" onclick="wsSwitchDoc('uispec')">
+              <span class="ws-ft-status-dot dot-todo" id="ft-dot-uispec"></span>
+              <svg class="ws-ft-icon file" width="13" height="13" viewBox="0 0 16 16"><path d="M4 1.5h5.586a1 1 0 01.707.293l2.914 2.914a1 1 0 01.293.707V13.5a1 1 0 01-1 1H4a1 1 0 01-1-1v-11a1 1 0 011-1z" fill="none" stroke="currentColor" stroke-width="1.2"/></svg>
+              <span class="ws-ft-name">UI_Spec.md</span>
+            </div>
+            <div class="ws-ft-file" data-asset="design" onclick="wsSwitchDoc('design')">
+              <span class="ws-ft-status-dot dot-todo" id="ft-dot-design"></span>
+              <svg class="ws-ft-icon file" width="13" height="13" viewBox="0 0 16 16"><path d="M4 1.5h5.586a1 1 0 01.707.293l2.914 2.914a1 1 0 01.293.707V13.5a1 1 0 01-1 1H4a1 1 0 01-1-1v-11a1 1 0 011-1z" fill="none" stroke="currentColor" stroke-width="1.2"/></svg>
+              <span class="ws-ft-name">Design.md</span>
+            </div>
+            <div class="ws-ft-file" data-asset="mockup" onclick="wsSwitchDoc('mockup')">
+              <span class="ws-ft-status-dot dot-todo" id="ft-dot-mockup"></span>
+              <svg class="ws-ft-icon file" width="13" height="13" viewBox="0 0 16 16"><path d="M4 1.5h5.586a1 1 0 01.707.293l2.914 2.914a1 1 0 01.293.707V13.5a1 1 0 01-1 1H4a1 1 0 01-1-1v-11a1 1 0 011-1z" fill="none" stroke="currentColor" stroke-width="1.2"/></svg>
+              <span class="ws-ft-name">Mockup.md</span>
+            </div>
+            <div class="ws-ft-file" data-asset="techspec" onclick="wsSwitchDoc('techspec')">
+              <span class="ws-ft-status-dot dot-todo" id="ft-dot-techspec"></span>
+              <svg class="ws-ft-icon file" width="13" height="13" viewBox="0 0 16 16"><path d="M4 1.5h5.586a1 1 0 01.707.293l2.914 2.914a1 1 0 01.293.707V13.5a1 1 0 01-1 1H4a1 1 0 01-1-1v-11a1 1 0 011-1z" fill="none" stroke="currentColor" stroke-width="1.2"/></svg>
+              <span class="ws-ft-name">Tech_Spec.md</span>
+            </div>
+            <div class="ws-ft-file" data-asset="delivery" onclick="wsSwitchDoc('delivery')">
+              <span class="ws-ft-status-dot dot-todo" id="ft-dot-delivery"></span>
+              <svg class="ws-ft-icon file" width="13" height="13" viewBox="0 0 16 16"><path d="M4 1.5h5.586a1 1 0 01.707.293l2.914 2.914a1 1 0 01.293.707V13.5a1 1 0 01-1 1H4a1 1 0 01-1-1v-11a1 1 0 011-1z" fill="none" stroke="currentColor" stroke-width="1.2"/></svg>
+              <span class="ws-ft-name">Delivery.md</span>
+            </div>
+          </div>
+        </div>
       </div>
       <div class="ws-sidebar-section" style="border-bottom:none;flex:1;display:flex;flex-direction:column;">
         <div class="ws-sidebar-label">Chat History</div>
@@ -2399,13 +2453,11 @@ body.ws-dragging * { cursor: col-resize !important; }
       </div>
       <div class="ws-messages" id="ws-messages"></div>
       <div class="ws-chat-footer">
-        <div class="ws-input-extras">
-          <button class="ws-extra-btn" onclick="wsQuickAction('save')">&#8595; Save version</button>
-          <button class="ws-extra-btn" onclick="wsQuickAction('export')">&#8595; Export .md</button>
-          <button class="ws-extra-btn" id="ws-confirm-btn" onclick="wsQuickAction('confirm')" style="display:none;color:#8B5CF6;border-color:rgba(168,85,247,0.3);background:rgba(168,85,247,0.06);">&#10003; Confirm baseline</button>
+        <div class="ws-input-extras" id="ws-input-extras" style="display:none;">
+          <button class="ws-extra-btn" id="ws-confirm-btn" onclick="wsQuickAction('confirm')" style="color:#8B5CF6;border-color:rgba(168,85,247,0.3);background:rgba(168,85,247,0.06);">&#10003; Confirm baseline</button>
         </div>
         <div class="ws-input-row">
-          <textarea class="ws-chat-textarea" id="ws-input" placeholder="Continue working on PRD…" rows="1" onkeydown="wsHandleKey(event)" oninput="this.style.height='auto';this.style.height=Math.min(this.scrollHeight,120)+'px'"></textarea>
+          <textarea class="ws-chat-textarea" id="ws-input" placeholder="Describe your product…" rows="1" onkeydown="wsHandleKey(event)" oninput="this.style.height='auto';this.style.height=Math.min(this.scrollHeight,120)+'px'"></textarea>
           <button class="ws-send-btn" id="ws-send-btn" onclick="wsSend()"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M13 7L1 2l3 5-3 5 12-5z" fill="white"/></svg></button>
         </div>
       </div>
@@ -2417,14 +2469,17 @@ body.ws-dragging * { cursor: col-resize !important; }
     <!-- Preview pane -->
     <div class="ws-preview-pane">
       <div class="ws-preview-header">
-        <span class="ws-preview-label" id="ws-preview-label">PRD — Preview</span>
+        <span class="ws-preview-label" id="ws-preview-label">PRD.md</span>
         <div class="ws-preview-actions">
-          <span class="ws-asset-badge ab-inprog" id="ws-preview-status">In progress</span>
-          <button class="ws-preview-btn" onclick="wsQuickAction('export')">Export</button>
-          <button class="ws-preview-btn" onclick="wsQuickAction('save')">Save version</button>
+          <div class="ws-mode-tabs">
+            <button class="ws-mode-tab" data-mode="edit" onclick="wsSetPreviewMode('edit')">Edit</button>
+            <button class="ws-mode-tab active" data-mode="preview" onclick="wsSetPreviewMode('preview')">Preview</button>
+          </div>
         </div>
       </div>
       <div class="ws-preview-content" id="ws-preview-content"></div>
+      <textarea class="ws-editor-textarea" id="ws-editor-textarea" style="display:none;" spellcheck="false" oninput="wsEditorAutoSave()"></textarea>
+      <div class="ws-autosave-indicator" id="ws-autosave-indicator" style="display:none;">Saved</div>
     </div>
   </div>
 </div>
@@ -2461,6 +2516,16 @@ function wsStartConversation() {
   document.getElementById('ws-messages').innerHTML = '';
   wsUserMsgCount = 0;
   wsCurrentDoc = 'prd';
+  // Sync project name to file tree
+  const ftName = document.getElementById('ws-ft-project-name');
+  if (ftName) ftName.textContent = wsProjectName;
+  // Reset edit mode to preview
+  wsPreviewMode = 'preview';
+  const editorEl = document.getElementById('ws-editor-textarea');
+  const previewEl = document.getElementById('ws-preview-content');
+  if (editorEl) editorEl.style.display = 'none';
+  if (previewEl) previewEl.style.display = 'block';
+  document.querySelectorAll('.ws-mode-tab').forEach(t => t.classList.toggle('active', t.dataset.mode === 'preview'));
   setTimeout(() => {
     wsAddMsg('ai','Blueprint AI · PM Agent',
       `👋 I've initialized your delivery package for <strong>"${wsProjectName}"</strong>.<br><br>
@@ -2482,19 +2547,14 @@ function wsSetAsset(asset) {
   wsCurrentAsset = asset;
   const meta = WS_ASSETS[asset];
 
-  // Update top delivery-progress nodes
-  document.querySelectorAll('.ws-node-btn').forEach(b => {
-    b.classList.toggle('active', b.dataset.asset === asset);
-  });
-
   // Update chat context labels + input
-  document.getElementById('ws-header-focus').textContent  = meta.focus;
   document.getElementById('ws-chat-context').textContent  = meta.context;
   document.getElementById('ws-input').placeholder         = meta.placeholder;
 
-  // Confirm button
+  // Confirm button — show only when asset is in progress
   const canConfirm = wsAssetStatus[asset] === 'inprog';
-  document.getElementById('ws-confirm-btn').style.display = canConfirm ? 'flex' : 'none';
+  const extrasRow = document.getElementById('ws-input-extras');
+  if (extrasRow) extrasRow.style.display = canConfirm ? 'flex' : 'none';
 
   // Sync doc view to the new flow asset
   wsSwitchDoc(asset);
@@ -2506,47 +2566,26 @@ function wsSetAsset(asset) {
    highlight. Does NOT change topbar flow progress,
    chat context, or focus badge.
 ─────────────────────────────────────────────────── */
+const WS_FILE_NAMES = {
+  prd:'PRD.md', uispec:'UI_Spec.md', design:'Design.md',
+  mockup:'Mockup.md', techspec:'Tech_Spec.md', delivery:'Delivery.md'
+};
+
 function wsSwitchDoc(asset) {
   wsCurrentDoc = asset;
 
-  // ── Sidebar: highlight the selected doc ──
-  document.querySelectorAll('.ws-asset-item').forEach(i => {
-    i.classList.toggle('active', i.dataset.asset === asset);
-    // Also show "flow-active" pill on the asset currently being worked on in chat
-    i.classList.toggle('flow-active', i.dataset.asset === wsCurrentAsset && i.dataset.asset !== asset);
+  // ── File tree: highlight the selected file ──
+  document.querySelectorAll('.ws-ft-file').forEach(f => {
+    f.classList.toggle('active', f.dataset.asset === asset);
   });
 
-  // ── Top nodes: mark "viewing" (without changing flow-active node) ──
-  document.querySelectorAll('.ws-node-btn').forEach(b => {
-    const isFlow    = b.dataset.asset === wsCurrentAsset;
-    const isViewing = b.dataset.asset === asset;
-    b.classList.toggle('active',  isFlow);
-    b.classList.toggle('viewing', isViewing && !isFlow);
-  });
-
-  // ── Preview pane ──
-  const meta = WS_ASSETS[asset];
-  document.getElementById('ws-preview-label').textContent = meta.previewLabel;
-  wsUpdatePreviewStatus(asset);
+  // ── Preview pane header ──
+  document.getElementById('ws-preview-label').textContent = WS_FILE_NAMES[asset] || WS_ASSETS[asset].label;
   wsRenderPreview();
-
-  // ── "Viewing" badge in topbar ──
-  const viewingBadge = document.getElementById('ws-viewing-badge');
-  if (viewingBadge) {
-    const isDifferentFromFlow = asset !== wsCurrentAsset;
-    viewingBadge.style.display = isDifferentFromFlow ? 'inline-flex' : 'none';
-    viewingBadge.textContent = 'Viewing: ' + WS_ASSETS[asset].label;
-  }
 }
 
 function wsUpdatePreviewStatus(asset) {
-  // asset = the doc being previewed (wsCurrentDoc), not flow asset
-  const st = wsAssetStatus[asset] || 'todo';
-  const badge = document.getElementById('ws-preview-status');
-  const map = {todo:'Pending',inprog:'In progress',done:'Confirmed',sync:'Needs sync'};
-  const cls  = {todo:'ab-todo',inprog:'ab-inprog',done:'ab-done',sync:'ab-sync'};
-  badge.textContent = map[st] || 'Pending';
-  badge.className = 'ws-asset-badge ' + (cls[st] || 'ab-todo');
+  // No-op: status badge removed from preview header
 }
 
 function wsRenderPreview() {
@@ -2633,7 +2672,7 @@ function wsPRDRespond(text, lo) {
       Ready to confirm <strong>v1.0</strong> as your requirements baseline?`,
       [{label:'✓ Confirm PRD v1.0',cls:'wcb-primary',fn:'wsConfirmAsset("prd")'},{label:'Keep refining',cls:'wcb-secondary',fn:''}]
     );
-    document.getElementById('ws-confirm-btn').style.display = 'flex';
+    var _er1 = document.getElementById('ws-input-extras'); if(_er1) _er1.style.display = 'flex';
   } else {
     wsAddMsg('ai','Blueprint AI · PM Agent','Got it — PRD updated. Anything else before we confirm?');
   }
@@ -2644,7 +2683,8 @@ function wsConfirmAsset(asset) {
   wsUpdateSidebarBadge(asset,'done','Confirmed');
   wsUpdateNodeStatus(asset,'done');
   wsUpdatePreviewStatus(asset);
-  document.getElementById('ws-confirm-btn').style.display = 'none';
+  const extrasRow = document.getElementById('ws-input-extras');
+  if (extrasRow) extrasRow.style.display = 'none';
   wsAddMsg('ai','Blueprint AI · PM Agent',
     `✅ <strong>${WS_ASSETS[asset].label} v1.0 confirmed</strong> as baseline.<br><br>
     Any future changes will create a new version and show impact on downstream assets first.<br><br>
@@ -2684,19 +2724,14 @@ function wsAttributeFix() {
 }
 
 function wsUpdateSidebarBadge(asset, status, label) {
-  const badge = document.getElementById('sb-badge-'+asset);
-  if (!badge) return;
-  const map = {todo:'ab-todo',inprog:'ab-inprog',done:'ab-done',sync:'ab-sync'};
-  badge.className = 'ws-asset-badge ' + (map[status]||'ab-todo');
-  badge.textContent = label;
-  const dot = document.querySelector(`.ws-asset-item[data-asset="${asset}"] .ws-node-status-dot`);
-  if (dot) dot.className = 'ws-node-status-dot dot-' + (status==='todo'?'todo':status==='inprog'?'inprog':'done');
+  // Update file tree status dot
+  const dot = document.getElementById('ft-dot-'+asset);
+  if (dot) dot.className = 'ws-ft-status-dot dot-' + (status==='todo'?'todo':status==='inprog'?'inprog':'done');
 }
 
 function wsUpdateNodeStatus(asset, status) {
-  const dot = document.querySelector(`.ws-node-btn[data-asset="${asset}"] .ws-node-status-dot`);
-  if (dot) dot.className = 'ws-node-status-dot dot-' + (status==='todo'?'todo':status==='inprog'?'inprog':'done');
-  if (status==='done') { const b = document.querySelector(`.ws-node-btn[data-asset="${asset}"]`); if(b) b.classList.add('done'); }
+  // Also update file tree dot (same as sidebar)
+  wsUpdateSidebarBadge(asset, status, '');
 }
 
 function wsQuickAction(a) {
@@ -2704,6 +2739,51 @@ function wsQuickAction(a) {
   else if (a==='export') showToast('⬇️ Exporting ' + WS_ASSETS[wsCurrentAsset].label + ' as Markdown…');
   else if (a==='confirm') wsConfirmAsset(wsCurrentAsset);
   else if (a==='paper')   showToast('↗ Opening in Paper — changes will sync back automatically');
+}
+
+/* ─── Edit / Preview mode switching ─── */
+let wsPreviewMode = 'preview';
+let wsAutoSaveTimer = null;
+
+const WS_MARKDOWN_CONTENT = {
+  prd: `# PRD — Product Requirements Document\n\n## Product Overview\n_Awaiting input…_\n\n## Target Users\n_Who is this for?_\n\n## Core Features (V1)\n_Must-have features for V1?_\n\n## Out of Scope\n_What are you not building in V1?_\n\n## Success Metrics\n_How will you measure success?_`,
+  uispec: `# UI Spec\n\n## Design System\nFont: Plus Jakarta Sans · Colors: TBD · Spacing: 8px grid\n\n## Core Screens\n_Complete PRD first — UI Spec will be generated from confirmed requirements._`,
+  design: `# Design\n\n_Hi-fi design will be generated after UI Spec is confirmed._`,
+  mockup: `# Mockup\n\n_Clickable prototype will appear after Design is confirmed._`,
+  techspec: `# Tech Spec\n\n## System Architecture\n_Will be generated after Mockup is confirmed._\n\n## Core Modules\n_Module breakdown will appear here._\n\n## API Design\n_Key API endpoints will be listed here._`,
+  delivery: `# Delivery Summary\n\n_Delivery summary will be auto-generated when all assets are confirmed._`
+};
+
+function wsSetPreviewMode(mode) {
+  wsPreviewMode = mode;
+  document.querySelectorAll('.ws-mode-tab').forEach(t => {
+    t.classList.toggle('active', t.dataset.mode === mode);
+  });
+  const previewEl = document.getElementById('ws-preview-content');
+  const editorEl  = document.getElementById('ws-editor-textarea');
+  if (mode === 'edit') {
+    previewEl.style.display = 'none';
+    editorEl.style.display = 'block';
+    editorEl.value = WS_MARKDOWN_CONTENT[wsCurrentDoc] || '# ' + (WS_FILE_NAMES[wsCurrentDoc]||'') + '\n\n';
+    editorEl.focus();
+  } else {
+    editorEl.style.display = 'none';
+    previewEl.style.display = 'block';
+    wsRenderPreview();
+  }
+}
+
+function wsEditorAutoSave() {
+  const indicator = document.getElementById('ws-autosave-indicator');
+  indicator.textContent = 'Saving…';
+  indicator.classList.add('show');
+  indicator.style.display = 'block';
+  clearTimeout(wsAutoSaveTimer);
+  wsAutoSaveTimer = setTimeout(() => {
+    WS_MARKDOWN_CONTENT[wsCurrentDoc] = document.getElementById('ws-editor-textarea').value;
+    indicator.textContent = 'Saved';
+    setTimeout(() => { indicator.classList.remove('show'); }, 1500);
+  }, 600);
 }
 
 function wsNewChat() {
@@ -3229,7 +3309,7 @@ function wsConfirmDesign() {
   wsUpdateSidebarBadge('design','done','Confirmed');
   wsUpdateNodeStatus('design','done');
   wsUpdatePreviewStatus('design');
-  document.getElementById('ws-confirm-btn').style.display = 'none';
+  var _er3 = document.getElementById('ws-input-extras'); if(_er3) _er3.style.display = 'none';
   wsAddMsg('ai','Blueprint AI',
     `✅ <strong>Design v1.1 confirmed</strong> as baseline.<br><br>
 Generating <strong>Mockup</strong> from PRD + UI Spec + Design now…`,
@@ -3252,7 +3332,7 @@ Review the preview on the right. When you're happy, confirm the baseline.`,
     wsAssetContent.mockup = buildMockupPreview('ready');
     if (wsCurrentAsset === 'mockup') wsRenderPreview();
     wsUpdatePreviewStatus('mockup');
-    document.getElementById('ws-confirm-btn').style.display = 'flex';
+    var _er2 = document.getElementById('ws-input-extras'); if(_er2) _er2.style.display = 'flex';
   }, 2600);
 }
 
